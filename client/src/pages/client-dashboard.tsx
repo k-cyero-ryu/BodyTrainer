@@ -9,7 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock } from "lucide-react";
+import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function ClientDashboard() {
@@ -34,6 +36,30 @@ export default function ClientDashboard() {
 
   const { data: evaluations = [] } = useQuery({
     queryKey: ["/api/evaluations"],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch client's assigned training plans
+  const { data: assignedPlans = [] } = useQuery({
+    queryKey: ["/api/client/assigned-plans"],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch client's payment plan
+  const { data: paymentPlan } = useQuery({
+    queryKey: ["/api/client/payment-plan"],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch today's workout
+  const { data: todayWorkout } = useQuery({
+    queryKey: ["/api/client/today-workout"],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch training plans list
+  const { data: trainingPlans = [] } = useQuery({
+    queryKey: ["/api/training-plans"],
     enabled: !!user && user.role === 'client',
   });
 
@@ -96,21 +122,22 @@ export default function ClientDashboard() {
     );
   }
 
-  // Mock client stats - in a real app these would come from API
+  // Calculate client stats from real data
+  const latestEvaluation = evaluations?.[0];
+  const currentWeight = latestEvaluation?.weight || 0;
+  const activeAssignedPlan = assignedPlans.find((p: any) => p.isActive);
+  
+  // Calculate workout completion stats
+  const totalWorkoutsThisWeek = activeAssignedPlan ? 5 : 0; // Assume 5 workouts per week if plan exists
+  const completedWorkoutsThisWeek = todayWorkout?.workout ? 4 : 0; // Mock completion for now
+  
   const clientStats = {
-    workoutsThisWeek: 4,
-    totalWorkouts: 5,
-    currentWeight: evaluations?.[0]?.weight || user?.client?.weight || 70,
-    goalProgress: 75,
-    streak: 12,
+    workoutsThisWeek: completedWorkoutsThisWeek,
+    totalWorkouts: totalWorkoutsThisWeek,
+    currentWeight: currentWeight,
+    goalProgress: activeAssignedPlan ? 75 : 0, // Mock progress
+    streak: 12, // Mock streak - could be calculated from workout history
   };
-
-  const todayExercises = [
-    { id: 1, name: "Push-ups", details: "3 sets × 12 reps" },
-    { id: 2, name: "Squats", details: "3 sets × 15 reps" },
-    { id: 3, name: "Plank", details: "3 sets × 30 seconds" },
-    { id: 4, name: "Lunges", details: "3 sets × 10 reps each leg" },
-  ];
 
   return (
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -118,6 +145,98 @@ export default function ClientDashboard() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
         <p className="text-gray-600 mt-2">Track your fitness journey and progress</p>
+      </div>
+
+      {/* Current Payment Plan and Training Plan */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Current Payment Plan */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Current Payment Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {paymentPlan ? (
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Plan:</span>
+                  <span className="text-sm">{paymentPlan.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Price:</span>
+                  <span className="text-sm font-bold">${paymentPlan.price}/{paymentPlan.billingCycle}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Sessions:</span>
+                  <span className="text-sm">{paymentPlan.sessionsPerWeek} per week</span>
+                </div>
+                {paymentPlan.features && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm font-medium mb-2">Features:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {paymentPlan.features.map((feature: string, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No payment plan assigned yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Contact your trainer to set up a plan</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Current Training Plan */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Dumbbell className="h-5 w-5" />
+              Current Training Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {assignedPlans.length > 0 ? (
+              <div className="space-y-3">
+                {assignedPlans.map((plan: any) => (
+                  <div key={plan.planId} className="p-3 border rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-medium">{plan.name}</h4>
+                        <p className="text-sm text-muted-foreground">{plan.goal}</p>
+                      </div>
+                      <Badge variant={plan.isActive ? "default" : "secondary"}>
+                        {plan.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Duration: {plan.duration} weeks</span>
+                      <span>Status: {plan.status}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                      <span>Started: {new Date(plan.assignedDate).toLocaleDateString()}</span>
+                      <Link href={`/training-plans/${plan.planId}`}>
+                        <Button variant="ghost" size="sm">View Details</Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No training plan assigned yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Your trainer will assign a plan soon</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Client Stats */}
@@ -187,37 +306,65 @@ export default function ClientDashboard() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Today's Workout</CardTitle>
-              <p className="text-sm text-gray-500">Upper Body Strength - Day 3</p>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Today's Workout
+              </CardTitle>
+              {todayWorkout?.workout && (
+                <p className="text-sm text-gray-500">
+                  {todayWorkout.planDetails.name} - Day {todayWorkout.workout.dayOfWeek}, Week {todayWorkout.workout.week}
+                </p>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {todayExercises.map((exercise) => (
-                  <div key={exercise.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Dumbbell className="h-5 w-5 text-gray-500" />
+              {todayWorkout?.workout?.exercises && todayWorkout.workout.exercises.length > 0 ? (
+                <div className="space-y-4">
+                  {todayWorkout.workout.exercises.map((exercise: any) => (
+                    <div key={exercise.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <Dumbbell className="h-5 w-5 text-gray-500" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{exercise.exerciseName}</h4>
+                          <div className="text-sm text-gray-500 space-y-1">
+                            {exercise.sets && <span>Sets: {exercise.sets}</span>}
+                            {exercise.reps && <span> • Reps: {exercise.reps}</span>}
+                            {exercise.duration && <span> • Duration: {exercise.duration} min</span>}
+                            {exercise.weight && <span> • Weight: {exercise.weight} kg</span>}
+                          </div>
+                          {exercise.notes && (
+                            <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">{exercise.name}</h4>
-                        <p className="text-sm text-gray-500">{exercise.details}</p>
+                      <div className="flex items-center space-x-2">
+                        <Button variant="ghost" size="sm">
+                          <Play className="h-4 w-4" />
+                        </Button>
+                        <input type="checkbox" className="rounded border-gray-300" />
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Play className="h-4 w-4" />
-                      </Button>
-                      <input type="checkbox" className="rounded border-gray-300" />
-                    </div>
+                  ))}
+                  <div className="mt-6 flex justify-center">
+                    <Button className="px-6 py-3">
+                      Complete Workout
+                    </Button>
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-6 flex justify-center">
-                <Button className="px-6 py-3">
-                  Complete Workout
-                </Button>
-              </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">
+                    {todayWorkout?.message || "No workout scheduled for today"}
+                  </p>
+                  {todayWorkout?.message === "No active training plan assigned" && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Your trainer will assign a training plan soon
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -276,6 +423,59 @@ export default function ClientDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Training Plans Section */}
+      {trainingPlans.length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Dumbbell className="h-5 w-5" />
+              My Training Plans
+            </CardTitle>
+            <p className="text-sm text-gray-500">View and track your assigned training plans</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {trainingPlans.map((plan: any) => (
+                <div key={plan.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-medium">{plan.name}</h4>
+                      <p className="text-sm text-muted-foreground">{plan.goal}</p>
+                    </div>
+                    <Badge variant={plan.isActive ? "default" : "secondary"}>
+                      {plan.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Duration:</span>
+                      <span>{plan.duration} weeks</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Status:</span>
+                      <span className="capitalize">{plan.status}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Started:</span>
+                      <span>{new Date(plan.assignedDate).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-3 border-t">
+                    <Link href={`/training-plans/${plan.id}`}>
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Full Details
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Monthly Evaluation Form */}
       <Card>

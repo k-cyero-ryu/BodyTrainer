@@ -491,37 +491,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/training-plans', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Check if user is trainer
       const trainer = await storage.getTrainerByUserId(userId);
-      if (!trainer) {
-        return res.status(403).json({ message: "Only trainers can view plans" });
+      if (trainer) {
+        const plans = await storage.getTrainingPlansByTrainer(trainer.id);
+        return res.json(plans);
       }
       
-      const plans = await storage.getTrainingPlansByTrainer(trainer.id);
-      res.json(plans);
+      // Check if user is client
+      const client = await storage.getClientByUserId(userId);
+      if (client) {
+        const assignedPlans = await storage.getClientPlans(client.id);
+        const planIds = assignedPlans.map((cp: any) => cp.planId);
+        
+        if (planIds.length === 0) {
+          return res.json([]);
+        }
+        
+        // Get full plan details for assigned plans
+        const plans = [];
+        for (const planId of planIds) {
+          const plan = await storage.getTrainingPlan(planId);
+          if (plan) {
+            const clientPlan = assignedPlans.find((cp: any) => cp.planId === planId);
+            plans.push({
+              ...plan,
+              assignedDate: clientPlan.startDate,
+              endDate: clientPlan.endDate,
+              isActive: clientPlan.isActive
+            });
+          }
+        }
+        
+        return res.json(plans);
+      }
+      
+      return res.status(403).json({ message: "Access denied" });
     } catch (error) {
       console.error("Error fetching training plans:", error);
       res.status(500).json({ message: "Failed to fetch training plans" });
     }
   });
 
-  // Get single training plan by ID
+  // Get single training plan by ID (accessible by both trainers and clients)
   app.get('/api/training-plans/:planId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const trainer = await storage.getTrainerByUserId(userId);
-      if (!trainer) {
-        return res.status(403).json({ message: "Only trainers can view plans" });
-      }
-      
       const { planId } = req.params;
       const plan = await storage.getTrainingPlan(planId);
       
       if (!plan) {
         return res.status(404).json({ message: "Training plan not found" });
       }
+
+      // Check access: trainers can view their own plans, clients can view assigned plans
+      let hasAccess = false;
       
-      // Verify the plan belongs to this trainer
-      if (plan.trainerId !== trainer.id) {
+      // Check if user is trainer who owns the plan
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (trainer && plan.trainerId === trainer.id) {
+        hasAccess = true;
+      }
+      
+      // Check if user is client who has this plan assigned
+      if (!hasAccess) {
+        const client = await storage.getClientByUserId(userId);
+        if (client) {
+          const assignedPlans = await storage.getClientPlans(client.id);
+          hasAccess = assignedPlans.some((cp: any) => cp.planId === planId);
+        }
+      }
+      
+      if (!hasAccess) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -535,6 +577,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching training plan:", error);
       res.status(500).json({ message: "Failed to fetch training plan" });
+    }
+  });
+
+  // Client-specific endpoints
+  app.get('/api/client/assigned-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can access this endpoint" });
+      }
+      
+      const assignedPlans = await storage.getClientPlans(client.id);
+      res.json(assignedPlans);
+    } catch (error) {
+      console.error("Error fetching assigned plans:", error);
+      res.status(500).json({ message: "Failed to fetch assigned plans" });
+    }
+  });
+
+  app.get('/api/client/payment-plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can access this endpoint" });
+      }
+      
+      if (!client.clientPaymentPlanId) {
+        return res.json(null);
+      }
+      
+      const paymentPlan = await storage.getClientPaymentPlan(client.clientPaymentPlanId);
+      res.json(paymentPlan);
+    } catch (error) {
+      console.error("Error fetching client payment plan:", error);
+      res.status(500).json({ message: "Failed to fetch payment plan" });
+    }
+  });
+
+  app.get('/api/client/today-workout', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can access this endpoint" });
+      }
+      
+      // Get active assigned plan
+      const assignedPlans = await storage.getClientPlans(client.id);
+      const activePlan = assignedPlans.find((cp: any) => cp.isActive);
+      
+      if (!activePlan) {
+        return res.json({ workout: null, message: "No active training plan assigned" });
+      }
+      
+      // Calculate which day of the plan the client is on
+      const startDate = new Date(activePlan.startDate);
+      const today = new Date();
+      const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const weeksSinceStart = Math.floor(daysSinceStart / 7);
+      const dayOfWeek = daysSinceStart % 7;
+      
+      // Get plan details with exercises
+      const plan = await storage.getTrainingPlan(activePlan.planId);
+      if (!plan) {
+        return res.json({ workout: null, message: "Training plan not found" });
+      }
+      
+      const planExercises = await storage.getPlanExercisesByPlan(activePlan.planId);
+      
+      // Filter exercises for today (assuming exercises have day and week info)
+      const todayExercises = planExercises.filter((ex: any) => 
+        ex.day === dayOfWeek + 1 && ex.week === (weeksSinceStart % plan.weeksCycle) + 1
+      );
+      
+      res.json({
+        workout: {
+          planName: plan.name,
+          dayOfWeek: dayOfWeek + 1,
+          week: (weeksSinceStart % plan.weeksCycle) + 1,
+          exercises: todayExercises
+        },
+        planDetails: plan
+      });
+    } catch (error) {
+      console.error("Error fetching today's workout:", error);
+      res.status(500).json({ message: "Failed to fetch today's workout" });
     }
   });
 
@@ -563,13 +693,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/exercises', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Check if user is trainer
       const trainer = await storage.getTrainerByUserId(userId);
-      if (!trainer) {
-        return res.status(403).json({ message: "Only trainers can view exercises" });
+      if (trainer) {
+        const exercises = await storage.getExercisesByTrainer(trainer.id);
+        return res.json(exercises);
       }
       
-      const exercises = await storage.getExercisesByTrainer(trainer.id);
-      res.json(exercises);
+      // Check if user is client - they can view all exercises for training plan details
+      const client = await storage.getClientByUserId(userId);
+      if (client) {
+        // For clients, get all exercises (they need to see exercise details in their plans)
+        const exercises = await storage.getExercises();
+        return res.json(exercises);
+      }
+      
+      return res.status(403).json({ message: "Access denied" });
     } catch (error) {
       console.error("Error fetching exercises:", error);
       res.status(500).json({ message: "Failed to fetch exercises" });
