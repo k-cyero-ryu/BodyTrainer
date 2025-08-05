@@ -139,26 +139,32 @@ function Router() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation />
-      <Switch>
-        {user?.role === 'superadmin' && (
-          <Route path="/" component={AdminDashboard} />
-        )}
-        {user?.role === 'trainer' && (
-          <>
-            <Route path="/" component={TrainerDashboard} />
-            <Route path="/clients" component={Clients} />
-            <Route path="/plans" component={TrainingPlans} />
-            <Route path="/exercises" component={Exercises} />
-            <Route path="/reports" component={Reports} />
-          </>
-        )}
-        {user?.role === 'client' && (
-          <Route path="/" component={ClientDashboard} />
-        )}
-        <Route component={NotFound} />
-      </Switch>
+      <div className="lg:pl-72">
+        <main className="min-h-screen pt-16 lg:pt-0">
+          <div className="py-6 px-4 lg:px-8">
+            <Switch>
+              {user?.role === 'superadmin' && (
+                <Route path="/" component={AdminDashboard} />
+              )}
+              {user?.role === 'trainer' && (
+                <>
+                  <Route path="/" component={TrainerDashboard} />
+                  <Route path="/clients" component={Clients} />
+                  <Route path="/plans" component={TrainingPlans} />
+                  <Route path="/exercises" component={Exercises} />
+                  <Route path="/reports" component={Reports} />
+                </>
+              )}
+              {user?.role === 'client' && (
+                <Route path="/" component={ClientDashboard} />
+              )}
+              <Route component={NotFound} />
+            </Switch>
+          </div>
+        </main>
+      </div>
       {isAuthenticated && <Chat />}
     </div>
   );

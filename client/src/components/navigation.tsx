@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -17,14 +18,19 @@ import {
   MessageCircle, 
   Settings,
   LogOut,
-  Menu
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import LanguageSelector from "./language-selector";
+import { cn } from "@/lib/utils";
+import LanguageSelector from "@/components/language-selector";
 
 export default function Navigation() {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (!isAuthenticated) return null;
 
@@ -83,8 +89,8 @@ export default function Navigation() {
     return user?.email?.[0]?.toUpperCase() || 'U';
   };
 
-  const NavItems = ({ mobile = false }: { mobile?: boolean }) => (
-    <>
+  const SidebarItems = ({ collapsed = false }: { collapsed?: boolean }) => (
+    <div className="space-y-2">
       {navigationItems.map((item) => {
         const Icon = item.icon;
         const isActive = location === item.href;
@@ -93,87 +99,220 @@ export default function Navigation() {
           <Link key={item.href} href={item.href}>
             <Button
               variant={isActive ? "default" : "ghost"}
-              className={`${mobile ? 'w-full justify-start' : ''} ${
-                isActive ? 'bg-blue-600 text-white hover:bg-blue-700' : ''
-              }`}
+              className={cn(
+                "w-full justify-start h-12 px-3",
+                isActive && "bg-blue-600 text-white hover:bg-blue-700",
+                collapsed && "px-2"
+              )}
+              onClick={() => setIsSidebarOpen(false)}
             >
-              <Icon className="w-4 h-4 mr-2" />
-              {item.label}
+              <Icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
+              {!collapsed && (
+                <span className="text-sm font-medium">{item.label}</span>
+              )}
             </Button>
           </Link>
         );
       })}
-    </>
+    </div>
   );
 
   return (
-    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+    <>
+      {/* Desktop Sidebar */}
+      <div className={cn(
+        "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:z-50 lg:w-72",
+        isCollapsed && "lg:w-20"
+      )}>
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 px-6 pb-4">
+          {/* Header */}
+          <div className="flex h-16 shrink-0 items-center justify-between">
+            {!isCollapsed && (
+              <Link href="/">
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                  My Body Trainer Manager
+                </h1>
+              </Link>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="h-8 w-8"
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex flex-1 flex-col">
+            <SidebarItems collapsed={isCollapsed} />
+            
+            {/* User Profile at Bottom */}
+            <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+              {!isCollapsed && <LanguageSelector />}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className={cn(
+                      "w-full justify-start h-12 mt-2",
+                      isCollapsed && "px-2"
+                    )}
+                  >
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={user?.profileImageUrl || undefined} />
+                      <AvatarFallback className="text-xs">{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                    {!isCollapsed && (
+                      <div className="ml-3 text-left">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {getUserDisplayName()}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                          {userRole}
+                        </p>
+                      </div>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{getUserDisplayName()}</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {user?.email}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {userRole}
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </nav>
+        </div>
+      </div>
+
+      {/* Mobile Top Bar */}
+      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-white dark:bg-gray-900 px-4 py-4 shadow-sm lg:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsSidebarOpen(true)}
+          className="lg:hidden"
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+        
+        <div className="flex-1">
           <Link href="/">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
               My Body Trainer Manager
             </h1>
           </Link>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-2">
-            <NavItems />
+        </div>
+
+        <LanguageSelector />
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.profileImageUrl || undefined} />
+                <AvatarFallback>{getUserInitials()}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end">
+            <div className="flex items-center justify-start gap-2 p-2">
+              <div className="flex flex-col space-y-1 leading-none">
+                <p className="font-medium">{getUserDisplayName()}</p>
+                <p className="w-[200px] truncate text-sm text-muted-foreground">
+                  {user?.email}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {userRole}
+                </p>
+              </div>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Mobile Sidebar */}
+      {isSidebarOpen && (
+        <div className="relative z-50 lg:hidden">
+          <div className="fixed inset-0 bg-gray-900/80" onClick={() => setIsSidebarOpen(false)} />
+          <div className="fixed inset-0 flex">
+            <div className="relative mr-16 flex w-full max-w-xs flex-1">
+              <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="text-white hover:bg-gray-700"
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+              </div>
+              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-900 px-6 pb-4">
+                <div className="flex h-16 shrink-0 items-center">
+                  <Link href="/">
+                    <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                      My Body Trainer Manager
+                    </h1>
+                  </Link>
+                </div>
+                <nav className="flex flex-1 flex-col">
+                  <SidebarItems />
+                  
+                  <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.profileImageUrl || undefined} />
+                        <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                      </Avatar>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {getUserDisplayName()}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                          {userRole}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </nav>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="flex items-center space-x-4">
-          <LanguageSelector />
-          
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.profileImageUrl || undefined} />
-                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-              <div className="flex items-center justify-start gap-2 p-2">
-                <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">{getUserDisplayName()}</p>
-                  <p className="w-[200px] truncate text-sm text-muted-foreground">
-                    {user?.email}
-                  </p>
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {userRole}
-                  </p>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Mobile Menu */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <div className="flex flex-col space-y-4 mt-4">
-                <NavItems mobile />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-    </nav>
+      )}
+    </>
   );
 }
