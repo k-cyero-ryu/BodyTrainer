@@ -35,6 +35,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -604,6 +605,8 @@ export class DatabaseStorage implements IStorage {
 
   // Admin view all clients with filtering
   async getAllClientsAdmin(filters: { trainer?: string; search?: string; status?: string }): Promise<any[]> {
+    const trainerUsers = alias(users, 'trainer_users');
+    
     let query = db
       .select({
         id: clients.id,
@@ -618,20 +621,20 @@ export class DatabaseStorage implements IStorage {
         createdAt: clients.createdAt,
         updatedAt: clients.updatedAt,
         // User information
-        email: sql<string>`${users.email}`.as('userEmail'),
-        firstName: sql<string>`${users.firstName}`.as('userFirstName'),
-        lastName: sql<string>`${users.lastName}`.as('userLastName'),
-        profileImageUrl: sql<string>`${users.profileImageUrl}`.as('userProfileImageUrl'),
+        userEmail: users.email,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+        userProfileImageUrl: users.profileImageUrl,
         userStatus: users.status,
         // Trainer information
-        trainerEmail: sql<string>`trainer_users.email`.as('trainerEmail'),
-        trainerFirstName: sql<string>`trainer_users.first_name`.as('trainerFirstName'),
-        trainerLastName: sql<string>`trainer_users.last_name`.as('trainerLastName'),
+        trainerEmail: trainerUsers.email,
+        trainerFirstName: trainerUsers.firstName,
+        trainerLastName: trainerUsers.lastName,
       })
       .from(clients)
       .innerJoin(users, eq(clients.userId, users.id))
       .leftJoin(trainers, eq(clients.trainerId, trainers.id))
-      .leftJoin(sql`${users} AS trainer_users`, sql`${trainers.userId} = trainer_users.id`);
+      .leftJoin(trainerUsers, eq(trainers.userId, trainerUsers.id));
 
     const conditions = [];
     
@@ -652,7 +655,10 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(sql`${conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`)}`);
+      const whereCondition = conditions.reduce((acc, condition, index) => 
+        index === 0 ? condition : sql`${acc} AND ${condition}`
+      );
+      query = query.where(whereCondition);
     }
 
     return await query.orderBy(desc(clients.createdAt));
@@ -660,6 +666,8 @@ export class DatabaseStorage implements IStorage {
 
   // Admin view all training plans with filtering
   async getAllTrainingPlansAdmin(filters: { trainer?: string; search?: string }): Promise<any[]> {
+    const trainerUsers = alias(users, 'trainer_users');
+    
     let query = db
       .select({
         id: trainingPlans.id,
@@ -672,13 +680,13 @@ export class DatabaseStorage implements IStorage {
         createdAt: trainingPlans.createdAt,
         updatedAt: trainingPlans.updatedAt,
         // Trainer information
-        trainerEmail: sql<string>`trainer_users.email`.as('trainerEmail'),
-        trainerFirstName: sql<string>`trainer_users.first_name`.as('trainerFirstName'),
-        trainerLastName: sql<string>`trainer_users.last_name`.as('trainerLastName'),
+        trainerEmail: trainerUsers.email,
+        trainerFirstName: trainerUsers.firstName,
+        trainerLastName: trainerUsers.lastName,
       })
       .from(trainingPlans)
       .innerJoin(trainers, eq(trainingPlans.trainerId, trainers.id))
-      .innerJoin(sql`${users} AS trainer_users`, sql`${trainers.userId} = trainer_users.id`);
+      .innerJoin(trainerUsers, eq(trainers.userId, trainerUsers.id));
 
     const conditions = [];
     
@@ -694,7 +702,10 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(sql`${conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`)}`);
+      const whereCondition = conditions.reduce((acc, condition, index) => 
+        index === 0 ? condition : sql`${acc} AND ${condition}`
+      );
+      query = query.where(whereCondition);
     }
 
     return await query.orderBy(desc(trainingPlans.createdAt));
@@ -702,6 +713,8 @@ export class DatabaseStorage implements IStorage {
 
   // Admin view all exercises with filtering
   async getAllExercisesAdmin(filters: { trainer?: string; search?: string; category?: string }): Promise<any[]> {
+    const trainerUsers = alias(users, 'trainer_users');
+    
     let query = db
       .select({
         id: exercises.id,
@@ -717,13 +730,13 @@ export class DatabaseStorage implements IStorage {
         createdAt: exercises.createdAt,
         updatedAt: exercises.updatedAt,
         // Trainer information
-        trainerEmail: sql<string>`trainer_users.email`.as('trainerEmail'),
-        trainerFirstName: sql<string>`trainer_users.first_name`.as('trainerFirstName'),
-        trainerLastName: sql<string>`trainer_users.last_name`.as('trainerLastName'),
+        trainerEmail: trainerUsers.email,
+        trainerFirstName: trainerUsers.firstName,
+        trainerLastName: trainerUsers.lastName,
       })
       .from(exercises)
       .innerJoin(trainers, eq(exercises.trainerId, trainers.id))
-      .innerJoin(sql`${users} AS trainer_users`, sql`${trainers.userId} = trainer_users.id`);
+      .innerJoin(trainerUsers, eq(trainers.userId, trainerUsers.id));
 
     const conditions = [];
     
@@ -743,7 +756,10 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(sql`${conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`)}`);
+      const whereCondition = conditions.reduce((acc, condition, index) => 
+        index === 0 ? condition : sql`${acc} AND ${condition}`
+      );
+      query = query.where(whereCondition);
     }
 
     return await query.orderBy(desc(exercises.createdAt));

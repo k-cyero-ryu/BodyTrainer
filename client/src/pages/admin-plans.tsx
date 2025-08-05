@@ -23,7 +23,7 @@ import {
 
 export default function AdminPlans() {
   const [search, setSearch] = useState("");
-  const [trainerFilter, setTrainerFilter] = useState("");
+  const [trainerFilter, setTrainerFilter] = useState("all");
 
   // Fetch all training plans with filters
   const { data: plans = [], isLoading } = useQuery({
@@ -32,7 +32,7 @@ export default function AdminPlans() {
       const [url, params] = queryKey as [string, any];
       const searchParams = new URLSearchParams();
       if (params.search) searchParams.append('search', params.search);
-      if (params.trainer) searchParams.append('trainer', params.trainer);
+      if (params.trainer && params.trainer !== 'all') searchParams.append('trainer', params.trainer);
       
       const fullUrl = searchParams.toString() ? `${url}?${searchParams}` : url;
       return fetch(fullUrl, { credentials: 'include' }).then(res => res.json());
@@ -153,7 +153,7 @@ export default function AdminPlans() {
                   <SelectValue placeholder="All trainers" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All trainers</SelectItem>
+                  <SelectItem value="all">All trainers</SelectItem>
                   {trainers.map((trainer: any) => (
                     <SelectItem key={trainer.id} value={trainer.id}>
                       {trainer.firstName || trainer.lastName 
@@ -172,7 +172,7 @@ export default function AdminPlans() {
                 size="sm"
                 onClick={() => {
                   setSearch('');
-                  setTrainerFilter('');
+                  setTrainerFilter('all');
                 }}
               >
                 Clear Filters

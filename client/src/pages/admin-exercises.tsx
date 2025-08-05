@@ -23,8 +23,8 @@ import {
 
 export default function AdminExercises() {
   const [search, setSearch] = useState("");
-  const [trainerFilter, setTrainerFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [trainerFilter, setTrainerFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   // Fetch all exercises with filters
   const { data: exercises = [], isLoading } = useQuery({
@@ -33,8 +33,8 @@ export default function AdminExercises() {
       const [url, params] = queryKey as [string, any];
       const searchParams = new URLSearchParams();
       if (params.search) searchParams.append('search', params.search);
-      if (params.trainer) searchParams.append('trainer', params.trainer);
-      if (params.category) searchParams.append('category', params.category);
+      if (params.trainer && params.trainer !== 'all') searchParams.append('trainer', params.trainer);
+      if (params.category && params.category !== 'all') searchParams.append('category', params.category);
       
       const fullUrl = searchParams.toString() ? `${url}?${searchParams}` : url;
       return fetch(fullUrl, { credentials: 'include' }).then(res => res.json());
@@ -203,7 +203,7 @@ export default function AdminExercises() {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value="all">All categories</SelectItem>
                   {categories.map((category: string) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -219,7 +219,7 @@ export default function AdminExercises() {
                   <SelectValue placeholder="All trainers" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All trainers</SelectItem>
+                  <SelectItem value="all">All trainers</SelectItem>
                   {trainers.map((trainer: any) => (
                     <SelectItem key={trainer.id} value={trainer.id}>
                       {trainer.firstName || trainer.lastName 
@@ -238,8 +238,8 @@ export default function AdminExercises() {
                 size="sm"
                 onClick={() => {
                   setSearch('');
-                  setCategoryFilter('');
-                  setTrainerFilter('');
+                  setCategoryFilter('all');
+                  setTrainerFilter('all');
                 }}
               >
                 Clear Filters

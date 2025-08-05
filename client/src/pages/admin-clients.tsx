@@ -25,8 +25,8 @@ import {
 
 export default function AdminClients() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [trainerFilter, setTrainerFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [trainerFilter, setTrainerFilter] = useState("all");
 
   // Fetch all clients with filters
   const { data: clients = [], isLoading } = useQuery({
@@ -35,8 +35,8 @@ export default function AdminClients() {
       const [url, params] = queryKey as [string, any];
       const searchParams = new URLSearchParams();
       if (params.search) searchParams.append('search', params.search);
-      if (params.status) searchParams.append('status', params.status);
-      if (params.trainer) searchParams.append('trainer', params.trainer);
+      if (params.status && params.status !== 'all') searchParams.append('status', params.status);
+      if (params.trainer && params.trainer !== 'all') searchParams.append('trainer', params.trainer);
       
       const fullUrl = searchParams.toString() ? `${url}?${searchParams}` : url;
       return fetch(fullUrl, { credentials: 'include' }).then(res => res.json());
@@ -196,7 +196,7 @@ export default function AdminClients() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
@@ -210,7 +210,7 @@ export default function AdminClients() {
                   <SelectValue placeholder="All trainers" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All trainers</SelectItem>
+                  <SelectItem value="all">All trainers</SelectItem>
                   {trainers.map((trainer: any) => (
                     <SelectItem key={trainer.id} value={trainer.id}>
                       {trainer.firstName || trainer.lastName 
@@ -229,8 +229,8 @@ export default function AdminClients() {
                 size="sm"
                 onClick={() => {
                   setSearch('');
-                  setStatusFilter('');
-                  setTrainerFilter('');
+                  setStatusFilter('all');
+                  setTrainerFilter('all');
                 }}
               >
                 Clear Filters
