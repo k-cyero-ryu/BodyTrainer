@@ -57,7 +57,7 @@ export default function PaymentPlans() {
     mutationFn: async (data: PaymentPlanForm) => {
       const planData = {
         ...data,
-        amount: parseFloat(data.amount),
+        amount: data.amount, // Keep as string, let backend handle conversion
         features: data.features ? data.features.split('\n').filter(f => f.trim()) : [],
       };
       return await apiRequest('POST', '/api/payment-plans', planData);
@@ -85,7 +85,7 @@ export default function PaymentPlans() {
     mutationFn: async (data: PaymentPlanForm) => {
       const planData = {
         ...data,
-        amount: parseFloat(data.amount),
+        amount: data.amount, // Keep as string, let backend handle conversion
         features: data.features ? data.features.split('\n').filter(f => f.trim()) : [],
       };
       return await apiRequest('PUT', `/api/payment-plans/${editingPlan.id}`, planData);

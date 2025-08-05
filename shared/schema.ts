@@ -352,6 +352,8 @@ export const paymentPlans = pgTable("payment_plans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertPaymentPlanSchema = createInsertSchema(paymentPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPaymentPlanSchema = createInsertSchema(paymentPlans).omit({ id: true, createdAt: true, updatedAt: true }).extend({
+  amount: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val)
+});
 export type InsertPaymentPlan = z.infer<typeof insertPaymentPlanSchema>;
 export type PaymentPlan = typeof paymentPlans.$inferSelect;
