@@ -68,11 +68,16 @@ export default function Chat() {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { receiverId: string; message: string }) => {
-      return apiRequest('/api/chat/messages', 'POST', data);
+      console.log('API request being made with data:', data);
+      return apiRequest('POST', '/api/chat/messages', data);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('Message sent successfully:', result);
       queryClient.invalidateQueries({ queryKey: ['/api/chat/messages'] });
       setNewMessage("");
+    },
+    onError: (error) => {
+      console.error('Error sending message:', error);
     },
   });
 
