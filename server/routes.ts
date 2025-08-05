@@ -603,7 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: "Trainer approved successfully" });
     } catch (error) {
       console.error("Error approving trainer:", error);
-      console.error("Error details:", error.message, error.stack);
+      console.error("Error details:", (error as Error).message, (error as Error).stack);
       res.status(500).json({ message: "Failed to approve trainer. Please try again." });
     }
   });

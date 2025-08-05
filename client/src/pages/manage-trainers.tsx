@@ -58,7 +58,7 @@ export default function ManageTrainers() {
   // Approve trainer mutation
   const approveMutation = useMutation({
     mutationFn: async (trainerId: string) => {
-      return await apiRequest(`/api/admin/approve-trainer/${trainerId}`, 'POST');
+      return await apiRequest('POST', `/api/admin/approve-trainer/${trainerId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-trainers'] });
@@ -80,7 +80,7 @@ export default function ManageTrainers() {
   // Reject trainer mutation
   const rejectMutation = useMutation({
     mutationFn: async (trainerId: string) => {
-      return await apiRequest(`/api/admin/reject-trainer/${trainerId}`, 'POST');
+      return await apiRequest('POST', `/api/admin/reject-trainer/${trainerId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/pending-trainers'] });
@@ -101,7 +101,7 @@ export default function ManageTrainers() {
   // Suspend trainer mutation
   const suspendMutation = useMutation({
     mutationFn: async (trainerId: string) => {
-      return await apiRequest(`/api/admin/suspend-trainer/${trainerId}`, 'POST');
+      return await apiRequest('POST', `/api/admin/suspend-trainer/${trainerId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/approved-trainers'] });
