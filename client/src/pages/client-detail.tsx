@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Chat from "@/components/chat";
 import { 
   User, 
   Phone, 
@@ -23,7 +25,8 @@ import {
   Weight,
   Ruler,
   TrendingUp,
-  Clock
+  Clock,
+  X
 } from "lucide-react";
 
 export default function ClientDetail() {
@@ -32,6 +35,7 @@ export default function ClientDetail() {
   const queryClient = useQueryClient();
   const [match, params] = useRoute("/clients/:clientId");
   const clientId = params?.clientId;
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -198,14 +202,20 @@ export default function ClientDetail() {
           <Badge className={getStatusColor(client.user?.status || 'inactive')}>
             {client.user?.status || 'inactive'}
           </Badge>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowChat(true)}
+          >
             <MessageCircle className="h-4 w-4 mr-2" />
             Message
           </Button>
-          <Button variant="outline" size="sm">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
+          <Link href={`/clients/${clientId}/edit`}>
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -392,6 +402,30 @@ export default function ClientDetail() {
           </Card>
         </div>
       </div>
+
+      {/* Chat Dialog */}
+      <Dialog open={showChat} onOpenChange={setShowChat}>
+        <DialogContent className="max-w-4xl h-[600px] p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Chat with {getUserDisplayName()}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChat(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden h-[calc(600px-100px)]">
+            <Chat targetUserId={client.userId} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

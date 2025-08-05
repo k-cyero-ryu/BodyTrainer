@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, Plus, Filter, Eye, Edit, MessageCircle, Copy, ExternalLink } from "lucide-react";
+import { Users, Plus, Filter, Eye, Edit, MessageCircle, Copy, ExternalLink, X } from "lucide-react";
 import { Link } from "wouter";
+import Chat from "@/components/chat";
 
 export default function Clients() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -21,6 +22,8 @@ export default function Clients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [selectedChatUserId, setSelectedChatUserId] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -50,6 +53,11 @@ export default function Clients() {
       title: "Copied!",
       description: "Link copied to clipboard",
     });
+  };
+
+  const openChatWithClient = (clientUserId: string) => {
+    setSelectedChatUserId(clientUserId);
+    setShowChat(true);
   };
 
   const filteredClients = Array.isArray(clients) ? clients.filter((client: any) => {
@@ -257,10 +265,17 @@ export default function Clients() {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
-                          <Button variant="ghost" size="sm" title="Edit Client">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" title="Message Client">
+                          <Link href={`/clients/${client.id}/edit`}>
+                            <Button variant="ghost" size="sm" title="Edit Client">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            title="Message Client"
+                            onClick={() => openChatWithClient(client.userId)}
+                          >
                             <MessageCircle className="h-4 w-4" />
                           </Button>
                         </div>
@@ -290,6 +305,30 @@ export default function Clients() {
           )}
         </CardContent>
       </Card>
+
+      {/* Chat Dialog */}
+      <Dialog open={showChat} onOpenChange={setShowChat}>
+        <DialogContent className="max-w-4xl h-[600px] p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Chat with Client
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowChat(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden h-[calc(600px-100px)]">
+            {selectedChatUserId && <Chat targetUserId={selectedChatUserId} />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

@@ -23,6 +23,7 @@ import AdminPlans from "@/pages/admin-plans";
 import AdminExercises from "@/pages/admin-exercises";
 import Clients from "@/pages/clients";
 import ClientDetail from "@/pages/client-detail";
+import EditClient from "@/pages/edit-client";
 import TrainingPlans from "@/pages/training-plans";
 import Exercises from "@/pages/exercises";
 import Reports from "@/pages/reports";
@@ -164,6 +165,7 @@ function Router() {
                 <>
                   <Route path="/" component={TrainerDashboard} />
                   <Route path="/clients" component={Clients} />
+                  <Route path="/clients/:clientId/edit" component={EditClient} />
                   <Route path="/clients/:clientId" component={ClientDetail} />
                   <Route path="/training-plans" component={TrainingPlans} />
                   <Route path="/exercises" component={Exercises} />
