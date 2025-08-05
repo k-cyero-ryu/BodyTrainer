@@ -303,8 +303,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("TRAINER FOUND - proceeding with success response");
       
       const clients = await storage.getClientsByTrainer(trainer.id);
+      console.log("Clients fetched:", clients.length);
+      
       const baseUrl = `${req.protocol}://${req.hostname}`;
       const referralUrl = `${baseUrl}/register/client?code=${trainer.referralCode}`;
+      
+      console.log("Sending success response with referralCode:", trainer.referralCode);
+      console.log("Sending success response with referralUrl:", referralUrl);
       
       res.json({
         clients,
