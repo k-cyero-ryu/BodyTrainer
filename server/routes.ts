@@ -999,6 +999,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get a specific client payment plan by ID
+  app.get('/api/client-payment-plans/:planId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can access client payment plans" });
+      }
+
+      const { planId } = req.params;
+      const plan = await storage.getClientPaymentPlan(planId);
+      
+      if (!plan || plan.trainerId !== trainer.id) {
+        return res.status(404).json({ message: "Client payment plan not found" });
+      }
+
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching client payment plan:", error);
+      res.status(500).json({ message: "Failed to fetch client payment plan" });
+    }
+  });
+
   app.post('/api/client-payment-plans', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

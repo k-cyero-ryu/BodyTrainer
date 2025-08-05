@@ -29,6 +29,26 @@ import {
   X
 } from "lucide-react";
 
+const formatCurrency = (amount: number, currency: string = "USD") => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(amount);
+};
+
+const formatBillingCycle = (type: string) => {
+  switch (type) {
+    case "monthly":
+      return "Monthly";
+    case "weekly":
+      return "Weekly";
+    case "per_session":
+      return "Per Session";
+    default:
+      return type;
+  }
+};
+
 export default function ClientDetail() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
@@ -64,6 +84,12 @@ export default function ClientDetail() {
   const { data: evaluations = [] } = useQuery({
     queryKey: ["/api/evaluations", { clientId }],
     enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
+  // Load client payment plan details if client has one assigned
+  const { data: clientPaymentPlan } = useQuery({
+    queryKey: [`/api/client-payment-plans/${client?.clientPaymentPlanId}`],
+    enabled: !!client?.clientPaymentPlanId && !!user && user.role === 'trainer',
   });
 
   const suspendMutation = useMutation({
@@ -279,7 +305,16 @@ export default function ClientDetail() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Plan</span>
-                <span className="text-sm capitalize">{client.paymentPlan || 'None'}</span>
+                {clientPaymentPlan ? (
+                  <div className="text-right">
+                    <div className="text-sm font-medium">{clientPaymentPlan.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatCurrency(clientPaymentPlan.amount, clientPaymentPlan.currency)} ({formatBillingCycle(clientPaymentPlan.type)})
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-sm">None</span>
+                )}
               </div>
               {client.referralSource && (
                 <div className="flex justify-between items-center">
