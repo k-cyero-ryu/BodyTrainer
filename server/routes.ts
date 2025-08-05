@@ -618,6 +618,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get client plans (assigned training plans for a client)
+  app.get('/api/client-plans/:clientId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can view client plans" });
+      }
+
+      const { clientId } = req.params;
+      
+      // Verify the client belongs to this trainer
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found or access denied" });
+      }
+
+      const clientPlans = await storage.getClientPlans(clientId);
+      
+      // Get full plan details for each assigned plan
+      const plansWithDetails = await Promise.all(
+        clientPlans.map(async (clientPlan) => {
+          const plan = await storage.getTrainingPlan(clientPlan.planId);
+          return {
+            ...clientPlan,
+            plan: plan
+          };
+        })
+      );
+
+      res.json(plansWithDetails);
+    } catch (error) {
+      console.error("Error fetching client plans:", error);
+      res.status(500).json({ message: "Failed to fetch client plans" });
+    }
+  });
+
   // Monthly evaluation routes
   app.post('/api/evaluations', isAuthenticated, async (req: any, res) => {
     try {

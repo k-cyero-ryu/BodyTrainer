@@ -82,8 +82,8 @@ export default function ClientDetail() {
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
-  const { data: trainingPlans = [] } = useQuery({
-    queryKey: ["/api/training-plans", { clientId }],
+  const { data: assignedPlans = [] } = useQuery({
+    queryKey: ["/api/client-plans", clientId],
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
@@ -155,7 +155,7 @@ export default function ClientDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/training-plans", { clientId }] });
+      queryClient.invalidateQueries({ queryKey: ["/api/client-plans", clientId] });
       toast({
         title: "Success",
         description: "Training plan assigned successfully",
@@ -383,35 +383,7 @@ export default function ClientDetail() {
             </CardContent>
           </Card>
 
-          {/* Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {client.user?.status === 'active' ? (
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => suspendMutation.mutate()}
-                  disabled={suspendMutation.isPending}
-                >
-                  {suspendMutation.isPending ? 'Suspending...' : 'Suspend Client'}
-                </Button>
-              ) : (
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => reactivateMutation.mutate()}
-                  disabled={reactivateMutation.isPending}
-                >
-                  {reactivateMutation.isPending ? 'Reactivating...' : 'Reactivate Client'}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+
         </div>
 
         {/* Right Column - Training Data */}
@@ -425,21 +397,32 @@ export default function ClientDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {trainingPlans.length > 0 ? (
+              {assignedPlans.length > 0 ? (
                 <div className="space-y-3">
-                  {trainingPlans.map((plan: any) => (
-                    <div key={plan.id} className="p-3 border rounded-lg">
+                  {assignedPlans.map((clientPlan: any) => (
+                    <div key={clientPlan.id} className="p-3 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">{plan.name}</h3>
-                        <Badge variant="secondary">{plan.difficulty}</Badge>
+                        <h3 className="font-medium">{clientPlan.plan?.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">{clientPlan.plan?.difficulty}</Badge>
+                          {clientPlan.isActive && (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                              Active
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{clientPlan.plan?.description}</p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {plan.duration} weeks
+                          {clientPlan.plan?.duration} weeks
                         </span>
-                        <span>{plan.exercises?.length || 0} exercises</span>
+                        <span>{clientPlan.plan?.exercises?.length || 0} exercises</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(clientPlan.startDate).toLocaleDateString()} - {new Date(clientPlan.endDate).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -490,6 +473,36 @@ export default function ClientDetail() {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center py-8">No evaluations recorded yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Client Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Client Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {client.user?.status === 'active' ? (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => suspendMutation.mutate()}
+                  disabled={suspendMutation.isPending}
+                >
+                  {suspendMutation.isPending ? 'Suspending...' : 'Suspend Client'}
+                </Button>
+              ) : (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => reactivateMutation.mutate()}
+                  disabled={reactivateMutation.isPending}
+                >
+                  {reactivateMutation.isPending ? 'Reactivating...' : 'Reactivate Client'}
+                </Button>
               )}
             </CardContent>
           </Card>
