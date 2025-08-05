@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertMonthlyEvaluationSchema, type User } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, type User } from "@shared/schema";
 
 // Extend WebSocket type to include userId
 interface ExtendedWebSocket extends WebSocket {
@@ -599,16 +599,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/chat/messages', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
       console.log('Creating chat message:', { userId, body: req.body });
       
+      const { receiverId, message } = req.body;
+      if (!receiverId || !message) {
+        return res.status(400).json({ message: "receiverId and message are required" });
+      }
+
+      // Authorization check for trainers
+      if (user?.role === 'trainer') {
+        const trainer = await storage.getTrainerByUserId(userId);
+        if (!trainer) {
+          return res.status(403).json({ message: "Trainer not found" });
+        }
+
+        const canChat = await storage.canTrainerChatWithUser(trainer.id, receiverId);
+        if (!canChat) {
+          return res.status(403).json({ message: "You can only chat with your clients and superadmin" });
+        }
+      }
+
+      // Authorization check for clients
+      if (user?.role === 'client') {
+        const client = await storage.getClientByUserId(userId);
+        const receiverUser = await storage.getUser(receiverId);
+        
+        if (!client || !receiverUser) {
+          return res.status(403).json({ message: "Invalid chat participants" });
+        }
+
+        if (receiverUser.role === 'superadmin') {
+          // Allow chat with superadmin
+        } else if (receiverUser.role === 'trainer') {
+          const receiverTrainer = await storage.getTrainerByUserId(receiverId);
+          if (!receiverTrainer || client.trainerId !== receiverTrainer.id) {
+            return res.status(403).json({ message: "You can only chat with your assigned trainer and superadmin" });
+          }
+        } else {
+          return res.status(403).json({ message: "You can only chat with your assigned trainer and superadmin" });
+        }
+      }
+      
       const messageData = insertChatMessageSchema.parse({
-        ...req.body,
         senderId: userId,
+        receiverId,
+        message,
       });
       
       console.log('Parsed message data:', messageData);
-      const message = await storage.createChatMessage(messageData);
-      console.log('Created message:', message);
+      const chatMessage = await storage.createChatMessage(messageData);
+      console.log('Created message:', chatMessage);
       
       // Broadcast to WebSocket clients
       console.log('Broadcasting to', wss.clients.size, 'WebSocket clients');
@@ -616,12 +657,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({
             type: 'new_message',
-            data: message,
+            data: chatMessage,
           }));
         }
       });
       
-      res.status(201).json(message);
+      res.status(201).json(chatMessage);
     } catch (error) {
       console.error("Error creating chat message:", error);
       res.status(500).json({ message: "Failed to create chat message" });
@@ -762,6 +803,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admin training plans:", error);
       res.status(500).json({ message: "Failed to fetch training plans" });
+    }
+  });
+
+  // Payment Plans API routes
+  app.get('/api/payment-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const plans = await storage.getAllPaymentPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching payment plans:", error);
+      res.status(500).json({ message: "Failed to fetch payment plans" });
+    }
+  });
+
+  app.get('/api/payment-plans/active', async (req, res) => {
+    try {
+      const plans = await storage.getActivePaymentPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching active payment plans:", error);
+      res.status(500).json({ message: "Failed to fetch active payment plans" });
+    }
+  });
+
+  app.post('/api/payment-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const planData = insertPaymentPlanSchema.parse(req.body);
+      const plan = await storage.createPaymentPlan(planData);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Error creating payment plan:", error);
+      res.status(500).json({ message: "Failed to create payment plan" });
+    }
+  });
+
+  app.put('/api/payment-plans/:planId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { planId } = req.params;
+      const planData = insertPaymentPlanSchema.partial().parse(req.body);
+      const plan = await storage.updatePaymentPlan(planId, planData);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error updating payment plan:", error);
+      res.status(500).json({ message: "Failed to update payment plan" });
+    }
+  });
+
+  app.delete('/api/payment-plans/:planId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { planId } = req.params;
+      await storage.deletePaymentPlan(planId);
+      res.json({ success: true, message: "Payment plan deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting payment plan:", error);
+      res.status(500).json({ message: "Failed to delete payment plan" });
     }
   });
 

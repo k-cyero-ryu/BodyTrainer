@@ -338,3 +338,20 @@ export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Post = typeof posts.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+// Payment Plans Configuration Table
+export const paymentPlans = pgTable("payment_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(), // e.g., "Basic Monthly", "Premium Quarterly"
+  type: varchar("type").notNull(), // "monthly", "quarterly", "annual"
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Payment amount
+  currency: varchar("currency").default("USD"),
+  features: text("features").array(), // Array of features included
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPaymentPlanSchema = createInsertSchema(paymentPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertPaymentPlan = z.infer<typeof insertPaymentPlanSchema>;
+export type PaymentPlan = typeof paymentPlans.$inferSelect;

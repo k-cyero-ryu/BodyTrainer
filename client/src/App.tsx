@@ -24,6 +24,7 @@ import AdminExercises from "@/pages/admin-exercises";
 import Clients from "@/pages/clients";
 import ClientDetail from "@/pages/client-detail";
 import EditClient from "@/pages/edit-client";
+import PaymentPlans from "@/pages/payment-plans";
 import TrainingPlans from "@/pages/training-plans";
 import Exercises from "@/pages/exercises";
 import Reports from "@/pages/reports";
@@ -159,6 +160,7 @@ function Router() {
                   <Route path="/admin-clients" component={AdminClients} />
                   <Route path="/admin-plans" component={AdminPlans} />
                   <Route path="/admin-exercises" component={AdminExercises} />
+                  <Route path="/payment-plans" component={PaymentPlans} />
                 </>
               )}
               {user?.role === 'trainer' && (

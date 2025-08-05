@@ -25,7 +25,10 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  UserCog
+  UserCog,
+  CreditCard,
+  UserCheck,
+  Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSelector from "@/components/language-selector";
@@ -81,7 +84,7 @@ export default function Navigation() {
     { 
       href: '/admin-clients', 
       label: 'All Clients', 
-      icon: Users,
+      icon: UserCheck,
       roles: ['superadmin']
     },
     { 
@@ -93,7 +96,13 @@ export default function Navigation() {
     { 
       href: '/admin-exercises', 
       label: 'All Exercises', 
-      icon: Dumbbell,
+      icon: Activity,
+      roles: ['superadmin']
+    },
+    { 
+      href: '/payment-plans', 
+      label: 'Payment Plans', 
+      icon: CreditCard,
       roles: ['superadmin']
     },
     { 

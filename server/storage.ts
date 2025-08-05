@@ -32,6 +32,9 @@ import {
   type InsertPost,
   type ChatMessage,
   type InsertChatMessage,
+  paymentPlans,
+  type PaymentPlan,
+  type InsertPaymentPlan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql } from "drizzle-orm";
@@ -110,6 +113,14 @@ export interface IStorage {
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
   getChatMessages(userId1: string, userId2: string): Promise<ChatMessage[]>;
   markMessagesAsRead(receiverId: string, senderId: string): Promise<void>;
+  canTrainerChatWithUser(trainerId: string, targetUserId: string): Promise<boolean>;
+
+  // Payment plan operations
+  getAllPaymentPlans(): Promise<PaymentPlan[]>;
+  getActivePaymentPlans(): Promise<PaymentPlan[]>;
+  createPaymentPlan(plan: InsertPaymentPlan): Promise<PaymentPlan>;
+  updatePaymentPlan(id: string, plan: Partial<InsertPaymentPlan>): Promise<PaymentPlan>;
+  deletePaymentPlan(id: string): Promise<void>;
 
   // Analytics operations
   getTrainerStats(trainerId: string): Promise<{
@@ -593,6 +604,52 @@ export class DatabaseStorage implements IStorage {
       .update(chatMessages)
       .set({ isRead: true })
       .where(and(eq(chatMessages.receiverId, receiverId), eq(chatMessages.senderId, senderId)));
+  }
+
+  // Payment plan operations
+  async getAllPaymentPlans(): Promise<PaymentPlan[]> {
+    return await db.select().from(paymentPlans).orderBy(paymentPlans.type, paymentPlans.amount);
+  }
+
+  async getActivePaymentPlans(): Promise<PaymentPlan[]> {
+    return await db.select().from(paymentPlans)
+      .where(eq(paymentPlans.isActive, true))
+      .orderBy(paymentPlans.type, paymentPlans.amount);
+  }
+
+  async createPaymentPlan(plan: InsertPaymentPlan): Promise<PaymentPlan> {
+    const [created] = await db.insert(paymentPlans).values(plan).returning();
+    return created;
+  }
+
+  async updatePaymentPlan(id: string, plan: Partial<InsertPaymentPlan>): Promise<PaymentPlan> {
+    const [updated] = await db
+      .update(paymentPlans)
+      .set({ ...plan, updatedAt: new Date() })
+      .where(eq(paymentPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePaymentPlan(id: string): Promise<void> {
+    await db.delete(paymentPlans).where(eq(paymentPlans.id, id));
+  }
+
+  // Check if trainer can chat with specific user
+  async canTrainerChatWithUser(trainerId: string, targetUserId: string): Promise<boolean> {
+    // Check if targetUser is superadmin
+    const targetUser = await this.getUser(targetUserId);
+    if (targetUser?.role === 'superadmin') {
+      return true; // Trainers can always chat with superadmin
+    }
+
+    // Check if targetUser is trainer's client
+    const client = await this.getClientByUserId(targetUserId);
+    if (client && client.trainerId === trainerId) {
+      return true;
+    }
+
+    return false;
   }
 
   // Analytics operations
