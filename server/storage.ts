@@ -288,10 +288,10 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Trainer not found');
     }
 
-    // Update user status to suspended
+    // Update user status to inactive (suspended)
     await db
       .update(users)
-      .set({ status: 'suspended', updatedAt: new Date() })
+      .set({ status: 'inactive', updatedAt: new Date() })
       .where(eq(users.id, trainer.userId));
   }
 

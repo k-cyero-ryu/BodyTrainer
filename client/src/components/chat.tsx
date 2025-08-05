@@ -44,7 +44,7 @@ export default function Chat() {
   });
 
   // Find superadmins for direct contact
-  const superAdmins = chatUsers.filter((chatUser: ChatUser) => chatUser.role === 'superadmin');
+  const superAdmins = Array.isArray(chatUsers) ? chatUsers.filter((chatUser: ChatUser) => chatUser.role === 'superadmin') : [];
 
   // Get messages for selected conversation
   const { data: messages = [] } = useQuery({
@@ -91,7 +91,8 @@ export default function Chat() {
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      if (message.type === 'message') {
+      console.log('WebSocket message received:', message);
+      if (message.type === 'new_message') {
         queryClient.invalidateQueries({ queryKey: ['/api/chat/messages'] });
       }
     };
@@ -114,6 +115,7 @@ export default function Chat() {
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedUser) return;
 
+    console.log('Sending message:', { receiverId: selectedUser, message: newMessage.trim() });
     sendMessageMutation.mutate({
       receiverId: selectedUser,
       message: newMessage.trim(),

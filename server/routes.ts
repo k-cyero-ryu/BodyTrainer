@@ -510,14 +510,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/chat/messages', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log('Creating chat message:', { userId, body: req.body });
+      
       const messageData = insertChatMessageSchema.parse({
         ...req.body,
         senderId: userId,
       });
       
+      console.log('Parsed message data:', messageData);
       const message = await storage.createChatMessage(messageData);
+      console.log('Created message:', message);
       
       // Broadcast to WebSocket clients
+      console.log('Broadcasting to', wss.clients.size, 'WebSocket clients');
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({
