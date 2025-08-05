@@ -146,6 +146,11 @@ export interface IStorage {
   getAllClientsAdmin(filters: { trainer?: string; search?: string; status?: string }): Promise<any[]>;
   getAllTrainingPlansAdmin(filters: { trainer?: string; search?: string }): Promise<any[]>;
   getAllExercisesAdmin(filters: { trainer?: string; search?: string; category?: string }): Promise<any[]>;
+
+  // Trainer management methods
+  getTrainersWithDetails(): Promise<any[]>;
+  updateTrainerPaymentPlan(trainerId: string, paymentPlanId: string | null): Promise<void>;
+  updateTrainerStatus(trainerId: string, status: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -919,6 +924,87 @@ export class DatabaseStorage implements IStorage {
       console.error("Error in getAllExercisesAdmin:", error);
       return [];
     }
+  }
+
+  // Trainer management methods
+  async getTrainersWithDetails(): Promise<any[]> {
+    try {
+      const result = await db
+        .select({
+          id: trainers.id,
+          userId: trainers.userId,
+          referralCode: trainers.referralCode,
+          expertise: trainers.expertise,
+          experience: trainers.experience,
+          gallery: trainers.gallery,
+          monthlyRevenue: trainers.monthlyRevenue,
+          paymentPlanId: trainers.paymentPlanId,
+          createdAt: trainers.createdAt,
+          updatedAt: trainers.updatedAt,
+        })
+        .from(trainers)
+        .orderBy(desc(trainers.createdAt));
+
+      // Get additional details for each trainer
+      const detailedTrainers = [];
+      for (const trainer of result) {
+        const user = await this.getUser(trainer.userId);
+        let paymentPlan = null;
+        if (trainer.paymentPlanId) {
+          const [plan] = await db.select().from(paymentPlans).where(eq(paymentPlans.id, trainer.paymentPlanId));
+          paymentPlan = plan;
+        }
+
+        // Get client count
+        const [clientCount] = await db
+          .select({ count: sql<number>`cast(count(*) as int)` })
+          .from(clients)
+          .where(eq(clients.trainerId, trainer.id));
+
+        detailedTrainers.push({
+          ...trainer,
+          user,
+          paymentPlan,
+          clientCount: clientCount?.count || 0,
+        });
+      }
+
+      return detailedTrainers;
+    } catch (error) {
+      console.error("Error in getTrainersWithDetails:", error);
+      return [];
+    }
+  }
+
+  async updateTrainerPaymentPlan(trainerId: string, paymentPlanId: string | null): Promise<void> {
+    await db
+      .update(trainers)
+      .set({ 
+        paymentPlanId,
+        updatedAt: new Date() 
+      })
+      .where(eq(trainers.id, trainerId));
+  }
+
+  async updateTrainerStatus(trainerId: string, status: string): Promise<void> {
+    // First get the trainer to find the user ID
+    const [trainer] = await db
+      .select({ userId: trainers.userId })
+      .from(trainers)
+      .where(eq(trainers.id, trainerId));
+
+    if (!trainer) {
+      throw new Error('Trainer not found');
+    }
+
+    // Update the user status
+    await db
+      .update(users)
+      .set({ 
+        status: status as any,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, trainer.userId));
   }
 }
 

@@ -53,6 +53,7 @@ export const trainers = pgTable("trainers", {
   experience: varchar("experience"),
   gallery: jsonb("gallery").default('[]'),
   monthlyRevenue: decimal("monthly_revenue", { precision: 10, scale: 2 }).default('0'),
+  paymentPlanId: varchar("payment_plan_id").references(() => paymentPlans.id), // Assigned by SuperAdmin
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

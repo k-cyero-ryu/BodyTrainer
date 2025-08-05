@@ -17,7 +17,7 @@ import ClientRegistration from "@/pages/client-registration";
 import TrainerDashboard from "@/pages/trainer-dashboard";
 import ClientDashboard from "@/pages/client-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
-import ManageTrainers from "@/pages/manage-trainers";
+import ManageTrainersPage from "@/pages/manage-trainers";
 import AdminClients from "@/pages/admin-clients";
 import AdminPlans from "@/pages/admin-plans";
 import AdminExercises from "@/pages/admin-exercises";
@@ -156,7 +156,7 @@ function Router() {
               {user?.role === 'superadmin' && (
                 <>
                   <Route path="/" component={AdminDashboard} />
-                  <Route path="/manage-trainers" component={ManageTrainers} />
+                  <Route path="/manage-trainers" component={ManageTrainersPage} />
                   <Route path="/admin-clients" component={AdminClients} />
                   <Route path="/admin-plans" component={AdminPlans} />
                   <Route path="/admin-exercises" component={AdminExercises} />

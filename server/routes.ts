@@ -772,6 +772,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all trainers with details for admin management
+  app.get('/api/admin/trainers', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const trainersWithDetails = await storage.getTrainersWithDetails();
+      res.json(trainersWithDetails);
+    } catch (error) {
+      console.error("Error fetching trainers with details:", error);
+      res.status(500).json({ message: "Failed to fetch trainers" });
+    }
+  });
+
+  // Update trainer payment plan (SuperAdmin only)
+  app.put('/api/admin/trainers/:trainerId/payment-plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainerId } = req.params;
+      const { paymentPlanId } = req.body;
+
+      await storage.updateTrainerPaymentPlan(trainerId, paymentPlanId);
+      res.json({ success: true, message: "Payment plan updated successfully" });
+    } catch (error) {
+      console.error("Error updating trainer payment plan:", error);
+      res.status(500).json({ message: "Failed to update payment plan" });
+    }
+  });
+
+  // Update trainer status (SuperAdmin only)
+  app.put('/api/admin/trainers/:trainerId/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainerId } = req.params;
+      const { status } = req.body;
+
+      await storage.updateTrainerStatus(trainerId, status);
+      res.json({ success: true, message: "Trainer status updated successfully" });
+    } catch (error) {
+      console.error("Error updating trainer status:", error);
+      res.status(500).json({ message: "Failed to update trainer status" });
+    }
+  });
+
   // Admin view all clients
   app.get('/api/admin/clients', isAuthenticated, async (req: any, res) => {
     try {
