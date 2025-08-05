@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get current trainer's clients
+  // Get current trainer's clients and referral info
   app.get('/api/trainers/clients', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -292,7 +292,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const clients = await storage.getClientsByTrainer(trainer.id);
-      res.json(clients);
+      const baseUrl = `${req.protocol}://${req.hostname}`;
+      const referralUrl = `${baseUrl}/register/client?code=${trainer.referralCode}`;
+      
+      res.json({
+        clients,
+        referralCode: trainer.referralCode,
+        referralUrl
+      });
     } catch (error) {
       console.error("Error fetching trainer clients:", error);
       res.status(500).json({ message: "Failed to fetch trainer clients" });

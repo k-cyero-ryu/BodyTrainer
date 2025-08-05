@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, Plus, Filter, Eye, Edit, MessageCircle, Mail, Copy, ExternalLink } from "lucide-react";
+import { Users, Plus, Filter, Eye, Edit, MessageCircle, Copy, ExternalLink } from "lucide-react";
 
 export default function Clients() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -20,12 +20,7 @@ export default function Clients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteForm, setInviteForm] = useState({
-    email: "",
-    firstName: "",
-    lastName: "",
-  });
-  const [inviteResult, setInviteResult] = useState<any>(null);
+
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -41,54 +36,12 @@ export default function Clients() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: clients = [] } = useQuery({
+  const { data: trainerData = { clients: [], referralCode: '', referralUrl: '' } } = useQuery({
     queryKey: ["/api/trainers/clients"],
     enabled: !!user && user.role === 'trainer',
   });
 
-  const inviteClientMutation = useMutation({
-    mutationFn: async (data: { email: string; firstName: string; lastName: string }) => {
-      return apiRequest("POST", "/api/trainers/invite-client", data);
-    },
-    onSuccess: (data) => {
-      if (data.existing) {
-        toast({
-          title: "Client Added",
-          description: "User successfully added to your client roster",
-        });
-        setShowInviteDialog(false);
-        setInviteForm({ email: "", firstName: "", lastName: "" });
-        setInviteResult(null);
-        queryClient.invalidateQueries({ queryKey: ["/api/trainers/clients"] });
-      } else {
-        setInviteResult(data);
-        toast({
-          title: "Referral Link Generated",
-          description: "Share the registration link with your client",
-        });
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send invitation",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleInviteSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteForm.email) {
-      toast({
-        title: "Error",
-        description: "Email is required",
-        variant: "destructive",
-      });
-      return;
-    }
-    inviteClientMutation.mutate(inviteForm);
-  };
+  const { clients = [], referralCode = '', referralUrl = '' } = trainerData;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -96,12 +49,6 @@ export default function Clients() {
       title: "Copied!",
       description: "Link copied to clipboard",
     });
-  };
-
-  const handleCloseDialog = () => {
-    setShowInviteDialog(false);
-    setInviteForm({ email: "", firstName: "", lastName: "" });
-    setInviteResult(null);
   };
 
   const filteredClients = Array.isArray(clients) ? clients.filter((client: any) => {
@@ -147,112 +94,68 @@ export default function Clients() {
               Invite Client
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Invite New Client</DialogTitle>
+              <DialogTitle>Share Your Referral Information</DialogTitle>
             </DialogHeader>
-            {inviteResult ? (
+            <div className="space-y-6">
               <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-medium text-green-800 mb-2">Registration Link Generated</h4>
-                  <p className="text-sm text-green-700 mb-3">
-                    Share this link with {inviteResult.inviteEmail} to register as your client:
-                  </p>
-                  <div className="flex items-center space-x-2 mb-3">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Registration URL</Label>
+                  <div className="flex items-center space-x-2">
                     <Input
-                      value={inviteResult.referralUrl}
+                      value={referralUrl}
                       readOnly
                       className="text-xs font-mono"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyToClipboard(inviteResult.referralUrl)}
+                      onClick={() => copyToClipboard(referralUrl)}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="bg-white border rounded p-3">
-                    <p className="text-sm font-medium text-gray-700 mb-1">Referral Code:</p>
-                    <code className="text-lg font-bold text-blue-600">{inviteResult.referralCode}</code>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Clients can also use this code manually during registration
-                    </p>
-                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Share this link directly with clients to register
+                  </p>
                 </div>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(inviteResult.referralUrl, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Open Link
-                  </Button>
-                  <Button onClick={handleCloseDialog}>
-                    Done
-                  </Button>
+                
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">Trainer Code</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={referralCode}
+                      readOnly
+                      className="text-lg font-bold text-center"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(referralCode)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Clients can enter this code manually during registration
+                  </p>
                 </div>
               </div>
-            ) : (
-              <form onSubmit={handleInviteSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="client@example.com"
-                    value={inviteForm.email}
-                    onChange={(e) => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      placeholder="John"
-                      value={inviteForm.firstName}
-                      onChange={(e) => setInviteForm(prev => ({ ...prev, firstName: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Doe"
-                      value={inviteForm.lastName}
-                      onChange={(e) => setInviteForm(prev => ({ ...prev, lastName: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCloseDialog}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={inviteClientMutation.isPending}
-                  >
-                    {inviteClientMutation.isPending ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Generate Referral Link
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            )}
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(referralUrl, '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Test Link
+                </Button>
+                <Button onClick={() => setShowInviteDialog(false)}>
+                  Done
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
