@@ -301,6 +301,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Current trainer profile with payment plan
+  app.get('/api/trainers/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      
+      // Get user details
+      const user = await storage.getUser(userId);
+      
+      // Get assigned payment plan
+      let paymentPlan = null;
+      if (trainer.paymentPlanId) {
+        const [plan] = await db.select().from(paymentPlans).where(eq(paymentPlans.id, trainer.paymentPlanId));
+        paymentPlan = plan;
+      }
+      
+      res.json({
+        ...trainer,
+        user,
+        paymentPlan
+      });
+    } catch (error) {
+      console.error("Error fetching trainer profile:", error);
+      res.status(500).json({ message: "Failed to fetch trainer profile" });
+    }
+  });
+
+  // Current trainer stats
+  app.get('/api/trainers/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      
+      const stats = await storage.getTrainerStats(trainer.id);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching trainer stats:", error);
+      res.status(500).json({ message: "Failed to fetch trainer stats" });
+    }
+  });
+
   app.get('/api/trainers/:id/stats', isAuthenticated, async (req, res) => {
     try {
       const stats = await storage.getTrainerStats(req.params.id);

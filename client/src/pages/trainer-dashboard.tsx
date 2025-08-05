@@ -71,6 +71,40 @@ export default function TrainerDashboard() {
         <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with your clients today.</p>
       </div>
 
+      {/* Payment Plan Status */}
+      {trainer?.paymentPlan && (
+        <div className="mb-6">
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg text-blue-900">Your Payment Plan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-blue-800">{trainer.paymentPlan.name}</p>
+                  <p className="text-sm text-blue-600">
+                    ${trainer.paymentPlan.amount}/{trainer.paymentPlan.type}
+                  </p>
+                </div>
+                <Badge variant="default" className="bg-blue-600">
+                  {trainer.paymentPlan.isActive ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+              {trainer.paymentPlan.features && trainer.paymentPlan.features.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-blue-800 mb-1">Features:</p>
+                  <ul className="text-xs text-blue-600 list-disc list-inside">
+                    {trainer.paymentPlan.features.map((feature: string, index: number) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
