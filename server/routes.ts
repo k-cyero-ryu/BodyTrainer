@@ -289,19 +289,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const trainer = await storage.getTrainerByUserId(userId);
       
       // Debug the exact issue
-      console.log("Direct trainer test:", trainer);
+      console.log("=== DEBUG TRAINER API ===");
+      console.log("UserID from auth:", userId);
+      console.log("Direct trainer test:", JSON.stringify(trainer, null, 2));
       console.log("Trainer exists:", !!trainer);
       console.log("Trainer ID exists:", trainer?.id);
       console.log("Trainer referralCode exists:", trainer?.referralCode);
       
-      // Return the raw data for debugging
-      return res.json({
-        debug: true,
-        userId,
-        trainer,
-        trainerExists: !!trainer,
-        trainerId: trainer?.id,
-        referralCode: trainer?.referralCode
+      if (!trainer) {
+        console.log("TRAINER IS NULL/UNDEFINED");
+        return res.status(404).json({ message: "Trainer not found", userId });
+      }
+      
+      if (!trainer.id) {
+        console.log("TRAINER ID IS MISSING");
+        return res.status(404).json({ message: "Trainer ID missing", trainer });
+      }
+      
+      if (!trainer.referralCode) {
+        console.log("REFERRAL CODE IS MISSING");
+        return res.status(404).json({ message: "Referral code missing", trainer });
+      }
+      
+      console.log("ALL TRAINER DATA VALID - proceeding");
+      
+      const clients = await storage.getClientsByTrainer(trainer.id);
+      const baseUrl = `${req.protocol}://${req.hostname}`;
+      const referralUrl = `${baseUrl}/register/client?code=${trainer.referralCode}`;
+      
+      console.log("SUCCESS - returning data");
+      
+      res.json({
+        clients,
+        referralCode: trainer.referralCode,
+        referralUrl
       });
       
     } catch (error) {
