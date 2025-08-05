@@ -52,6 +52,10 @@ export interface IStorage {
   updateTrainer(id: string, trainer: Partial<InsertTrainer>): Promise<Trainer>;
   getAllTrainers(): Promise<Trainer[]>;
   getPendingTrainers(): Promise<Trainer[]>;
+  getApprovedTrainers(): Promise<Trainer[]>;
+  approveTrainer(trainerId: string): Promise<void>;
+  rejectTrainer(trainerId: string): Promise<void>;
+  suspendTrainer(trainerId: string): Promise<void>;
 
   // Client operations
   createClient(client: InsertClient): Promise<Client>;
@@ -206,12 +210,89 @@ export class DatabaseStorage implements IStorage {
         monthlyRevenue: trainers.monthlyRevenue,
         createdAt: trainers.createdAt,
         updatedAt: trainers.updatedAt,
+        // Include user information for display
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        status: users.status,
+        role: users.role,
       })
       .from(trainers)
       .innerJoin(users, eq(trainers.userId, users.id))
       .where(eq(users.status, 'pending'))
       .orderBy(desc(trainers.createdAt));
-    return result;
+    return result as any[];
+  }
+
+  async getApprovedTrainers(): Promise<Trainer[]> {
+    const result = await db
+      .select({
+        id: trainers.id,
+        userId: trainers.userId,
+        referralCode: trainers.referralCode,
+        expertise: trainers.expertise,
+        experience: trainers.experience,
+        gallery: trainers.gallery,
+        monthlyRevenue: trainers.monthlyRevenue,
+        createdAt: trainers.createdAt,
+        updatedAt: trainers.updatedAt,
+        // Include user information for display
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        status: users.status,
+        role: users.role,
+      })
+      .from(trainers)
+      .innerJoin(users, eq(trainers.userId, users.id))
+      .where(eq(users.status, 'active'))
+      .orderBy(desc(trainers.createdAt));
+    return result as any[];
+  }
+
+  async approveTrainer(trainerId: string): Promise<void> {
+    // Get trainer to find userId
+    const trainer = await this.getTrainer(trainerId);
+    if (!trainer) {
+      throw new Error('Trainer not found');
+    }
+
+    // Update user status to active
+    await db
+      .update(users)
+      .set({ status: 'active', updatedAt: new Date() })
+      .where(eq(users.id, trainer.userId));
+  }
+
+  async rejectTrainer(trainerId: string): Promise<void> {
+    // Get trainer to find userId
+    const trainer = await this.getTrainer(trainerId);
+    if (!trainer) {
+      throw new Error('Trainer not found');
+    }
+
+    // Delete trainer record and update user status
+    await db.delete(trainers).where(eq(trainers.id, trainerId));
+    await db
+      .update(users)
+      .set({ role: 'client', status: 'active', updatedAt: new Date() })
+      .where(eq(users.id, trainer.userId));
+  }
+
+  async suspendTrainer(trainerId: string): Promise<void> {
+    // Get trainer to find userId
+    const trainer = await this.getTrainer(trainerId);
+    if (!trainer) {
+      throw new Error('Trainer not found');
+    }
+
+    // Update user status to suspended
+    await db
+      .update(users)
+      .set({ status: 'suspended', updatedAt: new Date() })
+      .where(eq(users.id, trainer.userId));
   }
 
   // Client operations

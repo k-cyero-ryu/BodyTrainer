@@ -565,6 +565,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get approved trainers for admin
+  app.get('/api/admin/approved-trainers', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const trainers = await storage.getApprovedTrainers();
+      res.json(trainers);
+    } catch (error) {
+      console.error("Error fetching approved trainers:", error);
+      res.status(500).json({ message: "Failed to fetch approved trainers" });
+    }
+  });
+
+  // Approve trainer
+  app.post('/api/admin/approve-trainer/:trainerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainerId } = req.params;
+      await storage.approveTrainer(trainerId);
+      res.json({ success: true, message: "Trainer approved successfully" });
+    } catch (error) {
+      console.error("Error approving trainer:", error);
+      res.status(500).json({ message: "Failed to approve trainer" });
+    }
+  });
+
+  // Reject trainer
+  app.post('/api/admin/reject-trainer/:trainerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainerId } = req.params;
+      await storage.rejectTrainer(trainerId);
+      res.json({ success: true, message: "Trainer rejected successfully" });
+    } catch (error) {
+      console.error("Error rejecting trainer:", error);
+      res.status(500).json({ message: "Failed to reject trainer" });
+    }
+  });
+
+  // Suspend trainer
+  app.post('/api/admin/suspend-trainer/:trainerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainerId } = req.params;
+      await storage.suspendTrainer(trainerId);
+      res.json({ success: true, message: "Trainer suspended successfully" });
+    } catch (error) {
+      console.error("Error suspending trainer:", error);
+      res.status(500).json({ message: "Failed to suspend trainer" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time chat

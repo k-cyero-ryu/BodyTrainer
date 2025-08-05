@@ -16,6 +16,7 @@ import SuperAdminSetup from "@/pages/superadmin-setup";
 import TrainerDashboard from "@/pages/trainer-dashboard";
 import ClientDashboard from "@/pages/client-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
+import ManageTrainers from "@/pages/manage-trainers";
 import Clients from "@/pages/clients";
 import TrainingPlans from "@/pages/training-plans";
 import Exercises from "@/pages/exercises";
@@ -146,7 +147,14 @@ function Router() {
           <div className="py-6 px-4 lg:px-8">
             <Switch>
               {user?.role === 'superadmin' && (
-                <Route path="/" component={AdminDashboard} />
+                <>
+                  <Route path="/" component={AdminDashboard} />
+                  <Route path="/trainers" component={ManageTrainers} />
+                  <Route path="/clients" component={Clients} />
+                  <Route path="/plans" component={TrainingPlans} />
+                  <Route path="/exercises" component={Exercises} />
+                  <Route path="/reports" component={Reports} />
+                </>
               )}
               {user?.role === 'trainer' && (
                 <>
@@ -158,7 +166,10 @@ function Router() {
                 </>
               )}
               {user?.role === 'client' && (
-                <Route path="/" component={ClientDashboard} />
+                <>
+                  <Route path="/" component={ClientDashboard} />
+                  <Route path="/plans" component={TrainingPlans} />
+                </>
               )}
               <Route component={NotFound} />
             </Switch>

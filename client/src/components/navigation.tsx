@@ -44,13 +44,19 @@ export default function Navigation() {
       roles: ['superadmin', 'trainer', 'client']
     },
     { 
+      href: '/trainers', 
+      label: 'Manage Trainers', 
+      icon: Users,
+      roles: ['superadmin']
+    },
+    { 
       href: '/clients', 
       label: 'Clients', 
       icon: Users,
       roles: ['superadmin', 'trainer']
     },
     { 
-      href: '/training-plans', 
+      href: '/plans', 
       label: 'Training Plans', 
       icon: Dumbbell,
       roles: ['superadmin', 'trainer', 'client']
@@ -71,7 +77,7 @@ export default function Navigation() {
       href: '/chat', 
       label: 'Chat', 
       icon: MessageCircle,
-      roles: ['trainer', 'client']
+      roles: ['superadmin', 'trainer', 'client']
     }
   ].filter(item => item.roles.includes(userRole));
 
