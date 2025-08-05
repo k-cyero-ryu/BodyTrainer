@@ -263,22 +263,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/trainers/clients', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      console.log("=== TRAINER CLIENT API ===");
-      console.log("Authenticated user ID:", userId);
-      
       const trainer = await storage.getTrainerByUserId(userId);
-      console.log("Found trainer:", !!trainer ? "YES" : "NO");
       
       if (!trainer) {
-        console.log("No trainer record found for user:", userId);
         return res.status(404).json({ 
           message: "Trainer not found",
           userId,
           hint: "This user might not be registered as a trainer"
         });
       }
-      
-      console.log("Trainer found - ID:", trainer.id, "Code:", trainer.referralCode);
       
       const clients = await storage.getClientsByTrainer(trainer.id);
       const baseUrl = `${req.protocol}://${req.hostname}`;

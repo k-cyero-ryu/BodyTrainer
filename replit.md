@@ -4,6 +4,14 @@
 
 My Body Trainer Manager is a comprehensive fitness management platform that connects personal trainers with their clients through a responsive, multi-lingual web application. The system enables trainers to manage client relationships, create customized training plans, track progress, and communicate directly with clients. It supports multiple user roles (SuperAdmin, Trainer, Client) with role-based access control and features real-time communication, exercise management, progress tracking, and monthly evaluations.
 
+## Recent Changes
+
+**January 5, 2025** - Fixed Critical Trainer Referral System
+- **Issue Resolved**: Route ordering conflict where `/api/trainers/:id` was intercepting `/api/trainers/clients` requests
+- **Solution Applied**: Reordered Express routes to place specific routes before parameterized routes
+- **System Status**: Trainer referral code system now fully functional with proper URL generation
+- **Verified Working**: Trainers can successfully generate and share referral URLs with code TR42176306
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
