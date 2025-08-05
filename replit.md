@@ -1,0 +1,54 @@
+# My Body Trainer Manager
+
+## Overview
+
+My Body Trainer Manager is a comprehensive fitness management platform that connects personal trainers with their clients through a responsive, multi-lingual web application. The system enables trainers to manage client relationships, create customized training plans, track progress, and communicate directly with clients. It supports multiple user roles (SuperAdmin, Trainer, Client) with role-based access control and features real-time communication, exercise management, progress tracking, and monthly evaluations.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React with TypeScript using Vite as the build tool
+- **Styling**: Tailwind CSS with shadcn/ui component library for consistent UI design
+- **State Management**: TanStack Query (React Query) for server state management and caching
+- **Routing**: Wouter for lightweight client-side routing
+- **Internationalization**: i18next for multi-language support (English, Spanish, French, Portuguese)
+- **File Uploads**: Uppy with AWS S3 integration for media file handling
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js framework
+- **Language**: TypeScript with ESM modules
+- **API Design**: RESTful API with WebSocket support for real-time chat functionality
+- **Authentication**: Replit's OIDC-based authentication system with session management
+- **Middleware**: Custom logging, error handling, and authentication middleware
+
+### Data Storage Solutions
+- **Primary Database**: PostgreSQL with Neon serverless hosting
+- **ORM**: Drizzle ORM for type-safe database operations
+- **Session Storage**: PostgreSQL-based session store using connect-pg-simple
+- **File Storage**: Google Cloud Storage with custom ACL (Access Control List) system for secure file management
+- **Database Schema**: Comprehensive schema supporting users, trainers, clients, training plans, exercises, evaluations, chat messages, and progress tracking
+
+### Authentication and Authorization
+- **Provider**: Replit's OpenID Connect (OIDC) authentication
+- **Session Management**: Secure HTTP-only cookies with PostgreSQL session storage
+- **Role-Based Access Control**: Three-tier permission system (SuperAdmin, Trainer, Client)
+- **Authorization Middleware**: Route-level protection with role-based access validation
+
+### External Dependencies
+- **Cloud Services**: 
+  - Neon Database for PostgreSQL hosting
+  - Google Cloud Storage for file storage
+  - Replit's authentication service
+- **UI Components**: Radix UI primitives with shadcn/ui styling system
+- **Development Tools**: 
+  - Vite for fast development and building
+  - Replit-specific plugins for development environment integration
+- **File Upload**: Uppy dashboard with AWS S3 multipart upload support
+- **Real-time Communication**: WebSocket implementation for chat functionality
+- **Monitoring**: Custom request logging and error tracking middleware
+
+The architecture follows a monorepo structure with shared TypeScript schemas between client and server, ensuring type safety across the full stack. The system is designed for scalability with serverless database hosting and cloud-based file storage, while maintaining real-time capabilities through WebSocket connections.

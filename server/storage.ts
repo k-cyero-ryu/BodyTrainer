@@ -1,0 +1,484 @@
+import {
+  users,
+  trainers,
+  clients,
+  trainingPlans,
+  exercises,
+  planExercises,
+  clientPlans,
+  workoutLogs,
+  monthlyEvaluations,
+  posts,
+  chatMessages,
+  type User,
+  type UpsertUser,
+  type Trainer,
+  type InsertTrainer,
+  type Client,
+  type InsertClient,
+  type TrainingPlan,
+  type InsertTrainingPlan,
+  type Exercise,
+  type InsertExercise,
+  type PlanExercise,
+  type InsertPlanExercise,
+  type ClientPlan,
+  type InsertClientPlan,
+  type WorkoutLog,
+  type InsertWorkoutLog,
+  type MonthlyEvaluation,
+  type InsertMonthlyEvaluation,
+  type Post,
+  type InsertPost,
+  type ChatMessage,
+  type InsertChatMessage,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, count, sum, sql } from "drizzle-orm";
+
+export interface IStorage {
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
+  // Trainer operations
+  createTrainer(trainer: InsertTrainer): Promise<Trainer>;
+  getTrainer(id: string): Promise<Trainer | undefined>;
+  getTrainerByUserId(userId: string): Promise<Trainer | undefined>;
+  getTrainerByReferralCode(code: string): Promise<Trainer | undefined>;
+  updateTrainer(id: string, trainer: Partial<InsertTrainer>): Promise<Trainer>;
+  getAllTrainers(): Promise<Trainer[]>;
+  getPendingTrainers(): Promise<Trainer[]>;
+
+  // Client operations
+  createClient(client: InsertClient): Promise<Client>;
+  getClient(id: string): Promise<Client | undefined>;
+  getClientByUserId(userId: string): Promise<Client | undefined>;
+  getClientsByTrainer(trainerId: string): Promise<Client[]>;
+  updateClient(id: string, client: Partial<InsertClient>): Promise<Client>;
+
+  // Training plan operations
+  createTrainingPlan(plan: InsertTrainingPlan): Promise<TrainingPlan>;
+  getTrainingPlan(id: string): Promise<TrainingPlan | undefined>;
+  getTrainingPlansByTrainer(trainerId: string): Promise<TrainingPlan[]>;
+  updateTrainingPlan(id: string, plan: Partial<InsertTrainingPlan>): Promise<TrainingPlan>;
+  deleteTrainingPlan(id: string): Promise<void>;
+
+  // Exercise operations
+  createExercise(exercise: InsertExercise): Promise<Exercise>;
+  getExercise(id: string): Promise<Exercise | undefined>;
+  getExercisesByTrainer(trainerId: string): Promise<Exercise[]>;
+  updateExercise(id: string, exercise: Partial<InsertExercise>): Promise<Exercise>;
+  deleteExercise(id: string): Promise<void>;
+
+  // Plan exercise operations
+  createPlanExercise(planExercise: InsertPlanExercise): Promise<PlanExercise>;
+  getPlanExercisesByPlan(planId: string): Promise<PlanExercise[]>;
+  updatePlanExercise(id: string, planExercise: Partial<InsertPlanExercise>): Promise<PlanExercise>;
+  deletePlanExercise(id: string): Promise<void>;
+
+  // Client plan operations
+  assignPlanToClient(clientPlan: InsertClientPlan): Promise<ClientPlan>;
+  getClientPlans(clientId: string): Promise<ClientPlan[]>;
+  getActiveClientPlan(clientId: string): Promise<ClientPlan | undefined>;
+
+  // Workout log operations
+  createWorkoutLog(log: InsertWorkoutLog): Promise<WorkoutLog>;
+  getWorkoutLogsByClient(clientId: string): Promise<WorkoutLog[]>;
+
+  // Monthly evaluation operations
+  createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation>;
+  getMonthlyEvaluationsByClient(clientId: string): Promise<MonthlyEvaluation[]>;
+
+  // Post operations
+  createPost(post: InsertPost): Promise<Post>;
+  getPostsByTrainer(trainerId: string): Promise<Post[]>;
+  updatePost(id: string, post: Partial<InsertPost>): Promise<Post>;
+  deletePost(id: string): Promise<void>;
+
+  // Chat operations
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  getChatMessages(userId1: string, userId2: string): Promise<ChatMessage[]>;
+  markMessagesAsRead(receiverId: string, senderId: string): Promise<void>;
+
+  // Analytics operations
+  getTrainerStats(trainerId: string): Promise<{
+    totalClients: number;
+    activeClients: number;
+    monthlyRevenue: number;
+    totalPlans: number;
+  }>;
+  getClientStats(clientId: string): Promise<{
+    workoutsThisWeek: number;
+    currentWeight: number;
+    goalProgress: number;
+    streak: number;
+  }>;
+  getSystemStats(): Promise<{
+    totalTrainers: number;
+    activeTrainers: number;
+    totalClients: number;
+    monthlyRevenue: number;
+  }>;
+}
+
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Trainer operations
+  async createTrainer(trainer: InsertTrainer): Promise<Trainer> {
+    const [created] = await db.insert(trainers).values(trainer).returning();
+    return created;
+  }
+
+  async getTrainer(id: string): Promise<Trainer | undefined> {
+    const [trainer] = await db.select().from(trainers).where(eq(trainers.id, id));
+    return trainer;
+  }
+
+  async getTrainerByUserId(userId: string): Promise<Trainer | undefined> {
+    const [trainer] = await db.select().from(trainers).where(eq(trainers.userId, userId));
+    return trainer;
+  }
+
+  async getTrainerByReferralCode(code: string): Promise<Trainer | undefined> {
+    const [trainer] = await db.select().from(trainers).where(eq(trainers.referralCode, code));
+    return trainer;
+  }
+
+  async updateTrainer(id: string, trainer: Partial<InsertTrainer>): Promise<Trainer> {
+    const [updated] = await db
+      .update(trainers)
+      .set({ ...trainer, updatedAt: new Date() })
+      .where(eq(trainers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAllTrainers(): Promise<Trainer[]> {
+    return await db.select().from(trainers).orderBy(desc(trainers.createdAt));
+  }
+
+  async getPendingTrainers(): Promise<Trainer[]> {
+    return await db
+      .select()
+      .from(trainers)
+      .innerJoin(users, eq(trainers.userId, users.id))
+      .where(eq(users.status, 'pending'))
+      .orderBy(desc(trainers.createdAt));
+  }
+
+  // Client operations
+  async createClient(client: InsertClient): Promise<Client> {
+    const [created] = await db.insert(clients).values(client).returning();
+    return created;
+  }
+
+  async getClient(id: string): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.id, id));
+    return client;
+  }
+
+  async getClientByUserId(userId: string): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.userId, userId));
+    return client;
+  }
+
+  async getClientsByTrainer(trainerId: string): Promise<Client[]> {
+    return await db.select().from(clients).where(eq(clients.trainerId, trainerId));
+  }
+
+  async updateClient(id: string, client: Partial<InsertClient>): Promise<Client> {
+    const [updated] = await db
+      .update(clients)
+      .set({ ...client, updatedAt: new Date() })
+      .where(eq(clients.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Training plan operations
+  async createTrainingPlan(plan: InsertTrainingPlan): Promise<TrainingPlan> {
+    const [created] = await db.insert(trainingPlans).values(plan).returning();
+    return created;
+  }
+
+  async getTrainingPlan(id: string): Promise<TrainingPlan | undefined> {
+    const [plan] = await db.select().from(trainingPlans).where(eq(trainingPlans.id, id));
+    return plan;
+  }
+
+  async getTrainingPlansByTrainer(trainerId: string): Promise<TrainingPlan[]> {
+    return await db
+      .select()
+      .from(trainingPlans)
+      .where(eq(trainingPlans.trainerId, trainerId))
+      .orderBy(desc(trainingPlans.createdAt));
+  }
+
+  async updateTrainingPlan(id: string, plan: Partial<InsertTrainingPlan>): Promise<TrainingPlan> {
+    const [updated] = await db
+      .update(trainingPlans)
+      .set({ ...plan, updatedAt: new Date() })
+      .where(eq(trainingPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainingPlan(id: string): Promise<void> {
+    await db.delete(trainingPlans).where(eq(trainingPlans.id, id));
+  }
+
+  // Exercise operations
+  async createExercise(exercise: InsertExercise): Promise<Exercise> {
+    const [created] = await db.insert(exercises).values(exercise).returning();
+    return created;
+  }
+
+  async getExercise(id: string): Promise<Exercise | undefined> {
+    const [exercise] = await db.select().from(exercises).where(eq(exercises.id, id));
+    return exercise;
+  }
+
+  async getExercisesByTrainer(trainerId: string): Promise<Exercise[]> {
+    return await db
+      .select()
+      .from(exercises)
+      .where(eq(exercises.trainerId, trainerId))
+      .orderBy(desc(exercises.createdAt));
+  }
+
+  async updateExercise(id: string, exercise: Partial<InsertExercise>): Promise<Exercise> {
+    const [updated] = await db
+      .update(exercises)
+      .set({ ...exercise, updatedAt: new Date() })
+      .where(eq(exercises.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteExercise(id: string): Promise<void> {
+    await db.delete(exercises).where(eq(exercises.id, id));
+  }
+
+  // Plan exercise operations
+  async createPlanExercise(planExercise: InsertPlanExercise): Promise<PlanExercise> {
+    const [created] = await db.insert(planExercises).values(planExercise).returning();
+    return created;
+  }
+
+  async getPlanExercisesByPlan(planId: string): Promise<PlanExercise[]> {
+    return await db.select().from(planExercises).where(eq(planExercises.planId, planId));
+  }
+
+  async updatePlanExercise(id: string, planExercise: Partial<InsertPlanExercise>): Promise<PlanExercise> {
+    const [updated] = await db
+      .update(planExercises)
+      .set(planExercise)
+      .where(eq(planExercises.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePlanExercise(id: string): Promise<void> {
+    await db.delete(planExercises).where(eq(planExercises.id, id));
+  }
+
+  // Client plan operations
+  async assignPlanToClient(clientPlan: InsertClientPlan): Promise<ClientPlan> {
+    const [created] = await db.insert(clientPlans).values(clientPlan).returning();
+    return created;
+  }
+
+  async getClientPlans(clientId: string): Promise<ClientPlan[]> {
+    return await db.select().from(clientPlans).where(eq(clientPlans.clientId, clientId));
+  }
+
+  async getActiveClientPlan(clientId: string): Promise<ClientPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(clientPlans)
+      .where(and(eq(clientPlans.clientId, clientId), eq(clientPlans.isActive, true)));
+    return plan;
+  }
+
+  // Workout log operations
+  async createWorkoutLog(log: InsertWorkoutLog): Promise<WorkoutLog> {
+    const [created] = await db.insert(workoutLogs).values(log).returning();
+    return created;
+  }
+
+  async getWorkoutLogsByClient(clientId: string): Promise<WorkoutLog[]> {
+    return await db
+      .select()
+      .from(workoutLogs)
+      .where(eq(workoutLogs.clientId, clientId))
+      .orderBy(desc(workoutLogs.completedAt));
+  }
+
+  // Monthly evaluation operations
+  async createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation> {
+    const [created] = await db.insert(monthlyEvaluations).values(evaluation).returning();
+    return created;
+  }
+
+  async getMonthlyEvaluationsByClient(clientId: string): Promise<MonthlyEvaluation[]> {
+    return await db
+      .select()
+      .from(monthlyEvaluations)
+      .where(eq(monthlyEvaluations.clientId, clientId))
+      .orderBy(desc(monthlyEvaluations.createdAt));
+  }
+
+  // Post operations
+  async createPost(post: InsertPost): Promise<Post> {
+    const [created] = await db.insert(posts).values(post).returning();
+    return created;
+  }
+
+  async getPostsByTrainer(trainerId: string): Promise<Post[]> {
+    return await db
+      .select()
+      .from(posts)
+      .where(eq(posts.trainerId, trainerId))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async updatePost(id: string, post: Partial<InsertPost>): Promise<Post> {
+    const [updated] = await db
+      .update(posts)
+      .set({ ...post, updatedAt: new Date() })
+      .where(eq(posts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePost(id: string): Promise<void> {
+    await db.delete(posts).where(eq(posts.id, id));
+  }
+
+  // Chat operations
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [created] = await db.insert(chatMessages).values(message).returning();
+    return created;
+  }
+
+  async getChatMessages(userId1: string, userId2: string): Promise<ChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(
+        sql`(${chatMessages.senderId} = ${userId1} AND ${chatMessages.receiverId} = ${userId2}) OR 
+            (${chatMessages.senderId} = ${userId2} AND ${chatMessages.receiverId} = ${userId1})`
+      )
+      .orderBy(chatMessages.createdAt);
+  }
+
+  async markMessagesAsRead(receiverId: string, senderId: string): Promise<void> {
+    await db
+      .update(chatMessages)
+      .set({ isRead: true })
+      .where(and(eq(chatMessages.receiverId, receiverId), eq(chatMessages.senderId, senderId)));
+  }
+
+  // Analytics operations
+  async getTrainerStats(trainerId: string): Promise<{
+    totalClients: number;
+    activeClients: number;
+    monthlyRevenue: number;
+    totalPlans: number;
+  }> {
+    const [stats] = await db
+      .select({
+        totalClients: count(clients.id),
+        activeClients: count(sql`CASE WHEN ${users.status} = 'active' THEN 1 END`),
+        monthlyRevenue: sum(trainers.monthlyRevenue),
+        totalPlans: count(trainingPlans.id),
+      })
+      .from(trainers)
+      .leftJoin(clients, eq(trainers.id, clients.trainerId))
+      .leftJoin(users, eq(clients.userId, users.id))
+      .leftJoin(trainingPlans, eq(trainers.id, trainingPlans.trainerId))
+      .where(eq(trainers.id, trainerId))
+      .groupBy(trainers.id);
+
+    return {
+      totalClients: Number(stats?.totalClients || 0),
+      activeClients: Number(stats?.activeClients || 0),
+      monthlyRevenue: Number(stats?.monthlyRevenue || 0),
+      totalPlans: Number(stats?.totalPlans || 0),
+    };
+  }
+
+  async getClientStats(clientId: string): Promise<{
+    workoutsThisWeek: number;
+    currentWeight: number;
+    goalProgress: number;
+    streak: number;
+  }> {
+    // This is a simplified implementation - in a real app you'd need more complex queries
+    const client = await this.getClient(clientId);
+    const evaluations = await this.getMonthlyEvaluationsByClient(clientId);
+    const workoutLogs = await this.getWorkoutLogsByClient(clientId);
+
+    const currentWeight = evaluations[0]?.weight ? Number(evaluations[0].weight) : Number(client?.weight || 0);
+    const workoutsThisWeek = workoutLogs.filter(log => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return log.completedAt && log.completedAt > weekAgo;
+    }).length;
+
+    return {
+      workoutsThisWeek,
+      currentWeight,
+      goalProgress: 75, // This would need proper calculation based on goals
+      streak: 12, // This would need proper calculation based on consecutive workout days
+    };
+  }
+
+  async getSystemStats(): Promise<{
+    totalTrainers: number;
+    activeTrainers: number;
+    totalClients: number;
+    monthlyRevenue: number;
+  }> {
+    const [stats] = await db
+      .select({
+        totalTrainers: count(trainers.id),
+        activeTrainers: count(sql`CASE WHEN ${users.status} = 'active' THEN 1 END`),
+        totalClients: count(clients.id),
+        monthlyRevenue: sum(trainers.monthlyRevenue),
+      })
+      .from(trainers)
+      .leftJoin(users, eq(trainers.userId, users.id))
+      .leftJoin(clients, eq(trainers.id, clients.trainerId));
+
+    return {
+      totalTrainers: Number(stats?.totalTrainers || 0),
+      activeTrainers: Number(stats?.activeTrainers || 0),
+      totalClients: Number(stats?.totalClients || 0),
+      monthlyRevenue: Number(stats?.monthlyRevenue || 0),
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();
