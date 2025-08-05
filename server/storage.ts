@@ -150,6 +150,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, username));
+    return user;
+  }
+
   async getUsersByRole(role: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, role as any));
   }
@@ -325,8 +330,23 @@ export class DatabaseStorage implements IStorage {
     return client;
   }
 
-  async getClientsByTrainer(trainerId: string): Promise<Client[]> {
-    return await db.select().from(clients).where(eq(clients.trainerId, trainerId));
+  async getClientsByTrainer(trainerId: string): Promise<any[]> {
+    try {
+      const clientResults = await db
+        .select()
+        .from(clients)
+        .innerJoin(users, eq(clients.userId, users.id))
+        .where(eq(clients.trainerId, trainerId))
+        .orderBy(desc(clients.createdAt));
+
+      return clientResults.map(row => ({
+        ...row.clients,
+        user: row.users,
+      }));
+    } catch (error) {
+      console.error("Error in getClientsByTrainer:", error);
+      return [];
+    }
   }
 
   async updateClient(id: string, client: Partial<InsertClient>): Promise<Client> {

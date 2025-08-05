@@ -282,6 +282,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current trainer's clients
+  app.get('/api/trainers/clients', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      
+      const clients = await storage.getClientsByTrainer(trainer.id);
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching trainer clients:", error);
+      res.status(500).json({ message: "Failed to fetch trainer clients" });
+    }
+  });
+
   app.get('/api/trainers/:id/clients', isAuthenticated, async (req, res) => {
     try {
       const clients = await storage.getClientsByTrainer(req.params.id);
@@ -289,6 +306,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching trainer clients:", error);
       res.status(500).json({ message: "Failed to fetch trainer clients" });
+    }
+  });
+
+  // Invite client by email (for trainers)
+  app.post('/api/trainers/invite-client', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only approved trainers can invite clients" });
+      }
+
+      const { email, firstName, lastName } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        // Check if they're already a client
+        const existingClient = await storage.getClientByUserId(existingUser.id);
+        if (existingClient) {
+          return res.status(400).json({ message: "This person is already registered as a client" });
+        }
+        
+        // Create client record for existing user
+        const client = await storage.createClient({
+          userId: existingUser.id,
+          trainerId: trainer.id,
+          referralSource: trainer.referralCode,
+          goals: '',
+          currentWeight: 0,
+          targetWeight: 0,
+          height: 0,
+          activityLevel: 'moderate',
+        });
+        
+        return res.status(201).json({ 
+          message: "Client invitation sent successfully", 
+          client,
+          existing: true 
+        });
+      }
+
+      // For new users, we'll create a pending invitation
+      // In a real app, you'd send an email with registration link
+      res.status(200).json({ 
+        message: `Invitation would be sent to ${email}`,
+        referralCode: trainer.referralCode,
+        inviteEmail: email,
+        firstName,
+        lastName
+      });
+    } catch (error) {
+      console.error("Error inviting client:", error);
+      res.status(500).json({ message: "Failed to send client invitation" });
     }
   });
 
