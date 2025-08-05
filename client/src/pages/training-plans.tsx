@@ -473,7 +473,7 @@ export default function TrainingPlans() {
       )}
 
       {/* Plans List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {Array.isArray(plans) && plans.length > 0 ? (
           plans.map((plan: any) => (
             <Card key={plan.id}>
@@ -491,7 +491,7 @@ export default function TrainingPlans() {
               <CardContent className="space-y-4">
                 <p className="text-gray-600 text-sm">{plan.description || "No description"}</p>
                 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-500">Goal:</span>
                     <div className="font-medium">{plan.goal || "Not specified"}</div>
@@ -520,7 +520,7 @@ export default function TrainingPlans() {
                   )}
                 </div>
 
-                <div className="pt-2 border-t flex justify-center space-x-2">
+                <div className="pt-2 border-t flex flex-wrap justify-center gap-2">
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -580,7 +580,7 @@ export default function TrainingPlans() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold mb-2">Plan Details</h3>
                 <div className="space-y-2 text-sm">
@@ -619,7 +619,7 @@ export default function TrainingPlans() {
               </p>
             </div>
 
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
               <Button variant="outline" onClick={() => { setShowPlanDetails(false); setSelectedPlan(null); }}>
                 Close
               </Button>
