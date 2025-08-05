@@ -165,7 +165,7 @@ export default function AdminPlans() {
               </Select>
             </div>
           </div>
-          {(search || trainerFilter) && (
+          {(search || (trainerFilter && trainerFilter !== 'all')) && (
             <div className="mt-4 pt-4 border-t">
               <Button
                 variant="outline"
@@ -193,7 +193,7 @@ export default function AdminPlans() {
             <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No training plans found</h3>
             <p className="text-muted-foreground">
-              {search || trainerFilter
+              {search || (trainerFilter && trainerFilter !== 'all')
                 ? "Try adjusting your filters to see more results."
                 : "There are no training plans in the system yet."}
             </p>

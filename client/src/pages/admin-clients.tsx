@@ -222,7 +222,7 @@ export default function AdminClients() {
               </Select>
             </div>
           </div>
-          {(search || statusFilter || trainerFilter) && (
+          {(search || (statusFilter && statusFilter !== 'all') || (trainerFilter && trainerFilter !== 'all')) && (
             <div className="mt-4 pt-4 border-t">
               <Button
                 variant="outline"
@@ -251,7 +251,7 @@ export default function AdminClients() {
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No clients found</h3>
             <p className="text-muted-foreground">
-              {search || statusFilter || trainerFilter
+              {search || (statusFilter && statusFilter !== 'all') || (trainerFilter && trainerFilter !== 'all')
                 ? "Try adjusting your filters to see more results."
                 : "There are no clients in the system yet."}
             </p>

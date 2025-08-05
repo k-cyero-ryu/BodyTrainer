@@ -231,7 +231,7 @@ export default function AdminExercises() {
               </Select>
             </div>
           </div>
-          {(search || categoryFilter || trainerFilter) && (
+          {(search || (categoryFilter && categoryFilter !== 'all') || (trainerFilter && trainerFilter !== 'all')) && (
             <div className="mt-4 pt-4 border-t">
               <Button
                 variant="outline"
@@ -260,7 +260,7 @@ export default function AdminExercises() {
             <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No exercises found</h3>
             <p className="text-muted-foreground">
-              {search || categoryFilter || trainerFilter
+              {search || (categoryFilter && categoryFilter !== 'all') || (trainerFilter && trainerFilter !== 'all')
                 ? "Try adjusting your filters to see more results."
                 : "There are no exercises in the system yet."}
             </p>

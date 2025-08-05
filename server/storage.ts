@@ -35,7 +35,6 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -605,164 +604,191 @@ export class DatabaseStorage implements IStorage {
 
   // Admin view all clients with filtering
   async getAllClientsAdmin(filters: { trainer?: string; search?: string; status?: string }): Promise<any[]> {
-    const trainerUsers = alias(users, 'trainer_users');
-    
-    let query = db
-      .select({
-        id: clients.id,
-        userId: clients.userId,
-        trainerId: clients.trainerId,
-        goals: clients.goals,
-        currentWeight: clients.currentWeight,
-        targetWeight: clients.targetWeight,
-        height: clients.height,
-        activityLevel: clients.activityLevel,
-        medicalConditions: clients.medicalConditions,
-        createdAt: clients.createdAt,
-        updatedAt: clients.updatedAt,
-        // User information
-        userEmail: users.email,
-        userFirstName: users.firstName,
-        userLastName: users.lastName,
-        userProfileImageUrl: users.profileImageUrl,
-        userStatus: users.status,
-        // Trainer information
-        trainerEmail: trainerUsers.email,
-        trainerFirstName: trainerUsers.firstName,
-        trainerLastName: trainerUsers.lastName,
-      })
-      .from(clients)
-      .innerJoin(users, eq(clients.userId, users.id))
-      .leftJoin(trainers, eq(clients.trainerId, trainers.id))
-      .leftJoin(trainerUsers, eq(trainers.userId, trainerUsers.id));
+    try {
+      // First get all clients with their user info
+      let clientsQuery = db
+        .select()
+        .from(clients)
+        .innerJoin(users, eq(clients.userId, users.id));
 
-    const conditions = [];
-    
-    if (filters.trainer) {
-      conditions.push(eq(clients.trainerId, filters.trainer));
-    }
-    
-    if (filters.search) {
-      conditions.push(
-        sql`(${users.email} ILIKE ${`%${filters.search}%`} OR 
-            ${users.firstName} ILIKE ${`%${filters.search}%`} OR 
-            ${users.lastName} ILIKE ${`%${filters.search}%`})`
-      );
-    }
-    
-    if (filters.status) {
-      conditions.push(eq(users.status, filters.status as any));
-    }
+      const conditions = [];
+      
+      if (filters.trainer) {
+        conditions.push(eq(clients.trainerId, filters.trainer));
+      }
+      
+      if (filters.search) {
+        conditions.push(
+          sql`(${users.email} ILIKE ${`%${filters.search}%`} OR 
+              ${users.firstName} ILIKE ${`%${filters.search}%`} OR 
+              ${users.lastName} ILIKE ${`%${filters.search}%`})`
+        );
+      }
+      
+      if (filters.status) {
+        conditions.push(eq(users.status, filters.status as any));
+      }
 
-    if (conditions.length > 0) {
-      const whereCondition = conditions.reduce((acc, condition, index) => 
-        index === 0 ? condition : sql`${acc} AND ${condition}`
-      );
-      query = query.where(whereCondition);
-    }
+      if (conditions.length > 0) {
+        const whereCondition = conditions.reduce((acc, condition, index) => 
+          index === 0 ? condition : sql`${acc} AND ${condition}`
+        );
+        clientsQuery = clientsQuery.where(whereCondition);
+      }
 
-    return await query.orderBy(desc(clients.createdAt));
+      const clientResults = await clientsQuery.orderBy(desc(clients.createdAt));
+
+      // Then get trainer info separately to avoid complex joins
+      const result = [];
+      for (const row of clientResults) {
+        const client = row.clients;
+        const user = row.users;
+        
+        let trainerInfo = null;
+        if (client.trainerId) {
+          const trainer = await this.getTrainer(client.trainerId);
+          if (trainer) {
+            const trainerUser = await this.getUser(trainer.userId);
+            trainerInfo = {
+              trainerEmail: trainerUser?.email,
+              trainerFirstName: trainerUser?.firstName,
+              trainerLastName: trainerUser?.lastName,
+            };
+          }
+        }
+
+        result.push({
+          ...client,
+          userEmail: user.email,
+          userFirstName: user.firstName,
+          userLastName: user.lastName,
+          userProfileImageUrl: user.profileImageUrl,
+          userStatus: user.status,
+          ...trainerInfo,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error in getAllClientsAdmin:", error);
+      return [];
+    }
   }
 
   // Admin view all training plans with filtering
   async getAllTrainingPlansAdmin(filters: { trainer?: string; search?: string }): Promise<any[]> {
-    const trainerUsers = alias(users, 'trainer_users');
-    
-    let query = db
-      .select({
-        id: trainingPlans.id,
-        trainerId: trainingPlans.trainerId,
-        name: trainingPlans.name,
-        description: trainingPlans.description,
-        difficulty: trainingPlans.difficulty,
-        duration: trainingPlans.duration,
-        category: trainingPlans.category,
-        createdAt: trainingPlans.createdAt,
-        updatedAt: trainingPlans.updatedAt,
-        // Trainer information
-        trainerEmail: trainerUsers.email,
-        trainerFirstName: trainerUsers.firstName,
-        trainerLastName: trainerUsers.lastName,
-      })
-      .from(trainingPlans)
-      .innerJoin(trainers, eq(trainingPlans.trainerId, trainers.id))
-      .innerJoin(trainerUsers, eq(trainers.userId, trainerUsers.id));
+    try {
+      let query = db.select().from(trainingPlans);
 
-    const conditions = [];
-    
-    if (filters.trainer) {
-      conditions.push(eq(trainingPlans.trainerId, filters.trainer));
-    }
-    
-    if (filters.search) {
-      conditions.push(
-        sql`(${trainingPlans.name} ILIKE ${`%${filters.search}%`} OR 
-            ${trainingPlans.description} ILIKE ${`%${filters.search}%`})`
-      );
-    }
+      const conditions = [];
+      
+      if (filters.trainer) {
+        conditions.push(eq(trainingPlans.trainerId, filters.trainer));
+      }
+      
+      if (filters.search) {
+        conditions.push(
+          sql`(${trainingPlans.name} ILIKE ${`%${filters.search}%`} OR 
+              ${trainingPlans.description} ILIKE ${`%${filters.search}%`})`
+        );
+      }
 
-    if (conditions.length > 0) {
-      const whereCondition = conditions.reduce((acc, condition, index) => 
-        index === 0 ? condition : sql`${acc} AND ${condition}`
-      );
-      query = query.where(whereCondition);
-    }
+      if (conditions.length > 0) {
+        const whereCondition = conditions.reduce((acc, condition, index) => 
+          index === 0 ? condition : sql`${acc} AND ${condition}`
+        );
+        query = query.where(whereCondition);
+      }
 
-    return await query.orderBy(desc(trainingPlans.createdAt));
+      const planResults = await query.orderBy(desc(trainingPlans.createdAt));
+
+      // Get trainer info separately
+      const result = [];
+      for (const plan of planResults) {
+        let trainerInfo = null;
+        if (plan.trainerId) {
+          const trainer = await this.getTrainer(plan.trainerId);
+          if (trainer) {
+            const trainerUser = await this.getUser(trainer.userId);
+            trainerInfo = {
+              trainerEmail: trainerUser?.email,
+              trainerFirstName: trainerUser?.firstName,
+              trainerLastName: trainerUser?.lastName,
+            };
+          }
+        }
+
+        result.push({
+          ...plan,
+          ...trainerInfo,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error in getAllTrainingPlansAdmin:", error);
+      return [];
+    }
   }
 
   // Admin view all exercises with filtering
   async getAllExercisesAdmin(filters: { trainer?: string; search?: string; category?: string }): Promise<any[]> {
-    const trainerUsers = alias(users, 'trainer_users');
-    
-    let query = db
-      .select({
-        id: exercises.id,
-        trainerId: exercises.trainerId,
-        name: exercises.name,
-        description: exercises.description,
-        category: exercises.category,
-        muscleGroups: exercises.muscleGroups,
-        equipment: exercises.equipment,
-        difficulty: exercises.difficulty,
-        instructions: exercises.instructions,
-        mediaUrls: exercises.mediaUrls,
-        createdAt: exercises.createdAt,
-        updatedAt: exercises.updatedAt,
-        // Trainer information
-        trainerEmail: trainerUsers.email,
-        trainerFirstName: trainerUsers.firstName,
-        trainerLastName: trainerUsers.lastName,
-      })
-      .from(exercises)
-      .innerJoin(trainers, eq(exercises.trainerId, trainers.id))
-      .innerJoin(trainerUsers, eq(trainers.userId, trainerUsers.id));
+    try {
+      let query = db.select().from(exercises);
 
-    const conditions = [];
-    
-    if (filters.trainer) {
-      conditions.push(eq(exercises.trainerId, filters.trainer));
-    }
-    
-    if (filters.search) {
-      conditions.push(
-        sql`(${exercises.name} ILIKE ${`%${filters.search}%`} OR 
-            ${exercises.description} ILIKE ${`%${filters.search}%`})`
-      );
-    }
-    
-    if (filters.category) {
-      conditions.push(eq(exercises.category, filters.category));
-    }
+      const conditions = [];
+      
+      if (filters.trainer) {
+        conditions.push(eq(exercises.trainerId, filters.trainer));
+      }
+      
+      if (filters.search) {
+        conditions.push(
+          sql`(${exercises.name} ILIKE ${`%${filters.search}%`} OR 
+              ${exercises.description} ILIKE ${`%${filters.search}%`})`
+        );
+      }
+      
+      if (filters.category) {
+        conditions.push(eq(exercises.category, filters.category));
+      }
 
-    if (conditions.length > 0) {
-      const whereCondition = conditions.reduce((acc, condition, index) => 
-        index === 0 ? condition : sql`${acc} AND ${condition}`
-      );
-      query = query.where(whereCondition);
-    }
+      if (conditions.length > 0) {
+        const whereCondition = conditions.reduce((acc, condition, index) => 
+          index === 0 ? condition : sql`${acc} AND ${condition}`
+        );
+        query = query.where(whereCondition);
+      }
 
-    return await query.orderBy(desc(exercises.createdAt));
+      const exerciseResults = await query.orderBy(desc(exercises.createdAt));
+
+      // Get trainer info separately
+      const result = [];
+      for (const exercise of exerciseResults) {
+        let trainerInfo = null;
+        if (exercise.trainerId) {
+          const trainer = await this.getTrainer(exercise.trainerId);
+          if (trainer) {
+            const trainerUser = await this.getUser(trainer.userId);
+            trainerInfo = {
+              trainerEmail: trainerUser?.email,
+              trainerFirstName: trainerUser?.firstName,
+              trainerLastName: trainerUser?.lastName,
+            };
+          }
+        }
+
+        result.push({
+          ...exercise,
+          ...trainerInfo,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error in getAllExercisesAdmin:", error);
+      return [];
+    }
   }
 }
 
