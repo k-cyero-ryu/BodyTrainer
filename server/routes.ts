@@ -286,45 +286,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/trainers/clients', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const trainer = await storage.getTrainerByUserId(userId);
+      console.log("=== TRAINER CLIENT API ===");
+      console.log("Authenticated user ID:", userId);
       
-      // Debug the exact issue
-      console.log("=== DEBUG TRAINER API ===");
-      console.log("UserID from auth:", userId);
-      console.log("Direct trainer test:", JSON.stringify(trainer, null, 2));
-      console.log("Trainer exists:", !!trainer);
-      console.log("Trainer ID exists:", trainer?.id);
-      console.log("Trainer referralCode exists:", trainer?.referralCode);
+      const trainer = await storage.getTrainerByUserId(userId);
+      console.log("Found trainer:", !!trainer ? "YES" : "NO");
       
       if (!trainer) {
-        console.log("TRAINER IS NULL/UNDEFINED");
-        return res.status(404).json({ message: "Trainer not found", userId });
+        console.log("No trainer record found for user:", userId);
+        return res.status(404).json({ 
+          message: "Trainer not found",
+          userId,
+          hint: "This user might not be registered as a trainer"
+        });
       }
       
-      if (!trainer.id) {
-        console.log("TRAINER ID IS MISSING");
-        return res.status(404).json({ message: "Trainer ID missing", trainer });
-      }
-      
-      if (!trainer.referralCode) {
-        console.log("REFERRAL CODE IS MISSING");
-        return res.status(404).json({ message: "Referral code missing", trainer });
-      }
-      
-      console.log("ALL TRAINER DATA VALID - proceeding");
+      console.log("Trainer found - ID:", trainer.id, "Code:", trainer.referralCode);
       
       const clients = await storage.getClientsByTrainer(trainer.id);
       const baseUrl = `${req.protocol}://${req.hostname}`;
       const referralUrl = `${baseUrl}/register/client?code=${trainer.referralCode}`;
-      
-      console.log("SUCCESS - returning data");
       
       res.json({
         clients,
         referralCode: trainer.referralCode,
         referralUrl
       });
-      
     } catch (error) {
       console.error("Error fetching trainer clients:", error);
       res.status(500).json({ message: "Failed to fetch trainer clients" });
