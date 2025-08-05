@@ -23,6 +23,8 @@ export default function TrainingPlans() {
   const [weeksCycle, setWeeksCycle] = useState<number>(1);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [showPlanDetails, setShowPlanDetails] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [planToAssign, setPlanToAssign] = useState<any>(null);
   const [workoutDays, setWorkoutDays] = useState<Record<number, Record<number, Array<{
     exerciseId: string;
     sets?: number;
@@ -57,6 +59,12 @@ export default function TrainingPlans() {
     enabled: !!user && user.role === 'trainer' && showCreateForm,
   });
 
+  const { data: clients = [] } = useQuery({
+    queryKey: ["/api/trainers/clients"],
+    enabled: !!user && user.role === 'trainer',
+    select: (data: any) => data?.clients || [],
+  });
+
   const createPlanMutation = useMutation({
     mutationFn: async (data: any) => {
       await apiRequest("POST", "/api/training-plans", data);
@@ -84,6 +92,44 @@ export default function TrainingPlans() {
       toast({
         title: "Error",
         description: "Failed to create training plan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const assignPlanMutation = useMutation({
+    mutationFn: async ({ planId, clientId, startDate, endDate }: any) => {
+      await apiRequest("POST", "/api/client-plans", {
+        planId,
+        clientId,
+        startDate,
+        endDate,
+        isActive: true,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Training plan assigned to client successfully",
+      });
+      setShowAssignModal(false);
+      setPlanToAssign(null);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to assign training plan",
         variant: "destructive",
       });
     },
@@ -540,6 +586,16 @@ export default function TrainingPlans() {
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
                   </Button>
+                  <Button 
+                    size="sm" 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                      setPlanToAssign(plan);
+                      setShowAssignModal(true);
+                    }}
+                  >
+                    Assign to Client
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -627,6 +683,119 @@ export default function TrainingPlans() {
                 Edit Plan
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Plan Modal */}
+      {showAssignModal && planToAssign && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full m-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Assign Training Plan</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setPlanToAssign(null);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Plan: <span className="font-medium">{planToAssign.name}</span>
+              </p>
+              <p className="text-sm text-gray-600">
+                Duration: <span className="font-medium">{planToAssign.duration} weeks</span>
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const clientId = formData.get("clientId") as string;
+                const startDate = formData.get("startDate") as string;
+                
+                if (!clientId) {
+                  toast({
+                    title: "Error",
+                    description: "Please select a client",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                // Calculate end date based on plan duration
+                const start = new Date(startDate);
+                const end = new Date(start);
+                end.setDate(start.getDate() + (planToAssign.duration * 7));
+
+                assignPlanMutation.mutate({
+                  planId: planToAssign.id,
+                  clientId,
+                  startDate,
+                  endDate: end.toISOString().split('T')[0],
+                });
+              }}
+            >
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="clientId">Select Client</Label>
+                  <Select name="clientId" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.isArray(clients) && clients.length > 0 ? (
+                        clients.map((client: any) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.firstName} {client.lastName}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-clients" disabled>
+                          No clients available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    type="date"
+                    name="startDate"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setPlanToAssign(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={assignPlanMutation.isPending}
+                >
+                  {assignPlanMutation.isPending ? "Assigning..." : "Assign Plan"}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

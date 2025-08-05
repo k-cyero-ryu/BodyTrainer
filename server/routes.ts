@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 
 // Extend WebSocket type to include userId
 interface ExtendedWebSocket extends WebSocket {
@@ -572,6 +572,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating exercise media:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Client plan assignment routes
+  app.post('/api/client-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can assign plans" });
+      }
+
+      const { planId, clientId, startDate, endDate, isActive } = req.body;
+      
+      if (!planId || !clientId || !startDate || !endDate) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Verify the plan belongs to this trainer
+      const plan = await storage.getTrainingPlan(planId);
+      if (!plan || plan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Plan not found or access denied" });
+      }
+
+      // Verify the client belongs to this trainer
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found or access denied" });
+      }
+
+      const clientPlan = await storage.assignPlanToClient({
+        planId,
+        clientId,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        isActive: isActive || true,
+      });
+
+      res.status(201).json(clientPlan);
+    } catch (error) {
+      console.error("Error assigning plan to client:", error);
+      res.status(500).json({ message: "Failed to assign plan to client" });
     }
   });
 
