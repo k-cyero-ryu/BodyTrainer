@@ -253,17 +253,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveTrainer(trainerId: string): Promise<void> {
+    console.log('ApproveTrainer: Looking for trainer with ID:', trainerId);
+    
     // Get trainer to find userId
     const trainer = await this.getTrainer(trainerId);
+    console.log('ApproveTrainer: Found trainer:', trainer);
+    
     if (!trainer) {
       throw new Error('Trainer not found');
     }
 
+    console.log('ApproveTrainer: Updating user status for userId:', trainer.userId);
+    
     // Update user status to active
-    await db
+    const result = await db
       .update(users)
       .set({ status: 'active', updatedAt: new Date() })
-      .where(eq(users.id, trainer.userId));
+      .where(eq(users.id, trainer.userId))
+      .returning();
+      
+    console.log('ApproveTrainer: Update result:', result);
   }
 
   async rejectTrainer(trainerId: string): Promise<void> {

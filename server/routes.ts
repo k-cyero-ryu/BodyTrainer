@@ -595,11 +595,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { trainerId } = req.params;
+      console.log('Approving trainer with ID:', trainerId);
+      
       await storage.approveTrainer(trainerId);
+      console.log('Trainer approved successfully:', trainerId);
+      
       res.json({ success: true, message: "Trainer approved successfully" });
     } catch (error) {
       console.error("Error approving trainer:", error);
-      res.status(500).json({ message: "Failed to approve trainer" });
+      console.error("Error details:", error.message, error.stack);
+      res.status(500).json({ message: "Failed to approve trainer. Please try again." });
     }
   });
 
