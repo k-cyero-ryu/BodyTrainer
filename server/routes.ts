@@ -288,20 +288,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const trainer = await storage.getTrainerByUserId(userId);
       
-      // Force check for trainer data with explicit validation
-      if (!trainer || !trainer.id || !trainer.referralCode) {
-        return res.status(404).json({ message: "Trainer not found" });
-      }
+      // Debug the exact issue
+      console.log("Direct trainer test:", trainer);
+      console.log("Trainer exists:", !!trainer);
+      console.log("Trainer ID exists:", trainer?.id);
+      console.log("Trainer referralCode exists:", trainer?.referralCode);
       
-      const clients = await storage.getClientsByTrainer(trainer.id);
-      const baseUrl = `${req.protocol}://${req.hostname}`;
-      const referralUrl = `${baseUrl}/register/client?code=${trainer.referralCode}`;
-      
-      res.json({
-        clients,
-        referralCode: trainer.referralCode,
-        referralUrl
+      // Return the raw data for debugging
+      return res.json({
+        debug: true,
+        userId,
+        trainer,
+        trainerExists: !!trainer,
+        trainerId: trainer?.id,
+        referralCode: trainer?.referralCode
       });
+      
     } catch (error) {
       console.error("Error fetching trainer clients:", error);
       res.status(500).json({ message: "Failed to fetch trainer clients" });
