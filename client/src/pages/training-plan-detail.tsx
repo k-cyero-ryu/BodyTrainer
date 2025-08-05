@@ -121,7 +121,9 @@ export default function TrainingPlanDetail() {
     );
   }
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: string | null | undefined) => {
+    if (!difficulty) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    
     switch (difficulty.toLowerCase()) {
       case 'beginner': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'intermediate': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
@@ -152,7 +154,7 @@ export default function TrainingPlanDetail() {
         </div>
         <div className="flex items-center gap-2">
           <Badge className={getDifficultyColor(plan.difficulty)}>
-            {plan.difficulty}
+            {plan.difficulty || 'Not Set'}
           </Badge>
         </div>
       </div>
