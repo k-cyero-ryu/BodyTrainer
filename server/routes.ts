@@ -345,17 +345,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         return res.status(201).json({ 
-          message: "Client invitation sent successfully", 
+          message: "User successfully added as your client", 
           client,
           existing: true 
         });
       }
 
-      // For new users, we'll create a pending invitation
-      // In a real app, you'd send an email with registration link
+      // Generate referral URL for new users
+      const baseUrl = `${req.protocol}://${req.hostname}`;
+      const referralUrl = `${baseUrl}/register/client?code=${trainer.referralCode}`;
+      
       res.status(200).json({ 
-        message: `Invitation would be sent to ${email}`,
+        message: `Share this registration link with ${email}`,
         referralCode: trainer.referralCode,
+        referralUrl,
         inviteEmail: email,
         firstName,
         lastName

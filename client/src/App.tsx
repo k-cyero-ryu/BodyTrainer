@@ -13,6 +13,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import RoleSelection from "@/pages/role-selection";
 import SuperAdminSetup from "@/pages/superadmin-setup";
+import ClientRegistration from "@/pages/client-registration";
 import TrainerDashboard from "@/pages/trainer-dashboard";
 import ClientDashboard from "@/pages/client-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -190,6 +191,7 @@ function App() {
         <Toaster />
         <Switch>
           <Route path="/setup-superadmin" component={SuperAdminSetup} />
+          <Route path="/register/client" component={ClientRegistration} />
           <Route component={Router} />
         </Switch>
       </TooltipProvider>
