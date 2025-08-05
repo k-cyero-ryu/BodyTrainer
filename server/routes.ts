@@ -525,7 +525,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      res.json(plan);
+      // Get plan exercises
+      const planExercises = await storage.getPlanExercisesByPlan(planId);
+      
+      res.json({
+        ...plan,
+        planExercises: planExercises
+      });
     } catch (error) {
       console.error("Error fetching training plan:", error);
       res.status(500).json({ message: "Failed to fetch training plan" });

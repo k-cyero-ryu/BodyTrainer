@@ -153,8 +153,8 @@ export default function TrainingPlanDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className={getDifficultyColor(plan.difficulty)}>
-            {plan.difficulty || 'Not Set'}
+          <Badge variant={plan.isActive ? "default" : "secondary"}>
+            {plan.isActive ? "Active" : "Draft"}
           </Badge>
         </div>
       </div>
@@ -180,15 +180,15 @@ export default function TrainingPlanDetail() {
               <div className="flex items-center gap-3">
                 <Target className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Focus</p>
-                  <p className="text-sm text-muted-foreground">{plan.focusArea || 'General Fitness'}</p>
+                  <p className="text-sm font-medium">Goal</p>
+                  <p className="text-sm text-muted-foreground">{plan.goal || 'Not specified'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Play className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">Exercises</p>
-                  <p className="text-sm text-muted-foreground">{plan.exercises?.length || 0} exercises</p>
+                  <p className="text-sm text-muted-foreground">{plan.planExercises?.length || 0} exercises</p>
                 </div>
               </div>
               {plan.createdAt && (
@@ -201,6 +201,43 @@ export default function TrainingPlanDetail() {
                     </p>
                   </div>
                 </div>
+              )}
+              
+              {/* Nutrition Information */}
+              {(plan.dailyCalories || plan.protein || plan.carbs) && (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Nutrition Guidelines</h4>
+                    {plan.dailyCalories && (
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                        <div>
+                          <p className="text-sm font-medium">Daily Calories</p>
+                          <p className="text-sm text-muted-foreground">{plan.dailyCalories} kcal</p>
+                        </div>
+                      </div>
+                    )}
+                    {plan.protein && (
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="text-sm font-medium">Protein</p>
+                          <p className="text-sm text-muted-foreground">{plan.protein}g</p>
+                        </div>
+                      </div>
+                    )}
+                    {plan.carbs && (
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
+                        <div>
+                          <p className="text-sm font-medium">Carbohydrates</p>
+                          <p className="text-sm text-muted-foreground">{plan.carbs}g</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -216,12 +253,12 @@ export default function TrainingPlanDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {plan.exercises && plan.exercises.length > 0 ? (
+              {plan.planExercises && plan.planExercises.length > 0 ? (
                 <div className="space-y-4">
-                  {plan.exercises.map((exerciseId: string, index: number) => {
-                    const exercise = getExerciseDetails(exerciseId);
+                  {plan.planExercises.map((planExercise: any, index: number) => {
+                    const exercise = getExerciseDetails(planExercise.exerciseId);
                     return (
-                      <div key={exerciseId} className="p-4 border rounded-lg">
+                      <div key={planExercise.id} className="p-4 border rounded-lg">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
@@ -245,25 +282,44 @@ export default function TrainingPlanDetail() {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {exercise?.sets && (
+                          {planExercise.sets && (
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">Sets:</span>
-                              <span className="text-sm">{exercise.sets}</span>
+                              <span className="text-sm">{planExercise.sets}</span>
                             </div>
                           )}
-                          {exercise?.reps && (
+                          {planExercise.reps && (
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">Reps:</span>
-                              <span className="text-sm">{exercise.reps}</span>
+                              <span className="text-sm">{planExercise.reps}</span>
                             </div>
                           )}
-                          {exercise?.duration && (
+                          {planExercise.duration && (
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">Duration:</span>
-                              <span className="text-sm">{exercise.duration}</span>
+                              <span className="text-sm">{planExercise.duration} min</span>
+                            </div>
+                          )}
+                          {planExercise.weight && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Weight:</span>
+                              <span className="text-sm">{planExercise.weight} kg</span>
+                            </div>
+                          )}
+                          {planExercise.restTime && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Rest:</span>
+                              <span className="text-sm">{planExercise.restTime} sec</span>
                             </div>
                           )}
                         </div>
+                        
+                        {planExercise.notes && (
+                          <div className="mt-3 pt-3 border-t">
+                            <h4 className="text-sm font-medium mb-2">Notes:</h4>
+                            <p className="text-sm text-muted-foreground">{planExercise.notes}</p>
+                          </div>
+                        )}
 
                         {exercise?.instructions && (
                           <div className="mt-3 pt-3 border-t">
@@ -303,9 +359,7 @@ export default function TrainingPlanDetail() {
                 <div className="text-center py-8">
                   <Play className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground">No exercises added to this plan yet.</p>
-                  <Link href={`/training-plans/${planId}/edit`}>
-                    <Button className="mt-3">Add Exercises</Button>
-                  </Link>
+                  <p className="text-sm text-muted-foreground mt-2">Exercises can be added when creating or editing the training plan.</p>
                 </div>
               )}
             </CardContent>
