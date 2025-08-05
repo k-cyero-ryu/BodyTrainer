@@ -18,9 +18,21 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const editClientSchema = z.object({
-  age: z.number().min(13).max(100).optional(),
-  height: z.number().min(100).max(250).optional(),
-  weight: z.number().min(30).max(300).optional(),
+  age: z.union([z.string(), z.number()]).optional().transform(val => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = typeof val === 'string' ? parseInt(val) : val;
+    return isNaN(num) ? undefined : num;
+  }).refine(val => val === undefined || (val >= 13 && val <= 100), "Age must be between 13 and 100"),
+  height: z.union([z.string(), z.number()]).optional().transform(val => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num;
+  }).refine(val => val === undefined || (val >= 100 && val <= 250), "Height must be between 100 and 250 cm"),
+  weight: z.union([z.string(), z.number()]).optional().transform(val => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num;
+  }).refine(val => val === undefined || (val >= 30 && val <= 300), "Weight must be between 30 and 300 kg"),
   bodyGoal: z.string().optional(),
   clientPaymentPlanId: z.string().optional().transform(val => val === "none" ? undefined : val),
   paymentStatus: z.enum(['active', 'overdue', 'suspended']).optional(),
@@ -242,7 +254,7 @@ export default function EditClient() {
                           placeholder="Enter age"
                           {...field}
                           value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -262,7 +274,7 @@ export default function EditClient() {
                           placeholder="Enter height in cm"
                           {...field}
                           value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -282,7 +294,7 @@ export default function EditClient() {
                           placeholder="Enter weight in kg"
                           {...field}
                           value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       </FormControl>
                       <FormMessage />
