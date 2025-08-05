@@ -13,7 +13,7 @@ interface Message {
   id: string;
   senderId: string;
   receiverId: string;
-  content: string;
+  message: string;
   createdAt: string;
 }
 
@@ -67,8 +67,8 @@ export default function Chat() {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (data: { receiverId: string; content: string }) => {
-      return apiRequest("POST", '/api/chat/messages', data);
+    mutationFn: async (data: { receiverId: string; message: string }) => {
+      return apiRequest('/api/chat/messages', 'POST', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/messages'] });
@@ -116,7 +116,7 @@ export default function Chat() {
 
     sendMessageMutation.mutate({
       receiverId: selectedUser,
-      content: newMessage.trim(),
+      message: newMessage.trim(),
     });
   };
 
@@ -217,7 +217,7 @@ export default function Chat() {
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
                         }`}
                       >
-                        <div className="text-sm">{message.content}</div>
+                        <div className="text-sm">{message.message}</div>
                         <div
                           className={`text-xs mt-1 ${
                             message.senderId === user?.id
