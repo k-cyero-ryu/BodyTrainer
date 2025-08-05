@@ -642,6 +642,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin view all clients
+  app.get('/api/admin/clients', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainer, search, status } = req.query;
+      const clients = await storage.getAllClientsAdmin({ trainer, search, status });
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching admin clients:", error);
+      res.status(500).json({ message: "Failed to fetch clients" });
+    }
+  });
+
+  // Admin view all training plans
+  app.get('/api/admin/training-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainer, search } = req.query;
+      const plans = await storage.getAllTrainingPlansAdmin({ trainer, search });
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching admin training plans:", error);
+      res.status(500).json({ message: "Failed to fetch training plans" });
+    }
+  });
+
+  // Admin view all exercises
+  app.get('/api/admin/exercises', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'superadmin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { trainer, search, category } = req.query;
+      const exercises = await storage.getAllExercisesAdmin({ trainer, search, category });
+      res.json(exercises);
+    } catch (error) {
+      console.error("Error fetching admin exercises:", error);
+      res.status(500).json({ message: "Failed to fetch exercises" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time chat

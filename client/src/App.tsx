@@ -17,6 +17,9 @@ import TrainerDashboard from "@/pages/trainer-dashboard";
 import ClientDashboard from "@/pages/client-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ManageTrainers from "@/pages/manage-trainers";
+import AdminClients from "@/pages/admin-clients";
+import AdminPlans from "@/pages/admin-plans";
+import AdminExercises from "@/pages/admin-exercises";
 import Clients from "@/pages/clients";
 import TrainingPlans from "@/pages/training-plans";
 import Exercises from "@/pages/exercises";
@@ -149,18 +152,17 @@ function Router() {
               {user?.role === 'superadmin' && (
                 <>
                   <Route path="/" component={AdminDashboard} />
-                  <Route path="/trainers" component={ManageTrainers} />
-                  <Route path="/clients" component={Clients} />
-                  <Route path="/plans" component={TrainingPlans} />
-                  <Route path="/exercises" component={Exercises} />
-                  <Route path="/reports" component={Reports} />
+                  <Route path="/manage-trainers" component={ManageTrainers} />
+                  <Route path="/admin-clients" component={AdminClients} />
+                  <Route path="/admin-plans" component={AdminPlans} />
+                  <Route path="/admin-exercises" component={AdminExercises} />
                 </>
               )}
               {user?.role === 'trainer' && (
                 <>
                   <Route path="/" component={TrainerDashboard} />
                   <Route path="/clients" component={Clients} />
-                  <Route path="/plans" component={TrainingPlans} />
+                  <Route path="/training-plans" component={TrainingPlans} />
                   <Route path="/exercises" component={Exercises} />
                   <Route path="/reports" component={Reports} />
                 </>
@@ -168,7 +170,7 @@ function Router() {
               {user?.role === 'client' && (
                 <>
                   <Route path="/" component={ClientDashboard} />
-                  <Route path="/plans" component={TrainingPlans} />
+                  <Route path="/training-plans" component={TrainingPlans} />
                 </>
               )}
               <Route component={NotFound} />

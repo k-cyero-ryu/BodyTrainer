@@ -44,34 +44,52 @@ export default function Navigation() {
       roles: ['superadmin', 'trainer', 'client']
     },
     { 
-      href: '/trainers', 
+      href: '/manage-trainers', 
       label: 'Manage Trainers', 
       icon: Users,
       roles: ['superadmin']
     },
     { 
-      href: '/clients', 
-      label: 'Clients', 
+      href: '/admin-clients', 
+      label: 'All Clients', 
       icon: Users,
-      roles: ['superadmin', 'trainer']
+      roles: ['superadmin']
     },
     { 
-      href: '/plans', 
+      href: '/admin-plans', 
+      label: 'All Training Plans', 
+      icon: Dumbbell,
+      roles: ['superadmin']
+    },
+    { 
+      href: '/admin-exercises', 
+      label: 'All Exercises', 
+      icon: Dumbbell,
+      roles: ['superadmin']
+    },
+    { 
+      href: '/clients', 
+      label: 'My Clients', 
+      icon: Users,
+      roles: ['trainer']
+    },
+    { 
+      href: '/training-plans', 
       label: 'Training Plans', 
       icon: Dumbbell,
-      roles: ['superadmin', 'trainer', 'client']
+      roles: ['trainer', 'client']
     },
     { 
       href: '/exercises', 
       label: 'Exercises', 
       icon: Dumbbell,
-      roles: ['superadmin', 'trainer']
+      roles: ['trainer']
     },
     { 
       href: '/reports', 
       label: 'Reports', 
       icon: BarChart3,
-      roles: ['superadmin', 'trainer']
+      roles: ['trainer']
     },
     { 
       href: '/chat', 

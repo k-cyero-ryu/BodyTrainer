@@ -127,6 +127,11 @@ export interface IStorage {
     totalClients: number;
     monthlyRevenue: number;
   }>;
+
+  // Admin view methods with filtering
+  getAllClientsAdmin(filters: { trainer?: string; search?: string; status?: string }): Promise<any[]>;
+  getAllTrainingPlansAdmin(filters: { trainer?: string; search?: string }): Promise<any[]>;
+  getAllExercisesAdmin(filters: { trainer?: string; search?: string; category?: string }): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -595,6 +600,153 @@ export class DatabaseStorage implements IStorage {
       totalClients: Number(stats?.totalClients || 0),
       monthlyRevenue: Number(stats?.monthlyRevenue || 0),
     };
+  }
+
+  // Admin view all clients with filtering
+  async getAllClientsAdmin(filters: { trainer?: string; search?: string; status?: string }): Promise<any[]> {
+    let query = db
+      .select({
+        id: clients.id,
+        userId: clients.userId,
+        trainerId: clients.trainerId,
+        goals: clients.goals,
+        currentWeight: clients.currentWeight,
+        targetWeight: clients.targetWeight,
+        height: clients.height,
+        activityLevel: clients.activityLevel,
+        medicalConditions: clients.medicalConditions,
+        createdAt: clients.createdAt,
+        updatedAt: clients.updatedAt,
+        // User information
+        email: sql<string>`${users.email}`.as('userEmail'),
+        firstName: sql<string>`${users.firstName}`.as('userFirstName'),
+        lastName: sql<string>`${users.lastName}`.as('userLastName'),
+        profileImageUrl: sql<string>`${users.profileImageUrl}`.as('userProfileImageUrl'),
+        userStatus: users.status,
+        // Trainer information
+        trainerEmail: sql<string>`trainer_users.email`.as('trainerEmail'),
+        trainerFirstName: sql<string>`trainer_users.first_name`.as('trainerFirstName'),
+        trainerLastName: sql<string>`trainer_users.last_name`.as('trainerLastName'),
+      })
+      .from(clients)
+      .innerJoin(users, eq(clients.userId, users.id))
+      .leftJoin(trainers, eq(clients.trainerId, trainers.id))
+      .leftJoin(sql`${users} AS trainer_users`, sql`${trainers.userId} = trainer_users.id`);
+
+    const conditions = [];
+    
+    if (filters.trainer) {
+      conditions.push(eq(clients.trainerId, filters.trainer));
+    }
+    
+    if (filters.search) {
+      conditions.push(
+        sql`(${users.email} ILIKE ${`%${filters.search}%`} OR 
+            ${users.firstName} ILIKE ${`%${filters.search}%`} OR 
+            ${users.lastName} ILIKE ${`%${filters.search}%`})`
+      );
+    }
+    
+    if (filters.status) {
+      conditions.push(eq(users.status, filters.status as any));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(sql`${conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`)}`);
+    }
+
+    return await query.orderBy(desc(clients.createdAt));
+  }
+
+  // Admin view all training plans with filtering
+  async getAllTrainingPlansAdmin(filters: { trainer?: string; search?: string }): Promise<any[]> {
+    let query = db
+      .select({
+        id: trainingPlans.id,
+        trainerId: trainingPlans.trainerId,
+        name: trainingPlans.name,
+        description: trainingPlans.description,
+        difficulty: trainingPlans.difficulty,
+        duration: trainingPlans.duration,
+        category: trainingPlans.category,
+        createdAt: trainingPlans.createdAt,
+        updatedAt: trainingPlans.updatedAt,
+        // Trainer information
+        trainerEmail: sql<string>`trainer_users.email`.as('trainerEmail'),
+        trainerFirstName: sql<string>`trainer_users.first_name`.as('trainerFirstName'),
+        trainerLastName: sql<string>`trainer_users.last_name`.as('trainerLastName'),
+      })
+      .from(trainingPlans)
+      .innerJoin(trainers, eq(trainingPlans.trainerId, trainers.id))
+      .innerJoin(sql`${users} AS trainer_users`, sql`${trainers.userId} = trainer_users.id`);
+
+    const conditions = [];
+    
+    if (filters.trainer) {
+      conditions.push(eq(trainingPlans.trainerId, filters.trainer));
+    }
+    
+    if (filters.search) {
+      conditions.push(
+        sql`(${trainingPlans.name} ILIKE ${`%${filters.search}%`} OR 
+            ${trainingPlans.description} ILIKE ${`%${filters.search}%`})`
+      );
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(sql`${conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`)}`);
+    }
+
+    return await query.orderBy(desc(trainingPlans.createdAt));
+  }
+
+  // Admin view all exercises with filtering
+  async getAllExercisesAdmin(filters: { trainer?: string; search?: string; category?: string }): Promise<any[]> {
+    let query = db
+      .select({
+        id: exercises.id,
+        trainerId: exercises.trainerId,
+        name: exercises.name,
+        description: exercises.description,
+        category: exercises.category,
+        muscleGroups: exercises.muscleGroups,
+        equipment: exercises.equipment,
+        difficulty: exercises.difficulty,
+        instructions: exercises.instructions,
+        mediaUrls: exercises.mediaUrls,
+        createdAt: exercises.createdAt,
+        updatedAt: exercises.updatedAt,
+        // Trainer information
+        trainerEmail: sql<string>`trainer_users.email`.as('trainerEmail'),
+        trainerFirstName: sql<string>`trainer_users.first_name`.as('trainerFirstName'),
+        trainerLastName: sql<string>`trainer_users.last_name`.as('trainerLastName'),
+      })
+      .from(exercises)
+      .innerJoin(trainers, eq(exercises.trainerId, trainers.id))
+      .innerJoin(sql`${users} AS trainer_users`, sql`${trainers.userId} = trainer_users.id`);
+
+    const conditions = [];
+    
+    if (filters.trainer) {
+      conditions.push(eq(exercises.trainerId, filters.trainer));
+    }
+    
+    if (filters.search) {
+      conditions.push(
+        sql`(${exercises.name} ILIKE ${`%${filters.search}%`} OR 
+            ${exercises.description} ILIKE ${`%${filters.search}%`})`
+      );
+    }
+    
+    if (filters.category) {
+      conditions.push(eq(exercises.category, filters.category));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(sql`${conditions.reduce((acc, condition) => sql`${acc} AND ${condition}`)}`);
+    }
+
+    return await query.orderBy(desc(exercises.createdAt));
   }
 }
 
