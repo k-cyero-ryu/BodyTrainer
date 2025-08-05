@@ -292,11 +292,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const trainer = await storage.getTrainerByUserId(userId);
       console.log("Found trainer:", JSON.stringify(trainer, null, 2));
+      console.log("Trainer truthiness:", !!trainer);
+      console.log("Trainer type:", typeof trainer);
       
       if (!trainer) {
         console.log("NO TRAINER FOUND - returning 404");
         return res.status(404).json({ message: "Trainer not found" });
       }
+      
+      console.log("TRAINER FOUND - proceeding with success response");
       
       const clients = await storage.getClientsByTrainer(trainer.id);
       const baseUrl = `${req.protocol}://${req.hostname}`;
