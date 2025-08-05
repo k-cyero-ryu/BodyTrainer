@@ -259,30 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/trainers/:id', isAuthenticated, async (req, res) => {
-    try {
-      const trainer = await storage.getTrainer(req.params.id);
-      if (!trainer) {
-        return res.status(404).json({ message: "Trainer not found" });
-      }
-      res.json(trainer);
-    } catch (error) {
-      console.error("Error fetching trainer:", error);
-      res.status(500).json({ message: "Failed to fetch trainer" });
-    }
-  });
-
-  app.get('/api/trainers/:id/stats', isAuthenticated, async (req, res) => {
-    try {
-      const stats = await storage.getTrainerStats(req.params.id);
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching trainer stats:", error);
-      res.status(500).json({ message: "Failed to fetch trainer stats" });
-    }
-  });
-
-  // Get current trainer's clients and referral info
+  // Get current trainer's clients and referral info (MUST come before /:id routes)
   app.get('/api/trainers/clients', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -315,6 +292,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching trainer clients:", error);
       res.status(500).json({ message: "Failed to fetch trainer clients" });
+    }
+  });
+
+  app.get('/api/trainers/:id', isAuthenticated, async (req, res) => {
+    try {
+      const trainer = await storage.getTrainer(req.params.id);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      res.json(trainer);
+    } catch (error) {
+      console.error("Error fetching trainer:", error);
+      res.status(500).json({ message: "Failed to fetch trainer" });
+    }
+  });
+
+  app.get('/api/trainers/:id/stats', isAuthenticated, async (req, res) => {
+    try {
+      const stats = await storage.getTrainerStats(req.params.id);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching trainer stats:", error);
+      res.status(500).json({ message: "Failed to fetch trainer stats" });
     }
   });
 
