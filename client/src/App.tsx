@@ -27,6 +27,7 @@ import EditClient from "@/pages/edit-client";
 import PaymentPlans from "@/pages/payment-plans";
 import ClientPaymentPlansPage from "@/pages/client-payment-plans";
 import TrainingPlans from "@/pages/training-plans";
+import TrainingPlanDetail from "@/pages/training-plan-detail";
 import Exercises from "@/pages/exercises";
 import Reports from "@/pages/reports";
 import Navigation from "@/components/navigation";
@@ -171,6 +172,7 @@ function Router() {
                   <Route path="/clients/:clientId/edit" component={EditClient} />
                   <Route path="/clients/:clientId" component={ClientDetail} />
                   <Route path="/training-plans" component={TrainingPlans} />
+                  <Route path="/training-plans/:planId" component={TrainingPlanDetail} />
                   <Route path="/exercises" component={Exercises} />
                   <Route path="/client-payment-plans" component={ClientPaymentPlansPage} />
                   <Route path="/reports" component={Reports} />

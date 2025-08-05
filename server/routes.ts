@@ -504,6 +504,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single training plan by ID
+  app.get('/api/training-plans/:planId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can view plans" });
+      }
+      
+      const { planId } = req.params;
+      const plan = await storage.getTrainingPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ message: "Training plan not found" });
+      }
+      
+      // Verify the plan belongs to this trainer
+      if (plan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching training plan:", error);
+      res.status(500).json({ message: "Failed to fetch training plan" });
+    }
+  });
+
   // Exercise routes
   app.post('/api/exercises', isAuthenticated, async (req: any, res) => {
     try {

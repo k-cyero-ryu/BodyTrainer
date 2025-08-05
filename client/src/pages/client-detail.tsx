@@ -402,7 +402,9 @@ export default function ClientDetail() {
                   {assignedPlans.map((clientPlan: any) => (
                     <div key={clientPlan.id} className="p-3 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">{clientPlan.plan?.name}</h3>
+                        <Link href={`/training-plans/${clientPlan.planId}`}>
+                          <h3 className="font-medium hover:text-primary cursor-pointer">{clientPlan.plan?.name}</h3>
+                        </Link>
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary">{clientPlan.plan?.difficulty}</Badge>
                           {clientPlan.isActive && (

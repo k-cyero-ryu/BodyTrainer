@@ -418,10 +418,10 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Client not found');
     }
 
-    // Update user status to suspended
+    // Update user status to inactive (since suspended is not a valid status)
     await db
       .update(users)
-      .set({ status: 'suspended', updatedAt: new Date() })
+      .set({ status: 'inactive', updatedAt: new Date() })
       .where(eq(users.id, client.userId));
   }
 

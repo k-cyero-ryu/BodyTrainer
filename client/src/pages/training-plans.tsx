@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Eye, Dumbbell, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Link } from "wouter";
 
 export default function TrainingPlans() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -526,17 +527,15 @@ export default function TrainingPlans() {
                 </div>
 
                 <div className="pt-2 border-t flex flex-wrap justify-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => {
-                      setSelectedPlan(plan);
-                      setShowPlanDetails(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View Details
-                  </Button>
+                  <Link href={`/training-plans/${plan.id}`}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Details
+                    </Button>
+                  </Link>
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
