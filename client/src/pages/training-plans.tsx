@@ -19,7 +19,7 @@ export default function TrainingPlans() {
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
-  const [weeksCycle, setWeeksCycle] = useState<number>(4);
+  const [weeksCycle, setWeeksCycle] = useState<number>(1);
   const [workoutDays, setWorkoutDays] = useState<Record<number, Record<number, string>>>({});
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export default function TrainingPlans() {
 
   const resetForm = () => {
     setShowCreateForm(false);
-    setWeeksCycle(4);
+    setWeeksCycle(1);
     setWorkoutDays({});
   };
 
@@ -152,9 +152,9 @@ export default function TrainingPlans() {
         <h1 className="text-3xl font-bold text-gray-900">Training Plans</h1>
         <Button onClick={() => {
           setShowCreateForm(true);
-          // Initialize workout days for default 4 weeks
+          // Initialize workout days for default 1 week
           if (Object.keys(workoutDays).length === 0) {
-            handleWeeksCycleChange("4");
+            handleWeeksCycleChange("1");
           }
         }}>
           <Plus className="h-4 w-4 mr-2" />
@@ -181,10 +181,10 @@ export default function TrainingPlans() {
                       <SelectValue placeholder="Select weeks cycle" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="1">1 week</SelectItem>
+                      <SelectItem value="2">2 weeks</SelectItem>
+                      <SelectItem value="3">3 weeks</SelectItem>
                       <SelectItem value="4">4 weeks</SelectItem>
-                      <SelectItem value="8">8 weeks</SelectItem>
-                      <SelectItem value="12">12 weeks</SelectItem>
-                      <SelectItem value="16">16 weeks</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
