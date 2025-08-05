@@ -19,7 +19,7 @@ const clientPaymentPlanSchema = z.object({
   description: z.string().optional(),
   amount: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
   currency: z.string().default("USD"),
-  billingCycle: z.enum(["monthly", "weekly", "per_session"]),
+  type: z.enum(["monthly", "weekly", "per_session"]),
   features: z.array(z.string()).optional().default([]),
   isActive: z.boolean().default(true),
 });
@@ -33,7 +33,7 @@ interface ClientPaymentPlan {
   description?: string;
   amount: number;
   currency: string;
-  billingCycle: string;
+  type: string;
   features: string[];
   isActive: boolean;
   createdAt: string;
@@ -62,7 +62,7 @@ function ClientPaymentPlanForm({
       description: plan?.description || "",
       amount: plan?.amount || 0,
       currency: plan?.currency || "USD",
-      billingCycle: plan?.billingCycle as any || "monthly",
+      type: plan?.type as any || "monthly",
       features: plan?.features || [],
       isActive: plan?.isActive ?? true,
     },
@@ -135,7 +135,7 @@ function ClientPaymentPlanForm({
 
               <FormField
                 control={form.control}
-                name="billingCycle"
+                name="type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Billing Cycle</FormLabel>
@@ -374,7 +374,7 @@ export default function ClientPaymentPlansPage() {
                         {formatCurrency(plan.amount, plan.currency)}
                       </span>
                       <Badge variant="secondary">
-                        {formatBillingCycle(plan.billingCycle)}
+                        {formatBillingCycle(plan.type)}
                       </Badge>
                     </div>
                   </div>
