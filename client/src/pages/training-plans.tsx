@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2, Eye, Dumbbell } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -18,6 +19,8 @@ export default function TrainingPlans() {
   const { toast } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [weeksCycle, setWeeksCycle] = useState<number>(4);
+  const [workoutDays, setWorkoutDays] = useState<Record<number, Record<number, string>>>({});
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -47,7 +50,7 @@ export default function TrainingPlans() {
         title: "Success",
         description: "Training plan created successfully",
       });
-      setShowCreateForm(false);
+      resetForm();
       queryClient.invalidateQueries({ queryKey: ["/api/training-plans"] });
     },
     onError: (error) => {
@@ -78,13 +81,50 @@ export default function TrainingPlans() {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       goal: formData.get('goal') as string,
-      duration: parseInt(formData.get('duration') as string),
+      duration: weeksCycle,
       dailyCalories: parseInt(formData.get('dailyCalories') as string),
       protein: parseInt(formData.get('protein') as string),
       carbs: parseInt(formData.get('carbs') as string),
+      workoutDays: workoutDays,
     };
 
     createPlanMutation.mutate(data);
+  };
+
+  const handleWeeksCycleChange = (value: string) => {
+    const weeks = parseInt(value);
+    setWeeksCycle(weeks);
+    
+    // Initialize workout days for all weeks
+    const newWorkoutDays: Record<number, Record<number, string>> = {};
+    for (let week = 1; week <= weeks; week++) {
+      newWorkoutDays[week] = {};
+      for (let day = 1; day <= 6; day++) {
+        newWorkoutDays[week][day] = workoutDays[week]?.[day] || '';
+      }
+    }
+    setWorkoutDays(newWorkoutDays);
+  };
+
+  const handleWorkoutDayChange = (week: number, day: number, value: string) => {
+    setWorkoutDays(prev => ({
+      ...prev,
+      [week]: {
+        ...prev[week],
+        [day]: value
+      }
+    }));
+  };
+
+  const getDayName = (dayNumber: number) => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dayNumber - 1];
+  };
+
+  const resetForm = () => {
+    setShowCreateForm(false);
+    setWeeksCycle(4);
+    setWorkoutDays({});
   };
 
   if (isLoading) {
@@ -110,7 +150,13 @@ export default function TrainingPlans() {
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8 flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Training Plans</h1>
-        <Button onClick={() => setShowCreateForm(true)}>
+        <Button onClick={() => {
+          setShowCreateForm(true);
+          // Initialize workout days for default 4 weeks
+          if (Object.keys(workoutDays).length === 0) {
+            handleWeeksCycleChange("4");
+          }
+        }}>
           <Plus className="h-4 w-4 mr-2" />
           Create Plan
         </Button>
@@ -129,10 +175,10 @@ export default function TrainingPlans() {
                   <Input id="name" name="name" placeholder="e.g., Weight Loss Program" required />
                 </div>
                 <div>
-                  <Label htmlFor="duration">Duration (weeks)</Label>
-                  <Select name="duration" required>
+                  <Label htmlFor="weeksCycle">Weeks Cycle</Label>
+                  <Select value={weeksCycle.toString()} onValueChange={handleWeeksCycleChange} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select duration" />
+                      <SelectValue placeholder="Select weeks cycle" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="4">4 weeks</SelectItem>
@@ -174,11 +220,49 @@ export default function TrainingPlans() {
                 </div>
               </div>
 
+              {/* Weekly Workout Days Tabs */}
+              {weeksCycle > 0 && (
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Weekly Workout Schedule</Label>
+                  <Tabs defaultValue="1" className="w-full">
+                    <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${weeksCycle}, 1fr)` }}>
+                      {Array.from({ length: weeksCycle }, (_, i) => i + 1).map((week) => (
+                        <TabsTrigger key={week} value={week.toString()}>
+                          Week {week}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    
+                    {Array.from({ length: weeksCycle }, (_, i) => i + 1).map((week) => (
+                      <TabsContent key={week} value={week.toString()} className="space-y-4">
+                        <h3 className="text-lg font-medium">Week {week} Workouts</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Array.from({ length: 6 }, (_, i) => i + 1).map((day) => (
+                            <div key={day}>
+                              <Label htmlFor={`week-${week}-day-${day}`}>
+                                {getDayName(day)}
+                              </Label>
+                              <Textarea
+                                id={`week-${week}-day-${day}`}
+                                placeholder="Enter workout details for this day..."
+                                value={workoutDays[week]?.[day] || ''}
+                                onChange={(e) => handleWorkoutDayChange(week, day, e.target.value)}
+                                rows={3}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-4">
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={resetForm}
                 >
                   Cancel
                 </Button>
