@@ -39,6 +39,7 @@ import { eq, desc, and, count, sum, sql } from "drizzle-orm";
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
 
   // Trainer operations
@@ -129,6 +130,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -179,12 +185,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingTrainers(): Promise<Trainer[]> {
-    return await db
-      .select()
+    const result = await db
+      .select({
+        id: trainers.id,
+        userId: trainers.userId,
+        referralCode: trainers.referralCode,
+        expertise: trainers.expertise,
+        experience: trainers.experience,
+        gallery: trainers.gallery,
+        monthlyRevenue: trainers.monthlyRevenue,
+        createdAt: trainers.createdAt,
+        updatedAt: trainers.updatedAt,
+      })
       .from(trainers)
       .innerJoin(users, eq(trainers.userId, users.id))
       .where(eq(users.status, 'pending'))
       .orderBy(desc(trainers.createdAt));
+    return result;
   }
 
   // Client operations

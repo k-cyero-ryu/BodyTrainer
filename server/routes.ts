@@ -46,9 +46,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Role selection endpoint
+  app.post('/api/users/select-role', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { role, trainerData, referralCode } = req.body;
+
+      if (!['trainer', 'client'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role. Must be 'trainer' or 'client'" });
+      }
+
+      // Update user role
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update user role and status
+      const updatedUser = await storage.upsertUser({
+        ...user,
+        role: role,
+        status: role === 'trainer' ? 'pending' : 'active', // Trainers need approval
+      });
+
+      // Create role-specific records
+      if (role === 'trainer') {
+        // Generate unique referral code
+        const referralCodeValue = `TR${Date.now().toString().slice(-6)}${userId.slice(-2)}`;
+        
+        await storage.createTrainer({
+          userId: userId,
+          referralCode: referralCodeValue,
+          expertise: trainerData?.expertise || '',
+          experience: trainerData?.experience || '',
+        });
+      } else if (role === 'client') {
+        // Find trainer by referral code if provided
+        let trainerId = null;
+        if (referralCode) {
+          const trainer = await storage.getTrainerByReferralCode(referralCode);
+          if (trainer) {
+            trainerId = trainer.id;
+          }
+        }
+
+        if (trainerId) {
+          await storage.createClient({
+            userId: userId,
+            trainerId: trainerId,
+          });
+        }
+        // If no referral code or trainer not found, client will be created without a trainer
+      }
+
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: role === 'trainer' 
+          ? 'Trainer profile created! Your account is pending approval.' 
+          : 'Client profile created successfully!'
+      });
+
+    } catch (error) {
+      console.error("Error selecting role:", error);
+      res.status(500).json({ message: "Failed to select role" });
+    }
+  });
+
+  // Superadmin management endpoint
+  app.post('/api/admin/promote-superadmin', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user.claims.sub;
+      const currentUser = await storage.getUser(currentUserId);
+      
+      // Only existing superadmins can promote others
+      if (!currentUser || currentUser.role !== 'superadmin') {
+        return res.status(403).json({ message: "Only superadmins can promote users" });
+      }
+
+      const { userEmail } = req.body;
+      if (!userEmail) {
+        return res.status(400).json({ message: "User email is required" });
+      }
+
+      // Find user by email and promote to superadmin
+      const targetUser = await storage.getUserByEmail(userEmail);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updatedUser = await storage.upsertUser({
+        ...targetUser,
+        role: 'superadmin',
+        status: 'active',
+      });
+
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: 'User promoted to superadmin successfully!'
+      });
+
+    } catch (error) {
+      console.error("Error promoting user to superadmin:", error);
+      res.status(500).json({ message: "Failed to promote user" });
+    }
+  });
+
+  // Initial superadmin setup endpoint (for bootstrapping)
+  app.post('/api/admin/setup-superadmin', async (req, res) => {
+    try {
+      const { email, setupKey } = req.body;
+      
+      // Check setup key (use environment variable for security)
+      const expectedSetupKey = process.env.SUPERADMIN_SETUP_KEY || 'replit-fitness-admin-2025';
+      if (setupKey !== expectedSetupKey) {
+        return res.status(403).json({ message: "Invalid setup key" });
+      }
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if any superadmin already exists
+      const existingStats = await storage.getSystemStats();
+      if (existingStats.totalTrainers > 0) { // Basic check - could be improved
+        // If there are existing superadmins, require authentication
+        return res.status(403).json({ message: "SuperAdmin setup is only allowed during initial setup" });
+      }
+
+      // Find user by email
+      const targetUser = await storage.getUserByEmail(email);
+      if (!targetUser) {
+        return res.status(404).json({ 
+          message: "User not found. Please ensure the user has logged in at least once." 
+        });
+      }
+
+      // Promote to superadmin
+      const updatedUser = await storage.upsertUser({
+        ...targetUser,
+        role: 'superadmin',
+        status: 'active',
+      });
+
+      res.json({ 
+        success: true, 
+        user: updatedUser,
+        message: 'SuperAdmin account created successfully!'
+      });
+
+    } catch (error) {
+      console.error("Error setting up superadmin:", error);
+      res.status(500).json({ message: "Failed to setup superadmin" });
+    }
+  });
+
   // Object storage routes for exercise media
   app.get("/objects/:objectPath(*)", isAuthenticated, async (req, res) => {
-    const userId = req.user?.claims?.sub;
+    const userId = (req.user as any)?.claims?.sub;
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
