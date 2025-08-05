@@ -168,11 +168,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email is required" });
       }
 
-      // Check if any superadmin already exists
-      const existingStats = await storage.getSystemStats();
-      if (existingStats.totalTrainers > 0) { // Basic check - could be improved
-        // If there are existing superadmins, require authentication
-        return res.status(403).json({ message: "SuperAdmin setup is only allowed during initial setup" });
+      // Check if any superadmin already exists - allow setup if no SuperAdmins exist
+      try {
+        const existingSuperAdmins = await storage.getUsersByRole('superadmin');
+        if (existingSuperAdmins.length > 0) {
+          // If there are existing superadmins, use the promote endpoint instead
+          return res.status(403).json({ message: "SuperAdmin already exists. Use the promote endpoint instead." });
+        }
+      } catch (error) {
+        console.log("Error checking existing superadmins:", error);
+        // If error checking, allow setup to proceed
       }
 
       // Find user by email
