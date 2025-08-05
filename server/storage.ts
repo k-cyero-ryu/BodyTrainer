@@ -60,9 +60,12 @@ export interface IStorage {
   // Client operations
   createClient(client: InsertClient): Promise<Client>;
   getClient(id: string): Promise<Client | undefined>;
+  getClientById(clientId: string): Promise<Client | undefined>;
   getClientByUserId(userId: string): Promise<Client | undefined>;
   getClientsByTrainer(trainerId: string): Promise<Client[]>;
   updateClient(id: string, client: Partial<InsertClient>): Promise<Client>;
+  suspendClient(clientId: string): Promise<void>;
+  reactivateClient(clientId: string): Promise<void>;
 
   // Training plan operations
   createTrainingPlan(plan: InsertTrainingPlan): Promise<TrainingPlan>;
@@ -356,6 +359,56 @@ export class DatabaseStorage implements IStorage {
       .where(eq(clients.id, id))
       .returning();
     return updated;
+  }
+
+  async getClientById(clientId: string): Promise<Client | undefined> {
+    try {
+      const result = await db
+        .select()
+        .from(clients)
+        .innerJoin(users, eq(clients.userId, users.id))
+        .where(eq(clients.id, clientId));
+
+      if (result.length === 0) {
+        return undefined;
+      }
+
+      return {
+        ...result[0].clients,
+        user: result[0].users,
+      } as any;
+    } catch (error) {
+      console.error("Error in getClientById:", error);
+      return undefined;
+    }
+  }
+
+  async suspendClient(clientId: string): Promise<void> {
+    // Get client to find userId
+    const client = await this.getClient(clientId);
+    if (!client) {
+      throw new Error('Client not found');
+    }
+
+    // Update user status to suspended
+    await db
+      .update(users)
+      .set({ status: 'suspended', updatedAt: new Date() })
+      .where(eq(users.id, client.userId));
+  }
+
+  async reactivateClient(clientId: string): Promise<void> {
+    // Get client to find userId
+    const client = await this.getClient(clientId);
+    if (!client) {
+      throw new Error('Client not found');
+    }
+
+    // Update user status to active
+    await db
+      .update(users)
+      .set({ status: 'active', updatedAt: new Date() })
+      .where(eq(users.id, client.userId));
   }
 
   // Training plan operations

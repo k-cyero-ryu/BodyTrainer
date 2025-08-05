@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Users, Plus, Filter, Eye, Edit, MessageCircle, Copy, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Clients() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -251,13 +252,15 @@ export default function Clients() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
+                          <Link href={`/clients/${client.id}`}>
+                            <Button variant="ghost" size="sm" title="View Details">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button variant="ghost" size="sm" title="Edit Client">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="Message Client">
                             <MessageCircle className="h-4 w-4" />
                           </Button>
                         </div>

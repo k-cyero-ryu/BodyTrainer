@@ -808,6 +808,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Get individual client details for trainer
+  app.get('/api/clients/:clientId', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const client = await storage.getClientById(clientId);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.claims.sub);
+      if (!trainer || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      res.json(client);
+    } catch (error) {
+      console.error("Error fetching client:", error);
+      res.status(500).json({ message: "Failed to fetch client" });
+    }
+  });
+
+  // Suspend client
+  app.post('/api/clients/:clientId/suspend', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const client = await storage.getClientById(clientId);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.claims.sub);
+      if (!trainer || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      await storage.suspendClient(clientId);
+      res.json({ success: true, message: "Client suspended successfully" });
+    } catch (error) {
+      console.error("Error suspending client:", error);
+      res.status(500).json({ message: "Failed to suspend client" });
+    }
+  });
+
+  // Reactivate client
+  app.post('/api/clients/:clientId/reactivate', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const client = await storage.getClientById(clientId);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.claims.sub);
+      if (!trainer || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      await storage.reactivateClient(clientId);
+      res.json({ success: true, message: "Client reactivated successfully" });
+    } catch (error) {
+      console.error("Error reactivating client:", error);
+      res.status(500).json({ message: "Failed to reactivate client" });
+    }
+  });
+
   // DEV ONLY: Account switcher for testing
   app.post('/api/dev/switch-account', async (req, res) => {
     try {
