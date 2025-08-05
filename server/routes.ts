@@ -501,11 +501,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only trainers can create exercises" });
       }
       
-      const exerciseData = insertExerciseSchema.parse(req.body);
-      const exercise = await storage.createExercise({
-        ...exerciseData,
+      const exerciseData = insertExerciseSchema.parse({
+        ...req.body,
         trainerId: trainer.id,
       });
+      const exercise = await storage.createExercise(exerciseData);
       
       res.status(201).json(exercise);
     } catch (error) {
