@@ -286,30 +286,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/trainers/clients', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      console.log("=== TRAINER LOOKUP DEBUG ===");
-      console.log("Looking for trainer with userId:", userId);
-      console.log("User ID type:", typeof userId);
-      
       const trainer = await storage.getTrainerByUserId(userId);
-      console.log("Found trainer:", JSON.stringify(trainer, null, 2));
-      console.log("Trainer truthiness:", !!trainer);
-      console.log("Trainer type:", typeof trainer);
       
-      if (!trainer) {
-        console.log("NO TRAINER FOUND - returning 404");
+      // Force check for trainer data with explicit validation
+      if (!trainer || !trainer.id || !trainer.referralCode) {
         return res.status(404).json({ message: "Trainer not found" });
       }
       
-      console.log("TRAINER FOUND - proceeding with success response");
-      
       const clients = await storage.getClientsByTrainer(trainer.id);
-      console.log("Clients fetched:", clients.length);
-      
       const baseUrl = `${req.protocol}://${req.hostname}`;
       const referralUrl = `${baseUrl}/register/client?code=${trainer.referralCode}`;
-      
-      console.log("Sending success response with referralCode:", trainer.referralCode);
-      console.log("Sending success response with referralUrl:", referralUrl);
       
       res.json({
         clients,
