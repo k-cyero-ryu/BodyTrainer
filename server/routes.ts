@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertMonthlyEvaluationSchema } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertMonthlyEvaluationSchema, type User } from "@shared/schema";
 
 // Extend WebSocket type to include userId
 interface ExtendedWebSocket extends WebSocket {
@@ -461,7 +461,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chat routes
-  app.get('/api/chat/:receiverId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/chat/users', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user.claims.sub;
+      const currentUser = await storage.getUser(currentUserId);
+      
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get all users and filter based on role
+      const allUsers = await storage.getAllUsers();
+      
+      const chatUsers = allUsers
+        .filter((user: User) => user.id !== currentUserId) // Exclude current user
+        .map((user: User) => ({
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          profileImageUrl: user.profileImageUrl,
+          role: user.role,
+        }));
+      
+      res.json(chatUsers);
+    } catch (error) {
+      console.error("Error fetching chat users:", error);
+      res.status(500).json({ message: "Failed to fetch chat users" });
+    }
+  });
+
+  app.get('/api/chat/messages/:receiverId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const messages = await storage.getChatMessages(userId, req.params.receiverId);
@@ -472,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/chat', isAuthenticated, async (req: any, res) => {
+  app.post('/api/chat/messages', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const messageData = insertChatMessageSchema.parse({

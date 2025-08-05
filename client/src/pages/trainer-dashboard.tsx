@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -6,11 +6,14 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, UserCheck, DollarSign, Dumbbell, Plus, PenTool, BarChart, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Chat from "@/components/chat";
+import { Users, UserCheck, DollarSign, Dumbbell, Plus, PenTool, BarChart, Copy, MessageCircle, X } from "lucide-react";
 
 export default function TrainerDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -214,7 +217,7 @@ export default function TrainerDashboard() {
             <CardContent>
               <div className="bg-gray-50 rounded-lg p-4 text-center">
                 <p className="text-sm text-gray-600 mb-2">Share this code with new clients:</p>
-                <p className="text-2xl font-bold text-primary">{user?.trainer?.referralCode}</p>
+                <p className="text-2xl font-bold text-primary">{trainer?.referralCode || 'Loading...'}</p>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -228,6 +231,27 @@ export default function TrainerDashboard() {
             </CardContent>
           </Card>
 
+          {/* Contact SuperAdmin */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Need Help?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">
+                  Have questions about your account or need support? Contact our administrators directly.
+                </p>
+                <Button 
+                  className="w-full"
+                  onClick={() => setIsChatOpen(true)}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Contact SuperAdmin
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Upcoming Evaluations */}
           <Card>
             <CardHeader>
@@ -235,7 +259,7 @@ export default function TrainerDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {clients && clients.length > 0 ? (
+                {Array.isArray(clients) && clients.length > 0 ? (
                   clients.slice(0, 3).map((client: any) => (
                     <div key={client.id} className="flex items-center justify-between py-2">
                       <div>
@@ -255,6 +279,38 @@ export default function TrainerDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Floating Chat Button */}
+      <Button
+        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg z-50"
+        onClick={() => setIsChatOpen(true)}
+      >
+        <MessageCircle className="h-6 w-6" />
+      </Button>
+
+      {/* Chat Dialog */}
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogContent className="max-w-4xl h-[600px] p-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Communication Center
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsChatOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden h-[calc(600px-100px)]">
+            <Chat />
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

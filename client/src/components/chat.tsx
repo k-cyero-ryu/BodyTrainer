@@ -31,6 +31,7 @@ export default function Chat() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -42,19 +43,32 @@ export default function Chat() {
     enabled: !!user?.id,
   });
 
+  // Find superadmins for direct contact
+  const superAdmins = chatUsers.filter((chatUser: ChatUser) => chatUser.role === 'superadmin');
+
   // Get messages for selected conversation
   const { data: messages = [] } = useQuery({
     queryKey: ['/api/chat/messages', selectedUser],
     enabled: !!selectedUser && !!user?.id,
   });
 
+  // Expose function to open SuperAdmin chat
+  useEffect(() => {
+    const chatWidget = document.querySelector('[data-chat-widget]');
+    if (chatWidget) {
+      (chatWidget as any).openSuperAdminChat = () => {
+        if (superAdmins.length > 0) {
+          setSelectedUser(superAdmins[0].id);
+          setIsOpen(true);
+        }
+      };
+    }
+  }, [superAdmins]);
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { receiverId: string; content: string }) => {
-      return apiRequest('/api/chat/messages', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", '/api/chat/messages', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/messages'] });
@@ -122,29 +136,34 @@ export default function Chat() {
 
   const filteredChatUsers = Array.isArray(chatUsers) ? chatUsers.filter((chatUser: ChatUser) => {
     if (userRole === 'trainer') {
-      return chatUser.role === 'client';
+      // Trainers can chat with clients AND superadmins
+      return chatUser.role === 'client' || chatUser.role === 'superadmin';
     } else if (userRole === 'client') {
       return chatUser.role === 'trainer';
+    } else if (userRole === 'superadmin') {
+      // SuperAdmins can chat with everyone
+      return chatUser.role === 'trainer' || chatUser.role === 'client';
     }
     return false;
   }) : [];
 
   return (
-    <div className="flex h-[calc(100vh-200px)] bg-white dark:bg-gray-900">
+    <div className="flex h-full bg-white dark:bg-gray-900">
       {/* Users List */}
       <div className="w-1/3 border-r border-gray-200 dark:border-gray-700">
         <Card className="h-full rounded-none border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
-              {userRole === 'trainer' ? 'Clients' : 'Trainers'}
+              {userRole === 'trainer' ? 'Clients & Support' : 
+               userRole === 'superadmin' ? 'Users' : 'Trainers'}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-1">
               {filteredChatUsers.length === 0 ? (
                 <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No {userRole === 'trainer' ? 'clients' : 'trainers'} available to chat
+                  No users available to chat
                 </div>
               ) : (
                 filteredChatUsers.map((chatUser: ChatUser) => (
