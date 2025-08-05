@@ -465,6 +465,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { planExercises, ...planData } = req.body;
       
+      console.log('planData received:', planData);
+      console.log('trainer.id:', trainer.id);
+      
       // Create the training plan first
       const plan = await storage.createTrainingPlan({
         ...insertTrainingPlanSchema.parse(planData),
