@@ -22,7 +22,7 @@ const editClientSchema = z.object({
   height: z.number().min(100).max(250).optional(),
   weight: z.number().min(30).max(300).optional(),
   bodyGoal: z.string().optional(),
-  clientPaymentPlanId: z.string().optional(),
+  clientPaymentPlanId: z.string().optional().transform(val => val === "none" ? undefined : val),
   paymentStatus: z.enum(['active', 'overdue', 'suspended']).optional(),
 });
 
@@ -88,7 +88,7 @@ export default function EditClient() {
       height: client?.height || undefined,
       weight: client?.weight || undefined,
       bodyGoal: client?.bodyGoal || '',
-      clientPaymentPlanId: client?.clientPaymentPlanId || undefined,
+      clientPaymentPlanId: client?.clientPaymentPlanId || "none",
       paymentStatus: client?.paymentStatus || 'active',
     },
   });
@@ -101,7 +101,7 @@ export default function EditClient() {
         height: client.height || undefined,
         weight: client.weight || undefined,
         bodyGoal: client.bodyGoal || '',
-        clientPaymentPlanId: client.clientPaymentPlanId || undefined,
+        clientPaymentPlanId: client.clientPaymentPlanId || "none",
         paymentStatus: client.paymentStatus || 'active',
       });
     }
@@ -303,7 +303,7 @@ export default function EditClient() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No Payment Plan</SelectItem>
+                          <SelectItem value="none">No Payment Plan</SelectItem>
                           {paymentPlans.map((plan: any) => (
                             <SelectItem key={plan.id} value={plan.id}>
                               {plan.name} - {formatCurrency(plan.amount, plan.currency)} ({formatBillingCycle(plan.type)})
