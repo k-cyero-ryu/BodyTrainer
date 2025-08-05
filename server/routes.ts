@@ -463,11 +463,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only trainers can create plans" });
       }
       
-      const planData = insertTrainingPlanSchema.parse(req.body);
+      const { planExercises, ...planData } = req.body;
+      
+      // Create the training plan first
       const plan = await storage.createTrainingPlan({
-        ...planData,
+        ...insertTrainingPlanSchema.parse(planData),
         trainerId: trainer.id,
       });
+      
+      // Create the plan exercises if provided
+      if (planExercises && planExercises.length > 0) {
+        await storage.createPlanExercises(plan.id, planExercises);
+      }
       
       res.status(201).json(plan);
     } catch (error) {

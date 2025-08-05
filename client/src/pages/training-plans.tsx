@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Eye, Dumbbell } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Edit, Trash2, Eye, Dumbbell, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function TrainingPlans() {
@@ -20,7 +21,15 @@ export default function TrainingPlans() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [weeksCycle, setWeeksCycle] = useState<number>(1);
-  const [workoutDays, setWorkoutDays] = useState<Record<number, Record<number, string>>>({});
+  const [workoutDays, setWorkoutDays] = useState<Record<number, Record<number, Array<{
+    exerciseId: string;
+    sets?: number;
+    reps?: number;
+    weight?: number;
+    duration?: number;
+    restTime?: number;
+    notes?: string;
+  }>>>>({});
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -39,6 +48,11 @@ export default function TrainingPlans() {
   const { data: plans = [] } = useQuery({
     queryKey: ["/api/training-plans"],
     enabled: !!user && (user.role === 'trainer' || user.role === 'client'),
+  });
+
+  const { data: exercises = [] } = useQuery({
+    queryKey: ["/api/exercises"],
+    enabled: !!user && user.role === 'trainer' && showCreateForm,
   });
 
   const createPlanMutation = useMutation({
@@ -77,15 +91,35 @@ export default function TrainingPlans() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    // Convert workoutDays to planExercises format
+    // Note: Since planExercises table doesn't have week field, we'll take the first week as the template
+    const planExercises: any[] = [];
+    const firstWeekData = workoutDays[1] || {};
+    
+    Object.entries(firstWeekData).forEach(([day, exercises]) => {
+      exercises.forEach(exercise => {
+        planExercises.push({
+          exerciseId: exercise.exerciseId,
+          dayOfWeek: parseInt(day),
+          sets: exercise.sets || null,
+          reps: exercise.reps || null,
+          weight: exercise.weight || null,
+          duration: exercise.duration || null,
+          restTime: exercise.restTime || null,
+          notes: exercise.notes || null
+        });
+      });
+    });
+    
     const data = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       goal: formData.get('goal') as string,
       duration: weeksCycle,
-      dailyCalories: parseInt(formData.get('dailyCalories') as string),
-      protein: parseInt(formData.get('protein') as string),
-      carbs: parseInt(formData.get('carbs') as string),
-      workoutDays: workoutDays,
+      dailyCalories: parseInt(formData.get('dailyCalories') as string) || null,
+      protein: parseInt(formData.get('protein') as string) || null,
+      carbs: parseInt(formData.get('carbs') as string) || null,
+      planExercises
     };
 
     createPlanMutation.mutate(data);
@@ -95,23 +129,72 @@ export default function TrainingPlans() {
     const weeks = parseInt(value);
     setWeeksCycle(weeks);
     
-    // Initialize workout days for all weeks
-    const newWorkoutDays: Record<number, Record<number, string>> = {};
+    // Initialize workout days for all weeks with exercise arrays
+    const newWorkoutDays: Record<number, Record<number, Array<{
+      exerciseId: string;
+      sets?: number;
+      reps?: number;
+      weight?: number;
+      duration?: number;
+      restTime?: number;
+      notes?: string;
+    }>>> = {};
+    
     for (let week = 1; week <= weeks; week++) {
       newWorkoutDays[week] = {};
       for (let day = 1; day <= 6; day++) {
-        newWorkoutDays[week][day] = workoutDays[week]?.[day] || '';
+        newWorkoutDays[week][day] = workoutDays[week]?.[day] || [];
       }
     }
     setWorkoutDays(newWorkoutDays);
   };
 
-  const handleWorkoutDayChange = (week: number, day: number, value: string) => {
+  const handleExerciseToggle = (week: number, day: number, exerciseId: string, isChecked: boolean) => {
+    setWorkoutDays(prev => {
+      const currentDay = prev[week]?.[day] || [];
+      
+      if (isChecked) {
+        // Add exercise with default values
+        return {
+          ...prev,
+          [week]: {
+            ...prev[week],
+            [day]: [...currentDay, { exerciseId, sets: 3, reps: 10 }]
+          }
+        };
+      } else {
+        // Remove exercise
+        return {
+          ...prev,
+          [week]: {
+            ...prev[week],
+            [day]: currentDay.filter(ex => ex.exerciseId !== exerciseId)
+          }
+        };
+      }
+    });
+  };
+
+  const handleExerciseDetailChange = (week: number, day: number, exerciseId: string, field: string, value: string | number) => {
     setWorkoutDays(prev => ({
       ...prev,
       [week]: {
         ...prev[week],
-        [day]: value
+        [day]: prev[week]?.[day]?.map(ex => 
+          ex.exerciseId === exerciseId 
+            ? { ...ex, [field]: value }
+            : ex
+        ) || []
+      }
+    }));
+  };
+
+  const removeExerciseFromDay = (week: number, day: number, exerciseId: string) => {
+    setWorkoutDays(prev => ({
+      ...prev,
+      [week]: {
+        ...prev[week],
+        [day]: prev[week]?.[day]?.filter(ex => ex.exerciseId !== exerciseId) || []
       }
     }));
   };
@@ -236,19 +319,128 @@ export default function TrainingPlans() {
                     {Array.from({ length: weeksCycle }, (_, i) => i + 1).map((week) => (
                       <TabsContent key={week} value={week.toString()} className="space-y-4">
                         <h3 className="text-lg font-medium">Week {week} Workouts</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                           {Array.from({ length: 6 }, (_, i) => i + 1).map((day) => (
-                            <div key={day}>
-                              <Label htmlFor={`week-${week}-day-${day}`}>
+                            <div key={day} className="space-y-3">
+                              <Label className="text-base font-medium">
                                 {getDayName(day)}
                               </Label>
-                              <Textarea
-                                id={`week-${week}-day-${day}`}
-                                placeholder="Enter workout details for this day..."
-                                value={workoutDays[week]?.[day] || ''}
-                                onChange={(e) => handleWorkoutDayChange(week, day, e.target.value)}
-                                rows={3}
-                              />
+                              
+                              {/* Available Exercises */}
+                              <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                                <Label className="text-sm text-gray-600">Available Exercises:</Label>
+                                {Array.isArray(exercises) && exercises.length > 0 ? (
+                                  exercises.map((exercise: any) => {
+                                    const isSelected = workoutDays[week]?.[day]?.some(ex => ex.exerciseId === exercise.id);
+                                    return (
+                                      <div key={exercise.id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`exercise-${week}-${day}-${exercise.id}`}
+                                          checked={isSelected}
+                                          onCheckedChange={(checked) => 
+                                            handleExerciseToggle(week, day, exercise.id, checked as boolean)
+                                          }
+                                        />
+                                        <Label 
+                                          htmlFor={`exercise-${week}-${day}-${exercise.id}`}
+                                          className="text-sm cursor-pointer flex-1"
+                                        >
+                                          {exercise.name}
+                                        </Label>
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  <p className="text-sm text-gray-500">No exercises available. Create exercises first.</p>
+                                )}
+                              </div>
+
+                              {/* Selected Exercises Details */}
+                              {workoutDays[week]?.[day] && workoutDays[week][day].length > 0 && (
+                                <div className="space-y-3">
+                                  <Label className="text-sm text-gray-600">Selected Exercises:</Label>
+                                  {workoutDays[week][day].map((selectedExercise, index) => {
+                                    const exercise = Array.isArray(exercises) ? exercises.find((ex: any) => ex.id === selectedExercise.exerciseId) : undefined;
+                                    return (
+                                      <div key={index} className="border rounded-lg p-3 space-y-2 bg-gray-50">
+                                        <div className="flex justify-between items-center">
+                                          <span className="font-medium text-sm">{exercise?.name}</span>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => removeExerciseFromDay(week, day, selectedExercise.exerciseId)}
+                                            className="h-6 w-6 p-0"
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-2">
+                                          <div>
+                                            <Label className="text-xs">Sets</Label>
+                                            <Input
+                                              type="number"
+                                              value={selectedExercise.sets || ''}
+                                              onChange={(e) => handleExerciseDetailChange(week, day, selectedExercise.exerciseId, 'sets', parseInt(e.target.value) || 0)}
+                                              className="h-7 text-xs"
+                                              min="1"
+                                              placeholder="3"
+                                            />
+                                          </div>
+                                          <div>
+                                            <Label className="text-xs">Reps</Label>
+                                            <Input
+                                              type="number"
+                                              value={selectedExercise.reps || ''}
+                                              onChange={(e) => handleExerciseDetailChange(week, day, selectedExercise.exerciseId, 'reps', parseInt(e.target.value) || 0)}
+                                              className="h-7 text-xs"
+                                              min="1"
+                                              placeholder="10"
+                                            />
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-2">
+                                          <div>
+                                            <Label className="text-xs">Weight (kg)</Label>
+                                            <Input
+                                              type="number"
+                                              step="0.5"
+                                              value={selectedExercise.weight || ''}
+                                              onChange={(e) => handleExerciseDetailChange(week, day, selectedExercise.exerciseId, 'weight', parseFloat(e.target.value) || 0)}
+                                              className="h-7 text-xs"
+                                              min="0"
+                                              placeholder="50"
+                                            />
+                                          </div>
+                                          <div>
+                                            <Label className="text-xs">Rest (sec)</Label>
+                                            <Input
+                                              type="number"
+                                              value={selectedExercise.restTime || ''}
+                                              onChange={(e) => handleExerciseDetailChange(week, day, selectedExercise.exerciseId, 'restTime', parseInt(e.target.value) || 0)}
+                                              className="h-7 text-xs"
+                                              min="0"
+                                              placeholder="60"
+                                            />
+                                          </div>
+                                        </div>
+                                        
+                                        <div>
+                                          <Label className="text-xs">Notes</Label>
+                                          <Textarea
+                                            value={selectedExercise.notes || ''}
+                                            onChange={(e) => handleExerciseDetailChange(week, day, selectedExercise.exerciseId, 'notes', e.target.value)}
+                                            className="h-16 text-xs"
+                                            placeholder="Exercise-specific notes..."
+                                          />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -280,7 +472,7 @@ export default function TrainingPlans() {
 
       {/* Plans List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {plans && plans.length > 0 ? (
+        {Array.isArray(plans) && plans.length > 0 ? (
           plans.map((plan: any) => (
             <Card key={plan.id}>
               <CardHeader>

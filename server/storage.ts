@@ -89,6 +89,7 @@ export interface IStorage {
 
   // Plan exercise operations
   createPlanExercise(planExercise: InsertPlanExercise): Promise<PlanExercise>;
+  createPlanExercises(planId: string, exercises: Array<Omit<InsertPlanExercise, 'planId'>>): Promise<void>;
   getPlanExercisesByPlan(planId: string): Promise<PlanExercise[]>;
   updatePlanExercise(id: string, planExercise: Partial<InsertPlanExercise>): Promise<PlanExercise>;
   deletePlanExercise(id: string): Promise<void>;
@@ -506,6 +507,17 @@ export class DatabaseStorage implements IStorage {
   async createPlanExercise(planExercise: InsertPlanExercise): Promise<PlanExercise> {
     const [created] = await db.insert(planExercises).values(planExercise).returning();
     return created;
+  }
+
+  async createPlanExercises(planId: string, exercises: Array<Omit<InsertPlanExercise, 'planId'>>): Promise<void> {
+    if (exercises.length === 0) return;
+    
+    const planExercisesToInsert = exercises.map(exercise => ({
+      ...exercise,
+      planId
+    }));
+    
+    await db.insert(planExercises).values(planExercisesToInsert);
   }
 
   async getPlanExercisesByPlan(planId: string): Promise<PlanExercise[]> {
