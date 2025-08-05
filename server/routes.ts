@@ -286,12 +286,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/trainers/clients', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("=== TRAINER LOOKUP DEBUG ===");
       console.log("Looking for trainer with userId:", userId);
+      console.log("User ID type:", typeof userId);
       
       const trainer = await storage.getTrainerByUserId(userId);
-      console.log("Found trainer:", trainer);
+      console.log("Found trainer:", JSON.stringify(trainer, null, 2));
       
       if (!trainer) {
+        console.log("NO TRAINER FOUND - returning 404");
         return res.status(404).json({ message: "Trainer not found" });
       }
       
