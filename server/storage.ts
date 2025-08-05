@@ -10,6 +10,8 @@ import {
   monthlyEvaluations,
   posts,
   chatMessages,
+  paymentPlans,
+  clientPaymentPlans,
   type User,
   type UpsertUser,
   type Trainer,
@@ -32,9 +34,10 @@ import {
   type InsertPost,
   type ChatMessage,
   type InsertChatMessage,
-  paymentPlans,
   type PaymentPlan,
   type InsertPaymentPlan,
+  type ClientPaymentPlan,
+  type InsertClientPaymentPlan,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql } from "drizzle-orm";
@@ -115,12 +118,20 @@ export interface IStorage {
   markMessagesAsRead(receiverId: string, senderId: string): Promise<void>;
   canTrainerChatWithUser(trainerId: string, targetUserId: string): Promise<boolean>;
 
-  // Payment plan operations
+  // Payment plan operations (SuperAdmin manages trainer payment plans)
   getAllPaymentPlans(): Promise<PaymentPlan[]>;
   getActivePaymentPlans(): Promise<PaymentPlan[]>;
   createPaymentPlan(plan: InsertPaymentPlan): Promise<PaymentPlan>;
   updatePaymentPlan(id: string, plan: Partial<InsertPaymentPlan>): Promise<PaymentPlan>;
   deletePaymentPlan(id: string): Promise<void>;
+
+  // Client payment plan operations (Trainers manage client payment plans)
+  createClientPaymentPlan(plan: InsertClientPaymentPlan): Promise<ClientPaymentPlan>;
+  getClientPaymentPlansByTrainer(trainerId: string): Promise<ClientPaymentPlan[]>;
+  getClientPaymentPlan(id: string): Promise<ClientPaymentPlan | undefined>;
+  updateClientPaymentPlan(id: string, plan: Partial<InsertClientPaymentPlan>): Promise<ClientPaymentPlan>;
+  deleteClientPaymentPlan(id: string): Promise<void>;
+  assignClientPaymentPlan(clientId: string, clientPaymentPlanId: string | null): Promise<void>;
 
   // Analytics operations
   getTrainerStats(trainerId: string): Promise<{
@@ -1005,6 +1016,66 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(users.id, trainer.userId));
+  }
+
+  // Client payment plan operations (Trainers manage client payment plans)
+  async createClientPaymentPlan(plan: InsertClientPaymentPlan): Promise<ClientPaymentPlan> {
+    const [created] = await db
+      .insert(clientPaymentPlans)
+      .values(plan)
+      .returning();
+    return created;
+  }
+
+  async getClientPaymentPlansByTrainer(trainerId: string): Promise<ClientPaymentPlan[]> {
+    return await db
+      .select()
+      .from(clientPaymentPlans)
+      .where(eq(clientPaymentPlans.trainerId, trainerId))
+      .orderBy(desc(clientPaymentPlans.createdAt));
+  }
+
+  async getClientPaymentPlan(id: string): Promise<ClientPaymentPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(clientPaymentPlans)
+      .where(eq(clientPaymentPlans.id, id));
+    return plan;
+  }
+
+  async updateClientPaymentPlan(id: string, plan: Partial<InsertClientPaymentPlan>): Promise<ClientPaymentPlan> {
+    const [updated] = await db
+      .update(clientPaymentPlans)
+      .set({
+        ...plan,
+        updatedAt: new Date()
+      })
+      .where(eq(clientPaymentPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteClientPaymentPlan(id: string): Promise<void> {
+    // First, remove the payment plan reference from any clients using it
+    await db
+      .update(clients)
+      .set({ clientPaymentPlanId: null })
+      .where(eq(clients.clientPaymentPlanId, id));
+
+    // Then delete the payment plan
+    await db
+      .delete(clientPaymentPlans)
+      .where(eq(clientPaymentPlans.id, id));
+  }
+
+  async assignClientPaymentPlan(clientId: string, clientPaymentPlanId: string | null): Promise<void> {
+    await db
+      .update(clients)
+      .set({
+        clientPaymentPlanId,
+        updatedAt: new Date()
+      })
+      .where(eq(clients.id, clientId));
   }
 }
 

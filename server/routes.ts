@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, type User } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 
 // Extend WebSocket type to include userId
 interface ExtendedWebSocket extends WebSocket {
@@ -979,6 +979,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting payment plan:", error);
       res.status(500).json({ message: "Failed to delete payment plan" });
+    }
+  });
+
+  // Client payment plan routes (for trainers to manage client payment plans)
+  app.get('/api/client-payment-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can access client payment plans" });
+      }
+
+      const plans = await storage.getClientPaymentPlansByTrainer(trainer.id);
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching client payment plans:", error);
+      res.status(500).json({ message: "Failed to fetch client payment plans" });
+    }
+  });
+
+  app.post('/api/client-payment-plans', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can create client payment plans" });
+      }
+
+      const planData = insertClientPaymentPlanSchema.parse({
+        ...req.body,
+        trainerId: trainer.id
+      });
+      const plan = await storage.createClientPaymentPlan(planData);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Error creating client payment plan:", error);
+      res.status(500).json({ message: "Failed to create client payment plan" });
+    }
+  });
+
+  app.put('/api/client-payment-plans/:planId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can update client payment plans" });
+      }
+
+      const { planId } = req.params;
+      
+      // Verify the plan belongs to this trainer
+      const existingPlan = await storage.getClientPaymentPlan(planId);
+      if (!existingPlan || existingPlan.trainerId !== trainer.id) {
+        return res.status(404).json({ message: "Client payment plan not found" });
+      }
+
+      const planData = insertClientPaymentPlanSchema.partial().parse(req.body);
+      const plan = await storage.updateClientPaymentPlan(planId, planData);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error updating client payment plan:", error);
+      res.status(500).json({ message: "Failed to update client payment plan" });
+    }
+  });
+
+  app.delete('/api/client-payment-plans/:planId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can delete client payment plans" });
+      }
+
+      const { planId } = req.params;
+      
+      // Verify the plan belongs to this trainer
+      const existingPlan = await storage.getClientPaymentPlan(planId);
+      if (!existingPlan || existingPlan.trainerId !== trainer.id) {
+        return res.status(404).json({ message: "Client payment plan not found" });
+      }
+
+      await storage.deleteClientPaymentPlan(planId);
+      res.json({ success: true, message: "Client payment plan deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting client payment plan:", error);
+      res.status(500).json({ message: "Failed to delete client payment plan" });
+    }
+  });
+
+  // Assign client payment plan to client
+  app.put('/api/clients/:clientId/payment-plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can assign client payment plans" });
+      }
+
+      const { clientId } = req.params;
+      const { clientPaymentPlanId } = req.body;
+
+      // Verify the client belongs to this trainer
+      const client = await storage.getClient(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(404).json({ message: "Client not found or not assigned to you" });
+      }
+
+      // If a payment plan is being assigned, verify it belongs to this trainer
+      if (clientPaymentPlanId) {
+        const paymentPlan = await storage.getClientPaymentPlan(clientPaymentPlanId);
+        if (!paymentPlan || paymentPlan.trainerId !== trainer.id) {
+          return res.status(400).json({ message: "Invalid payment plan" });
+        }
+      }
+
+      await storage.assignClientPaymentPlan(clientId, clientPaymentPlanId || null);
+      res.json({ success: true, message: "Client payment plan assigned successfully" });
+    } catch (error) {
+      console.error("Error assigning client payment plan:", error);
+      res.status(500).json({ message: "Failed to assign client payment plan" });
     }
   });
 

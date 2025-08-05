@@ -68,7 +68,8 @@ export const clients = pgTable("clients", {
   weight: decimal("weight", { precision: 5, scale: 2 }),
   bodyGoal: text("body_goal"),
   referralSource: varchar("referral_source"),
-  paymentPlan: varchar("payment_plan"),
+  paymentPlan: varchar("payment_plan"), // Legacy field for backward compatibility
+  clientPaymentPlanId: varchar("client_payment_plan_id"), // New payment plan reference - will add foreign key after clientPaymentPlans is defined
   paymentStatus: varchar("payment_status").default('active'),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -205,10 +206,15 @@ export const trainersRelations = relations(trainers, ({ one, many }) => ({
     fields: [trainers.userId],
     references: [users.id],
   }),
+  paymentPlan: one(paymentPlans, {
+    fields: [trainers.paymentPlanId],
+    references: [paymentPlans.id],
+  }),
   clients: many(clients),
   trainingPlans: many(trainingPlans),
   exercises: many(exercises),
   posts: many(posts),
+  clientPaymentPlans: many(clientPaymentPlans),
 }));
 
 export const clientsRelations = relations(clients, ({ one, many }) => ({
@@ -219,6 +225,10 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
   trainer: one(trainers, {
     fields: [clients.trainerId],
     references: [trainers.id],
+  }),
+  clientPaymentPlan: one(clientPaymentPlans, {
+    fields: [clients.clientPaymentPlanId],
+    references: [clientPaymentPlans.id],
   }),
   clientPlans: many(clientPlans),
   workoutLogs: many(workoutLogs),
@@ -303,6 +313,8 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
   }),
 }));
 
+// Will add clientPaymentPlansRelations after clientPaymentPlans table is defined
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTrainerSchema = createInsertSchema(trainers).omit({ id: true, createdAt: true, updatedAt: true });
@@ -341,6 +353,7 @@ export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 
 // Payment Plans Configuration Table
+// Payment plans table (SuperAdmin creates for trainers)
 export const paymentPlans = pgTable("payment_plans", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(), // e.g., "Basic Monthly", "Premium Quarterly"
@@ -353,8 +366,38 @@ export const paymentPlans = pgTable("payment_plans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Client payment plans table (Trainers create for their clients)
+export const clientPaymentPlans = pgTable("client_payment_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  type: varchar("type").notNull(), // 'monthly', 'weekly', 'yearly'
+  currency: varchar("currency").default("USD"),
+  description: text("description"),
+  features: text("features").array(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertPaymentPlanSchema = createInsertSchema(paymentPlans).omit({ id: true, createdAt: true, updatedAt: true }).extend({
   amount: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val)
 });
 export type InsertPaymentPlan = z.infer<typeof insertPaymentPlanSchema>;
 export type PaymentPlan = typeof paymentPlans.$inferSelect;
+
+export const insertClientPaymentPlanSchema = createInsertSchema(clientPaymentPlans).omit({ id: true, createdAt: true, updatedAt: true }).extend({
+  amount: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val)
+});
+export type InsertClientPaymentPlan = z.infer<typeof insertClientPaymentPlanSchema>;
+export type ClientPaymentPlan = typeof clientPaymentPlans.$inferSelect;
+
+// Client payment plans relations
+export const clientPaymentPlansRelations = relations(clientPaymentPlans, ({ one, many }) => ({
+  trainer: one(trainers, {
+    fields: [clientPaymentPlans.trainerId],
+    references: [trainers.id],
+  }),
+  clients: many(clients),
+}));

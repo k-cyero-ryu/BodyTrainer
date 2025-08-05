@@ -124,6 +124,12 @@ export default function Navigation() {
       roles: ['trainer']
     },
     { 
+      href: '/client-payment-plans', 
+      label: 'Client Payment Plans', 
+      icon: CreditCard,
+      roles: ['trainer'] 
+    },
+    { 
       href: '/reports', 
       label: 'Reports', 
       icon: BarChart3,
