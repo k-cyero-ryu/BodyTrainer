@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -21,7 +24,8 @@ import {
   Menu,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  UserCog
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSelector from "@/components/language-selector";
@@ -31,6 +35,31 @@ export default function Navigation() {
   const [location] = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const testAccounts = [
+    { id: '39363427', email: 'darkryuudan@gmail.com', role: 'superadmin', name: 'Ronny (SuperAdmin)' },
+    { id: '46005006', email: 'kuban.solutions@gmail.com', role: 'trainer', name: 'Trainer Account' },
+    { id: 'client001', email: 'client.test@example.com', role: 'client', name: 'John Client' }
+  ];
+
+  const switchAccountMutation = useMutation({
+    mutationFn: async (accountId: string) => {
+      return await apiRequest('POST', '/api/dev/switch-account', { accountId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      window.location.reload();
+    },
+    onError: (error) => {
+      toast({
+        title: "Switch Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   if (!isAuthenticated) return null;
 
@@ -218,6 +247,27 @@ export default function Navigation() {
                     </div>
                   </div>
                   <DropdownMenuSeparator />
+                  {/* Test Account Switcher */}
+                  <div className="px-2 py-1">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Test Accounts:</p>
+                    {testAccounts.map((account) => (
+                      <DropdownMenuItem 
+                        key={account.id}
+                        onClick={() => switchAccountMutation.mutate(account.id)}
+                        className={user?.id === account.id ? "bg-blue-50 dark:bg-blue-900/20" : ""}
+                      >
+                        <UserCog className="mr-2 h-4 w-4" />
+                        <div className="flex flex-col">
+                          <span className="text-sm">{account.name}</span>
+                          <span className="text-xs text-muted-foreground capitalize">{account.role}</span>
+                        </div>
+                        {user?.id === account.id && (
+                          <span className="ml-auto text-xs text-blue-600 dark:text-blue-400">Current</span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
@@ -274,6 +324,27 @@ export default function Navigation() {
                   {userRole}
                 </p>
               </div>
+            </div>
+            <DropdownMenuSeparator />
+            {/* Test Account Switcher */}
+            <div className="px-2 py-1">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Test Accounts:</p>
+              {testAccounts.map((account) => (
+                <DropdownMenuItem 
+                  key={account.id}
+                  onClick={() => switchAccountMutation.mutate(account.id)}
+                  className={user?.id === account.id ? "bg-blue-50 dark:bg-blue-900/20" : ""}
+                >
+                  <UserCog className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span className="text-sm">{account.name}</span>
+                    <span className="text-xs text-muted-foreground capitalize">{account.role}</span>
+                  </div>
+                  {user?.id === account.id && (
+                    <span className="ml-auto text-xs text-blue-600 dark:text-blue-400">Current</span>
+                  )}
+                </DropdownMenuItem>
+              ))}
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
