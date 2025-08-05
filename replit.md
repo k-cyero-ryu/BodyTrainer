@@ -6,6 +6,15 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 5, 2025** - Implemented Training Plan Assignment System
+- **Feature Added**: Training plan assignment functionality moved from training plan cards to client detail pages
+- **UI Enhancement**: Added "Assign Plan" button to client detail page header with blue styling
+- **Modal Interface**: Created assignment modal with training plan selection dropdown and date picker
+- **Backend Integration**: Connected to existing API routes (`/api/client-plans`) and database schema (`clientPlans` table)
+- **Date Calculation**: Automatic end date calculation based on plan duration (weeks × 7 days)
+- **Validation**: Added proper form validation and error handling with user feedback
+- **System Status**: Trainers can now assign training plans to clients from the client detail page
+
 **January 5, 2025** - Fixed Critical Trainer Referral System
 - **Issue Resolved**: Route ordering conflict where `/api/trainers/:id` was intercepting `/api/trainers/clients` requests
 - **Solution Applied**: Reordered Express routes to place specific routes before parameterized routes
