@@ -21,6 +21,8 @@ export default function TrainingPlans() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [weeksCycle, setWeeksCycle] = useState<number>(1);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [showPlanDetails, setShowPlanDetails] = useState(false);
   const [workoutDays, setWorkoutDays] = useState<Record<number, Record<number, Array<{
     exerciseId: string;
     sets?: number;
@@ -486,36 +488,57 @@ export default function TrainingPlans() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-sm mb-4">{plan.description || "No description"}</p>
+              <CardContent className="space-y-4">
+                <p className="text-gray-600 text-sm">{plan.description || "No description"}</p>
                 
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Goal:</span>
-                    <span className="font-medium">{plan.goal || "Not specified"}</span>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Goal:</span>
+                    <div className="font-medium">{plan.goal || "Not specified"}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Duration:</span>
+                    <div className="font-medium">{plan.duration} weeks</div>
                   </div>
                   {plan.dailyCalories && (
-                    <div className="flex justify-between">
-                      <span>Daily Calories:</span>
-                      <span className="font-medium">{plan.dailyCalories} kcal</span>
+                    <div>
+                      <span className="text-gray-500">Daily Calories:</span>
+                      <div className="font-medium">{plan.dailyCalories} kcal</div>
+                    </div>
+                  )}
+                  {plan.protein && (
+                    <div>
+                      <span className="text-gray-500">Protein:</span>
+                      <div className="font-medium">{plan.protein}g</div>
+                    </div>
+                  )}
+                  {plan.carbs && (
+                    <div>
+                      <span className="text-gray-500">Carbs:</span>
+                      <div className="font-medium">{plan.carbs}g</div>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-4 flex justify-between">
-                  <div className="flex space-x-2">
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Button size="sm">
-                    Assign to Client
+                <div className="pt-2 border-t flex justify-center space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedPlan(plan);
+                      setShowPlanDetails(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Details
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
                   </Button>
                 </div>
               </CardContent>
@@ -535,6 +558,78 @@ export default function TrainingPlans() {
           </div>
         )}
       </div>
+
+      {/* Plan Details Modal */}
+      {showPlanDetails && selectedPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">{selectedPlan.name}</h2>
+                <p className="text-gray-600">{selectedPlan.description}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowPlanDetails(false);
+                  setSelectedPlan(null);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Plan Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div><span className="text-gray-500">Duration:</span> <span className="font-medium">{selectedPlan.duration} weeks</span></div>
+                  <div><span className="text-gray-500">Goal:</span> <span className="font-medium">{selectedPlan.goal || "Not specified"}</span></div>
+                  <div><span className="text-gray-500">Status:</span> <Badge variant={selectedPlan.isActive ? "default" : "secondary"}>{selectedPlan.isActive ? "Active" : "Draft"}</Badge></div>
+                </div>
+              </div>
+
+              {selectedPlan.dailyCalories && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2">Nutrition</h3>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="text-gray-500">Daily Calories:</span> <span className="font-medium">{selectedPlan.dailyCalories} kcal</span></div>
+                    {selectedPlan.protein && <div><span className="text-gray-500">Protein:</span> <span className="font-medium">{selectedPlan.protein}g</span></div>}
+                    {selectedPlan.carbs && <div><span className="text-gray-500">Carbs:</span> <span className="font-medium">{selectedPlan.carbs}g</span></div>}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Created</h3>
+                <div className="text-sm">
+                  <div className="text-gray-500">
+                    {selectedPlan.createdAt ? new Date(selectedPlan.createdAt).toLocaleDateString() : "Recently"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h3 className="font-semibold mb-2 text-yellow-800">Exercises</h3>
+              <p className="text-yellow-700 text-sm">
+                Exercise details and workout schedule will be displayed here once the full exercise viewing system is implemented.
+                This plan currently stores exercises in the database and can be assigned to clients.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button variant="outline" onClick={() => { setShowPlanDetails(false); setSelectedPlan(null); }}>
+                Close
+              </Button>
+              <Button>
+                Edit Plan
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
