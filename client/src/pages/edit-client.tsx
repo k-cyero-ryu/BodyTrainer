@@ -22,11 +22,31 @@ const editClientSchema = z.object({
   height: z.number().min(100).max(250).optional(),
   weight: z.number().min(30).max(300).optional(),
   bodyGoal: z.string().optional(),
-  paymentPlan: z.enum(['monthly', 'quarterly', 'annual']).optional(),
+  clientPaymentPlanId: z.string().optional(),
   paymentStatus: z.enum(['active', 'overdue', 'suspended']).optional(),
 });
 
 type EditClientForm = z.infer<typeof editClientSchema>;
+
+const formatCurrency = (amount: number, currency: string = "USD") => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(amount);
+};
+
+const formatBillingCycle = (type: string) => {
+  switch (type) {
+    case "monthly":
+      return "Monthly";
+    case "weekly":
+      return "Weekly";
+    case "per_session":
+      return "Per Session";
+    default:
+      return type;
+  }
+};
 
 export default function EditClient() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -55,6 +75,12 @@ export default function EditClient() {
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
+  // Load trainer's client payment plans
+  const { data: paymentPlans = [] } = useQuery({
+    queryKey: ["/api/client-payment-plans"],
+    enabled: !!user && user.role === 'trainer',
+  });
+
   const form = useForm<EditClientForm>({
     resolver: zodResolver(editClientSchema),
     defaultValues: {
@@ -62,7 +88,7 @@ export default function EditClient() {
       height: client?.height || undefined,
       weight: client?.weight || undefined,
       bodyGoal: client?.bodyGoal || '',
-      paymentPlan: client?.paymentPlan || 'monthly',
+      clientPaymentPlanId: client?.clientPaymentPlanId || undefined,
       paymentStatus: client?.paymentStatus || 'active',
     },
   });
@@ -75,7 +101,7 @@ export default function EditClient() {
         height: client.height || undefined,
         weight: client.weight || undefined,
         bodyGoal: client.bodyGoal || '',
-        paymentPlan: client.paymentPlan || 'monthly',
+        clientPaymentPlanId: client.clientPaymentPlanId || undefined,
         paymentStatus: client.paymentStatus || 'active',
       });
     }
@@ -83,7 +109,16 @@ export default function EditClient() {
 
   const updateClientMutation = useMutation({
     mutationFn: async (data: EditClientForm) => {
-      return await apiRequest('PUT', `/api/clients/${clientId}`, data);
+      // If clientPaymentPlanId is being updated, use the specific endpoint for that
+      if (data.clientPaymentPlanId !== client?.clientPaymentPlanId) {
+        await apiRequest("PUT", `/api/clients/${clientId}/payment-plan`, {
+          clientPaymentPlanId: data.clientPaymentPlanId
+        });
+      }
+      
+      // Update other client data (excluding clientPaymentPlanId since it's handled above)
+      const { clientPaymentPlanId, ...clientData } = data;
+      return await apiRequest('PUT', `/api/clients/${clientId}`, clientData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients", clientId] });
@@ -257,7 +292,7 @@ export default function EditClient() {
 
                 <FormField
                   control={form.control}
-                  name="paymentPlan"
+                  name="clientPaymentPlanId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Payment Plan</FormLabel>
@@ -268,9 +303,12 @@ export default function EditClient() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                          <SelectItem value="quarterly">Quarterly</SelectItem>
-                          <SelectItem value="annual">Annual</SelectItem>
+                          <SelectItem value="">No Payment Plan</SelectItem>
+                          {paymentPlans.map((plan: any) => (
+                            <SelectItem key={plan.id} value={plan.id}>
+                              {plan.name} - {formatCurrency(plan.amount, plan.currency)} ({formatBillingCycle(plan.type)})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

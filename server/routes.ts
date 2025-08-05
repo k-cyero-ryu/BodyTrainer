@@ -1232,6 +1232,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update client information
+  // Update client payment plan
+  app.put('/api/clients/:clientId/payment-plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const { clientPaymentPlanId } = req.body;
+      
+      const client = await storage.getClientById(clientId);
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.claims.sub);
+      if (!trainer || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      // If a payment plan is specified, verify it belongs to this trainer
+      if (clientPaymentPlanId) {
+        const paymentPlan = await storage.getClientPaymentPlan(clientPaymentPlanId);
+        if (!paymentPlan || paymentPlan.trainerId !== trainer.id) {
+          return res.status(400).json({ message: "Invalid payment plan" });
+        }
+      }
+
+      const updatedClient = await storage.updateClient(clientId, { clientPaymentPlanId });
+      res.json(updatedClient);
+    } catch (error) {
+      console.error("Error updating client payment plan:", error);
+      res.status(500).json({ message: "Failed to update client payment plan" });
+    }
+  });
+
   app.put('/api/clients/:clientId', isAuthenticated, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.claims.sub);
