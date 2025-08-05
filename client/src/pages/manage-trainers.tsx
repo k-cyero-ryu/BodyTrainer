@@ -104,16 +104,17 @@ export default function ManageTrainers() {
 
   const handleAssignPaymentPlan = (trainer: TrainerWithUser) => {
     setSelectedTrainer(trainer);
-    setSelectedPaymentPlan(trainer.paymentPlanId || "");
+    setSelectedPaymentPlan(trainer.paymentPlanId || "none");
     setIsPaymentDialogOpen(true);
   };
 
   const handleSavePaymentPlan = () => {
     if (!selectedTrainer) return;
     
+    const paymentPlanId = selectedPaymentPlan === 'none' ? null : selectedPaymentPlan;
     updatePaymentPlanMutation.mutate({
       trainerId: selectedTrainer.id,
-      paymentPlanId: selectedPaymentPlan || null,
+      paymentPlanId,
     });
   };
 
@@ -335,7 +336,7 @@ export default function ManageTrainers() {
                   <SelectValue placeholder="Select a payment plan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Payment Plan</SelectItem>
+                  <SelectItem value="none">No Payment Plan</SelectItem>
                   {paymentPlans.map((plan: PaymentPlan) => (
                     <SelectItem key={plan.id} value={plan.id}>
                       <div className="flex justify-between items-center w-full">
@@ -350,7 +351,7 @@ export default function ManageTrainers() {
               </Select>
             </div>
             
-            {selectedPaymentPlan && paymentPlans.find((p: PaymentPlan) => p.id === selectedPaymentPlan) && (
+            {selectedPaymentPlan && selectedPaymentPlan !== 'none' && paymentPlans.find((p: PaymentPlan) => p.id === selectedPaymentPlan) && (
               <div className="p-3 bg-gray-50 rounded-lg">
                 <h4 className="font-medium mb-2">Plan Details:</h4>
                 {(() => {
