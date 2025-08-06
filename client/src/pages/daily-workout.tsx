@@ -28,7 +28,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function DailyWorkout() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    // Force UTC date to match server timezone
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  });
   const [exerciseTimers, setExerciseTimers] = useState<Record<string, number>>({});
   const [activeTimer, setActiveTimer] = useState<string | null>(null);
   const [completedSets, setCompletedSets] = useState<Record<string, Set<number>>>({});
@@ -328,6 +332,11 @@ export default function DailyWorkout() {
   }
 
   const isToday = selectedDate === new Date().toISOString().split('T')[0];
+  
+  // Debug logging to see what dates we're working with
+  console.log('[DEBUG] Selected date:', selectedDate);
+  console.log('[DEBUG] Today date:', new Date().toISOString().split('T')[0]);
+  console.log('[DEBUG] isToday:', isToday);
   const selectedDateObj = new Date(selectedDate);
   const dateString = selectedDateObj.toLocaleDateString('en-US', {
     weekday: 'long',
