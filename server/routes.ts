@@ -1070,6 +1070,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startOfDay = new Date(today.setHours(0, 0, 0, 0));
       const endOfDay = new Date(today.setHours(23, 59, 59, 999));
       
+      console.log(`[DEBUG] Creating workout logs for today: ${today.toISOString().split('T')[0]}`);
+      
       // Get existing workout logs for this exercise today to see which sets are already completed
       const existingLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
       const exerciseLogs = existingLogs.filter(log => log.planExerciseId === planExerciseId);
