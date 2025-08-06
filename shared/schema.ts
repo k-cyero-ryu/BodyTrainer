@@ -340,7 +340,17 @@ export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: tru
 export const insertPlanExerciseSchema = createInsertSchema(planExercises).omit({ id: true });
 export const insertClientPlanSchema = createInsertSchema(clientPlans).omit({ id: true, createdAt: true });
 export const insertWorkoutLogSchema = createInsertSchema(workoutLogs).omit({ id: true, completedAt: true });
-export const insertMonthlyEvaluationSchema = createInsertSchema(monthlyEvaluations).omit({ id: true, createdAt: true });
+export const insertMonthlyEvaluationSchema = createInsertSchema(monthlyEvaluations).omit({ id: true, createdAt: true }).extend({
+  weight: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  bodyFatPercentage: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  waistMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  chestMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  hipsMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  thighMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  calfMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  bicepsMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  abdomenMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+});
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
 

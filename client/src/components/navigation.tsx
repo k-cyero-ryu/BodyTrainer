@@ -131,6 +131,12 @@ export default function Navigation() {
       roles: ['client']
     },
     { 
+      href: '/monthly-evaluation', 
+      label: 'Monthly Evaluation', 
+      icon: Calendar,
+      roles: ['client']
+    },
+    { 
       href: '/profile', 
       label: 'Profile', 
       icon: User,
