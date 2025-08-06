@@ -276,6 +276,10 @@ export default function ClientDashboard() {
       waistMeasurement: parseFloat(formData.get('waist') as string),
       chestMeasurement: parseFloat(formData.get('chest') as string),
       bicepsMeasurement: parseFloat(formData.get('biceps') as string),
+      abdomenMeasurement: parseFloat(formData.get('abdomen') as string),
+      hipsMeasurement: parseFloat(formData.get('hips') as string),
+      thighMeasurement: parseFloat(formData.get('thigh') as string),
+      calfMeasurement: parseFloat(formData.get('calf') as string),
       trainingAdherence: parseInt(formData.get('trainingAdherence') as string),
       mealAdherence: parseInt(formData.get('mealAdherence') as string),
       selfEvaluation: parseInt(formData.get('selfEvaluation') as string),
@@ -780,15 +784,31 @@ export default function ClientDashboard() {
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="waist">Waist</Label>
-                      <Input id="waist" name="waist" type="number" placeholder="80" required />
+                      <Input id="waist" name="waist" type="number" step="0.1" placeholder="80" required />
                     </div>
                     <div>
                       <Label htmlFor="chest">Chest</Label>
-                      <Input id="chest" name="chest" type="number" placeholder="95" required />
+                      <Input id="chest" name="chest" type="number" step="0.1" placeholder="95" required />
                     </div>
                     <div>
                       <Label htmlFor="biceps">Biceps</Label>
-                      <Input id="biceps" name="biceps" type="number" placeholder="32" required />
+                      <Input id="biceps" name="biceps" type="number" step="0.1" placeholder="32" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="abdomen">Abdomen</Label>
+                      <Input id="abdomen" name="abdomen" type="number" step="0.1" placeholder="85" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="hips">Hips</Label>
+                      <Input id="hips" name="hips" type="number" step="0.1" placeholder="100" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="thigh">Thigh</Label>
+                      <Input id="thigh" name="thigh" type="number" step="0.1" placeholder="55" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="calf">Calf</Label>
+                      <Input id="calf" name="calf" type="number" step="0.1" placeholder="38" required />
                     </div>
                   </div>
                 </div>
