@@ -1115,6 +1115,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get weekly workout stats endpoint
+  app.get('/api/client/weekly-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view workout stats" });
+      }
+
+      // Get start of current week (Monday)
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - daysToMonday);
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      // Get workout logs for this week
+      const weeklyLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfWeek, endOfWeek);
+      
+      // Group by date and exercise to count completed workouts
+      const workoutsByDate = new Map();
+      weeklyLogs.forEach(log => {
+        if (log.setNumber && log.setNumber > 0) {
+          const dateKey = log.completedAt.toDateString();
+          if (!workoutsByDate.has(dateKey)) {
+            workoutsByDate.set(dateKey, new Set());
+          }
+          workoutsByDate.get(dateKey).add(log.planExerciseId);
+        }
+      });
+
+      const completedWorkoutDays = workoutsByDate.size;
+
+      // Get client's active plan to determine sessions per week
+      const activeClientPlan = await storage.getActiveClientPlan(client.id);
+      let totalWorkoutsPerWeek = 0;
+      
+      if (activeClientPlan) {
+        const trainingPlan = await storage.getTrainingPlan(activeClientPlan.planId);
+        if (trainingPlan) {
+          // Count unique workout days from plan exercises
+          const planExercises = await storage.getPlanExercisesByPlan(trainingPlan.id);
+          const uniqueDays = new Set(planExercises.map(pe => pe.dayOfWeek));
+          totalWorkoutsPerWeek = uniqueDays.size;
+        }
+      }
+
+      res.json({
+        completedWorkouts: completedWorkoutDays,
+        totalWorkouts: totalWorkoutsPerWeek
+      });
+    } catch (error) {
+      console.error("Error fetching weekly stats:", error);
+      res.status(500).json({ message: "Failed to fetch weekly stats" });
+    }
+  });
+
+  // Get workout streak endpoint
+  app.get('/api/client/workout-streak', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view workout streak" });
+      }
+
+      // Get all workout logs ordered by date descending
+      const allLogs = await storage.getWorkoutLogsByClient(client.id);
+      
+      // Group by date to see which days had workouts
+      const workoutDates = new Set();
+      allLogs.forEach(log => {
+        if (log.setNumber && log.setNumber > 0) {
+          const dateKey = log.completedAt.toDateString();
+          workoutDates.add(dateKey);
+        }
+      });
+
+      // Convert to sorted array of dates (most recent first)
+      const sortedWorkoutDates = Array.from(workoutDates)
+        .map(dateStr => new Date(dateStr))
+        .sort((a, b) => b.getTime() - a.getTime());
+
+      if (sortedWorkoutDates.length === 0) {
+        return res.json({ streak: 0 });
+      }
+
+      // Calculate streak counting backward from today
+      let streak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Check if there was a workout today or yesterday (to allow for flexibility)
+      const mostRecentWorkout = sortedWorkoutDates[0];
+      const daysSinceLastWorkout = Math.floor((today.getTime() - mostRecentWorkout.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceLastWorkout <= 1) {
+        // Start counting streak
+        let currentDate = new Date(mostRecentWorkout);
+        
+        for (const workoutDate of sortedWorkoutDates) {
+          const daysDiff = Math.floor((currentDate.getTime() - workoutDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff <= 1) { // Allow 1 day gap for rest days
+            streak++;
+            currentDate = new Date(workoutDate);
+          } else {
+            break;
+          }
+        }
+      }
+
+      res.json({ streak });
+    } catch (error) {
+      console.error("Error fetching workout streak:", error);
+      res.status(500).json({ message: "Failed to fetch workout streak" });
+    }
+  });
+
   // Complete entire exercise endpoint
   app.post('/api/client/complete-exercise-all-sets', isAuthenticated, async (req: any, res) => {
     try {

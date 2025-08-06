@@ -84,6 +84,18 @@ export default function ClientDashboard() {
     enabled: !!user && user.role === 'client',
   });
 
+  // Fetch weekly workout stats
+  const { data: weeklyStats } = useQuery({
+    queryKey: ["/api/client/weekly-stats"],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch workout streak
+  const { data: streakData } = useQuery({
+    queryKey: ["/api/client/workout-streak"],
+    enabled: !!user && user.role === 'client',
+  });
+
   const evaluationMutation = useMutation({
     mutationFn: async (data: any) => {
       await apiRequest("POST", "/api/evaluations", data);
@@ -298,16 +310,17 @@ export default function ClientDashboard() {
   
   const activeAssignedPlan = assignedPlans.find((p: any) => p.isActive);
   
-  // Calculate workout completion stats
-  const totalWorkoutsThisWeek = activeAssignedPlan?.sessionsPerWeek || 0;
-  const completedWorkoutsThisWeek = todayWorkout?.workout ? 4 : 0; // This would need workout tracking data
+  // Calculate workout completion stats from real data
+  const totalWorkoutsThisWeek = weeklyStats?.totalWorkouts || 0;
+  const completedWorkoutsThisWeek = weeklyStats?.completedWorkouts || 0;
+  const currentStreak = streakData?.streak || 0;
   
   const clientStats = {
     workoutsThisWeek: completedWorkoutsThisWeek,
     totalWorkouts: totalWorkoutsThisWeek,
     currentWeight: currentWeight,
     goalProgress: goalProgress,
-    streak: 12, // This would need workout streak calculation from actual data
+    streak: currentStreak,
   };
 
   return (

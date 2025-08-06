@@ -6,6 +6,15 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 6, 2025** - Enhanced Dashboard with Real Workout Analytics
+- **Weekly Stats API**: New `/api/client/weekly-stats` endpoint calculates actual completed workouts vs planned sessions per week
+- **Workout Streak API**: New `/api/client/workout-streak` endpoint calculates consecutive workout days with 1-day gap tolerance for rest days
+- **Real Data Integration**: Dashboard now shows authentic workout completion stats instead of hardcoded values
+- **Smart Calculations**: Weekly stats count unique workout days from actual set completions, streak allows flexibility for rest days
+- **Independent Notes Saving**: Added "Save" button next to "Workout Notes" label for saving notes without completing sets
+- **Efficient Database Design**: Notes are saved to the first set of exercises, updating existing records when possible
+- **System Status**: Dashboard analytics now reflect true workout progress and engagement patterns
+
 **January 6, 2025** - Enhanced Daily Workout with Set Unchecking Feature
 - **Set Unchecking**: Added ability to uncheck accidentally completed sets with dedicated "Uncheck" button
 - **API Endpoint**: New `/api/client/uncheck-set` DELETE endpoint for removing workout log entries
