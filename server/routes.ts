@@ -1481,6 +1481,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...evaluationData,
         clientId: client.id,
       });
+
+      // Update the client's current weight with the new weight from evaluation
+      if (evaluationData.weight) {
+        await storage.updateClient(client.id, {
+          currentWeight: evaluationData.weight,
+        });
+      }
       
       res.status(201).json(evaluation);
     } catch (error) {
