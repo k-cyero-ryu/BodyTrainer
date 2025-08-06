@@ -640,6 +640,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client profile endpoint
+  app.get('/api/client/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can access this endpoint" });
+      }
+      
+      // Get user details
+      const user = await storage.getUser(userId);
+      
+      // Get trainer details if assigned
+      let trainer = null;
+      if (client.trainerId) {
+        trainer = await storage.getTrainer(client.trainerId);
+      }
+      
+      res.json({
+        ...client,
+        ...user,
+        trainer
+      });
+    } catch (error) {
+      console.error("Error fetching client profile:", error);
+      res.status(500).json({ message: "Failed to fetch client profile" });
+    }
+  });
+
+  // Update client profile endpoint
+  app.put('/api/client/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can access this endpoint" });
+      }
+      
+      const {
+        firstName,
+        lastName,
+        phone,
+        dateOfBirth,
+        goals,
+        currentWeight,
+        targetWeight,
+        height,
+        activityLevel,
+        medicalConditions,
+        dietaryRestrictions
+      } = req.body;
+      
+      // Update user information
+      if (firstName || lastName) {
+        await storage.updateUser(userId, {
+          firstName,
+          lastName
+        });
+      }
+      
+      // Update client information
+      await storage.updateClient(client.id, {
+        phone,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        goals,
+        currentWeight,
+        targetWeight,
+        height,
+        activityLevel,
+        medicalConditions,
+        dietaryRestrictions
+      });
+      
+      // Return updated profile
+      const updatedUser = await storage.getUser(userId);
+      const updatedClient = await storage.getClientByUserId(userId);
+      
+      res.json({
+        ...updatedClient,
+        ...updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating client profile:", error);
+      res.status(500).json({ message: "Failed to update client profile" });
+    }
+  });
+
   app.get('/api/client/today-workout', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

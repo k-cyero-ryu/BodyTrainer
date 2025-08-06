@@ -124,6 +124,12 @@ export default function Navigation() {
       roles: ['client']
     },
     { 
+      href: '/profile', 
+      label: 'Profile', 
+      icon: User,
+      roles: ['client']
+    },
+    { 
       href: '/exercises', 
       label: 'Exercises', 
       icon: Dumbbell,

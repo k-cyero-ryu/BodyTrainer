@@ -63,10 +63,18 @@ export const clients = pgTable("clients", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
+  phone: varchar("phone"),
+  dateOfBirth: timestamp("date_of_birth"),
   age: integer("age"),
   height: decimal("height", { precision: 5, scale: 2 }),
   weight: decimal("weight", { precision: 5, scale: 2 }),
+  currentWeight: decimal("current_weight", { precision: 5, scale: 2 }),
+  targetWeight: decimal("target_weight", { precision: 5, scale: 2 }),
   bodyGoal: text("body_goal"),
+  goals: text("goals"),
+  activityLevel: varchar("activity_level").default('moderate'),
+  medicalConditions: text("medical_conditions"),
+  dietaryRestrictions: text("dietary_restrictions"),
   referralSource: varchar("referral_source"),
   paymentPlan: varchar("payment_plan"), // Legacy field for backward compatibility
   clientPaymentPlanId: varchar("client_payment_plan_id"), // New payment plan reference - will add foreign key after clientPaymentPlans is defined
