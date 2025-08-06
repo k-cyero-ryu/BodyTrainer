@@ -661,29 +661,67 @@ export default function ClientDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Weight Goal</span>
-                    <span>75%</span>
-                  </div>
-                  <Progress value={75} className="h-2" />
-                </div>
+                {(() => {
+                  // Calculate weight goal progress if we have evaluations
+                  let weightGoalProgress = 0;
+                  if (evaluations.length >= 2) {
+                    const firstEvaluation = evaluations[evaluations.length - 1]; // Oldest
+                    const latestEvaluation = evaluations[0]; // Latest
+                    const startWeight = firstEvaluation.weight;
+                    const currentWeight = latestEvaluation.weight;
+                    const weightChange = startWeight - currentWeight;
+                    
+                    // Assume a reasonable goal (10% weight loss from start)
+                    const targetWeightLoss = startWeight * 0.1;
+                    weightGoalProgress = Math.min(100, Math.max(0, (weightChange / targetWeightLoss) * 100));
+                  }
+
+                  return (
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Weight Goal Progress</span>
+                        <span>{weightGoalProgress.toFixed(0)}%</span>
+                      </div>
+                      <Progress value={weightGoalProgress} className="h-2" />
+                    </div>
+                  );
+                })()}
                 
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Strength</span>
-                    <span>60%</span>
-                  </div>
-                  <Progress value={60} className="h-2" />
-                </div>
+                {(() => {
+                  // Calculate training adherence from latest evaluation
+                  let trainingAdherence = 0;
+                  if (evaluations.length > 0) {
+                    trainingAdherence = evaluations[0].trainingAdherence * 10; // Convert from /10 to percentage
+                  }
+
+                  return (
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Training Adherence</span>
+                        <span>{trainingAdherence}%</span>
+                      </div>
+                      <Progress value={trainingAdherence} className="h-2" />
+                    </div>
+                  );
+                })()}
                 
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Endurance</span>
-                    <span>85%</span>
-                  </div>
-                  <Progress value={85} className="h-2" />
-                </div>
+                {(() => {
+                  // Calculate nutrition adherence from latest evaluation
+                  let nutritionAdherence = 0;
+                  if (evaluations.length > 0) {
+                    nutritionAdherence = evaluations[0].mealAdherence * 10; // Convert from /10 to percentage
+                  }
+
+                  return (
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Nutrition Adherence</span>
+                        <span>{nutritionAdherence}%</span>
+                      </div>
+                      <Progress value={nutritionAdherence} className="h-2" />
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="mt-6">
@@ -691,15 +729,36 @@ export default function ClientDashboard() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Workouts:</span>
-                    <span className="font-medium">16/20</span>
+                    <span className="font-medium">
+                      {weeklyStats ? `${weeklyStats.completedWorkouts}/${weeklyStats.totalWorkouts}` : "0/0"}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Weight Change:</span>
-                    <span className="font-medium text-green-600">-2.5 kg</span>
-                  </div>
+                  {(() => {
+                    // Calculate weight change from evaluations
+                    let weightChange = 0;
+                    let weightChangeColor = "text-gray-600";
+                    
+                    if (evaluations.length >= 2) {
+                      const firstEvaluation = evaluations[evaluations.length - 1]; // Oldest
+                      const latestEvaluation = evaluations[0]; // Latest
+                      weightChange = latestEvaluation.weight - firstEvaluation.weight;
+                      weightChangeColor = weightChange < 0 ? "text-green-600" : weightChange > 0 ? "text-red-600" : "text-gray-600";
+                    }
+
+                    return (
+                      <div className="flex justify-between">
+                        <span>Weight Change:</span>
+                        <span className={`font-medium ${weightChangeColor}`}>
+                          {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <div className="flex justify-between">
                     <span>Best Streak:</span>
-                    <span className="font-medium">12 days</span>
+                    <span className="font-medium">
+                      {workoutStreak ? `${workoutStreak.streak} days` : "0 days"}
+                    </span>
                   </div>
                 </div>
               </div>
