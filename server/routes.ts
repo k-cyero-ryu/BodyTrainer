@@ -820,6 +820,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Workout completion endpoints
+  app.post('/api/client/complete-exercise', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can complete exercises" });
+      }
+
+      const { planExerciseId, completedSets, completedReps, actualWeight, actualDuration, notes } = req.body;
+      
+      const workoutLog = await storage.createWorkoutLog({
+        clientId: client.id,
+        planExerciseId,
+        completedSets: completedSets || null,
+        completedReps: completedReps || null,
+        actualWeight: actualWeight || null,
+        actualDuration: actualDuration || null,
+        notes: notes || null
+      });
+
+      res.status(201).json(workoutLog);
+    } catch (error) {
+      console.error("Error logging exercise completion:", error);
+      res.status(500).json({ message: "Failed to log exercise completion" });
+    }
+  });
+
+  app.get('/api/client/workout-logs', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view workout logs" });
+      }
+
+      const { date, planExerciseId } = req.query;
+      let workoutLogs;
+
+      if (planExerciseId) {
+        // Get logs for specific exercise
+        workoutLogs = await storage.getWorkoutLogsByExercise(client.id, planExerciseId as string);
+      } else if (date) {
+        // Get logs for specific date
+        const targetDate = new Date(date as string);
+        const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+        workoutLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
+      } else {
+        // Get all logs for client
+        workoutLogs = await storage.getWorkoutLogsByClient(client.id);
+      }
+
+      res.json(workoutLogs);
+    } catch (error) {
+      console.error("Error fetching workout logs:", error);
+      res.status(500).json({ message: "Failed to fetch workout logs" });
+    }
+  });
+
   // Exercise routes
   app.post('/api/exercises', isAuthenticated, async (req: any, res) => {
     try {
@@ -856,8 +916,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user is client - they can view all exercises for training plan details
       const client = await storage.getClientByUserId(userId);
       if (client) {
-        // For clients, get all exercises (they need to see exercise details in their plans)
-        const exercises = await storage.getExercises();
+        // For clients, get exercises from their trainer
+        const clientData = await storage.getClient(client.id);
+        if (!clientData || !clientData.trainerId) {
+          return res.json([]);
+        }
+        const exercises = await storage.getExercisesByTrainer(clientData.trainerId);
         return res.json(exercises);
       }
       

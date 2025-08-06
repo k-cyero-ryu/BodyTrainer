@@ -40,7 +40,7 @@ import {
   type InsertClientPaymentPlan,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, sum, sql } from "drizzle-orm";
+import { eq, desc, and, count, sum, sql, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -575,6 +575,26 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(workoutLogs)
       .where(eq(workoutLogs.clientId, clientId))
+      .orderBy(desc(workoutLogs.completedAt));
+  }
+
+  async getWorkoutLogsByExercise(clientId: string, planExerciseId: string): Promise<WorkoutLog[]> {
+    return await db
+      .select()
+      .from(workoutLogs)
+      .where(and(eq(workoutLogs.clientId, clientId), eq(workoutLogs.planExerciseId, planExerciseId)))
+      .orderBy(desc(workoutLogs.completedAt));
+  }
+
+  async getWorkoutLogsByDateRange(clientId: string, startDate: Date, endDate: Date): Promise<WorkoutLog[]> {
+    return await db
+      .select()
+      .from(workoutLogs)
+      .where(and(
+        eq(workoutLogs.clientId, clientId),
+        gte(workoutLogs.completedAt, startDate),
+        lte(workoutLogs.completedAt, endDate)
+      ))
       .orderBy(desc(workoutLogs.completedAt));
   }
 

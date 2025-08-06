@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -18,6 +19,7 @@ export default function ClientDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -100,6 +102,114 @@ export default function ClientDashboard() {
       });
     },
   });
+
+  // Exercise completion mutation
+  const completeExerciseMutation = useMutation({
+    mutationFn: async ({ planExerciseId, completedSets, completedReps, actualWeight, actualDuration, notes }: {
+      planExerciseId: string;
+      completedSets?: number;
+      completedReps?: number;
+      actualWeight?: number;
+      actualDuration?: number;
+      notes?: string;
+    }) => {
+      await apiRequest("/api/client/complete-exercise", {
+        method: "POST",
+        body: JSON.stringify({
+          planExerciseId,
+          completedSets,
+          completedReps,
+          actualWeight,
+          actualDuration,
+          notes
+        })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/client/today-workout"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/client/stats"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to log exercise completion. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Exercise completion handlers
+  const handleExerciseCompletion = (exerciseId: string, checked: boolean | string) => {
+    const isChecked = checked === true;
+    setCompletedExercises(prev => {
+      const newSet = new Set(prev);
+      if (isChecked) {
+        newSet.add(exerciseId);
+      } else {
+        newSet.delete(exerciseId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCompleteWorkout = async () => {
+    if (!todayWorkout?.workout?.exercises || completedExercises.size === 0) {
+      toast({
+        title: "No Exercises Selected",
+        description: "Please complete at least one exercise before finishing the workout.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const completedExercisesList = todayWorkout.workout.exercises.filter((ex: any) => 
+      completedExercises.has(ex.id)
+    );
+
+    try {
+      // Log completion for each selected exercise
+      await Promise.all(
+        completedExercisesList.map((exercise: any) =>
+          completeExerciseMutation.mutateAsync({
+            planExerciseId: exercise.id,
+            completedSets: exercise.sets,
+            completedReps: exercise.reps,
+            actualWeight: exercise.weight,
+            actualDuration: exercise.duration
+          })
+        )
+      );
+
+      toast({
+        title: "Workout Completed!",
+        description: `Great job! You completed ${completedExercises.size} exercises today.`,
+      });
+
+      // Reset completed exercises
+      setCompletedExercises(new Set());
+    } catch (error) {
+      // Error handling is done in the mutation onError
+      console.error("Failed to complete workout:", error);
+    }
+  };
+
+  const startExercise = (exerciseId: string) => {
+    toast({
+      title: "Exercise Started",
+      description: "Timer functionality coming soon!",
+    });
+  };
 
   const handleEvaluationSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -358,11 +468,16 @@ export default function ClientDashboard() {
                   {todayWorkout.workout.exercises.map((exercise: any) => (
                     <div key={exercise.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center space-x-4">
+                        <Checkbox 
+                          id={`exercise-${exercise.id}`}
+                          checked={completedExercises.has(exercise.id)}
+                          onCheckedChange={(checked) => handleExerciseCompletion(exercise.id, checked)}
+                        />
                         <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                           <Dumbbell className="h-5 w-5 text-gray-500" />
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">{exercise.exerciseName}</h4>
+                          <h4 className="font-medium text-gray-900">{exercise.exercise?.name || exercise.exerciseName}</h4>
                           <div className="text-sm text-gray-500 space-y-1">
                             {exercise.sets && <span>Sets: {exercise.sets}</span>}
                             {exercise.reps && <span> • Reps: {exercise.reps}</span>}
@@ -375,16 +490,19 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => startExercise(exercise.id)}>
                           <Play className="h-4 w-4" />
                         </Button>
-                        <input type="checkbox" className="rounded border-gray-300" />
                       </div>
                     </div>
                   ))}
                   <div className="mt-6 flex justify-center">
-                    <Button className="px-6 py-3">
-                      Complete Workout
+                    <Button 
+                      className="px-6 py-3" 
+                      onClick={handleCompleteWorkout}
+                      disabled={completedExercises.size === 0}
+                    >
+                      Complete Workout ({completedExercises.size}/{todayWorkout.workout.exercises.length})
                     </Button>
                   </div>
                 </div>
