@@ -1055,7 +1055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Save exercise notes independently endpoint
+  // Save exercise notes independently endpoint - saves to set 1
   app.post('/api/client/save-exercise-notes', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -1073,24 +1073,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use the provided date or default to today
       const targetDate = date ? new Date(date) : new Date();
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
       
-      // Create a special workout log entry just for notes (no sets completed)
-      const workoutLog = await storage.createWorkoutLog({
-        clientId: client.id,
-        planExerciseId,
-        completedSets: null,
-        completedReps: null,
-        setNumber: null,
-        actualWeight: null,
-        actualDuration: null,
-        notes: notes.trim(),
-        completedAt: targetDate
-      });
-
-      res.status(201).json({ 
-        message: "Notes saved successfully",
-        workoutLog
-      });
+      // Check if set 1 already exists for this exercise on this date
+      const existingLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
+      const existingSet1 = existingLogs.find(log => 
+        log.planExerciseId === planExerciseId && log.setNumber === 1
+      );
+      
+      if (existingSet1) {
+        // Update existing set 1 with new notes
+        const updatedLog = await storage.updateWorkoutLog(existingSet1.id, {
+          notes: notes.trim()
+        });
+        res.status(200).json({ 
+          message: "Notes updated successfully",
+          workoutLog: updatedLog
+        });
+      } else {
+        // Create set 1 with notes (but not marked as completed)
+        const workoutLog = await storage.createWorkoutLog({
+          clientId: client.id,
+          planExerciseId,
+          completedSets: null, // Not completed, just has notes
+          completedReps: null,
+          setNumber: 1,
+          actualWeight: null,
+          actualDuration: null,
+          notes: notes.trim(),
+          completedAt: targetDate
+        });
+        res.status(201).json({ 
+          message: "Notes saved successfully",
+          workoutLog
+        });
+      }
     } catch (error) {
       console.error("Error saving exercise notes:", error);
       res.status(500).json({ message: "Failed to save exercise notes" });

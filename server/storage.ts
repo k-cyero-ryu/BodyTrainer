@@ -570,6 +570,15 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  async updateWorkoutLog(id: string, log: Partial<InsertWorkoutLog>): Promise<WorkoutLog> {
+    const [updated] = await db
+      .update(workoutLogs)
+      .set({ ...log, updatedAt: new Date() })
+      .where(eq(workoutLogs.id, id))
+      .returning();
+    return updated;
+  }
+
   async getWorkoutLogsByClient(clientId: string): Promise<WorkoutLog[]> {
     return await db
       .select()
