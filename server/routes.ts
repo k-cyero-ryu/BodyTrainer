@@ -1015,6 +1015,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Uncheck/delete individual set endpoint
+  app.delete('/api/client/uncheck-set', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can uncheck sets" });
+      }
+
+      const { planExerciseId, setNumber, date } = req.body;
+      
+      // Find the specific set log to delete
+      const targetDate = date ? new Date(date) : new Date();
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+      
+      const existingLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
+      const setToDelete = existingLogs.find(log => 
+        log.planExerciseId === planExerciseId && log.setNumber === setNumber
+      );
+      
+      if (!setToDelete) {
+        return res.status(404).json({ message: "Set not found" });
+      }
+
+      await storage.deleteWorkoutLog(setToDelete.id);
+      res.status(200).json({ message: "Set unchecked successfully" });
+    } catch (error) {
+      console.error("Error unchecking set:", error);
+      res.status(500).json({ message: "Failed to uncheck set" });
+    }
+  });
+
   // Exercise routes
   app.post('/api/exercises', isAuthenticated, async (req: any, res) => {
     try {

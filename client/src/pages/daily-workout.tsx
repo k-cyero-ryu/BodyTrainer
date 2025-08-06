@@ -120,6 +120,46 @@ export default function DailyWorkout() {
     },
   });
 
+  // Uncheck set mutation
+  const uncheckSetMutation = useMutation({
+    mutationFn: async ({ planExerciseId, setNumber, date }: {
+      planExerciseId: string;
+      setNumber: number;
+      date: string;
+    }) => {
+      await apiRequest("DELETE", "/api/client/uncheck-set", {
+        planExerciseId,
+        setNumber,
+        date
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      toast({
+        title: "Set Unchecked",
+        description: "Set has been unchecked successfully.",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to uncheck set. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSetCompletion = (exerciseId: string, setNumber: number) => {
     setCompletedSets(prev => {
       const exerciseSets = prev[exerciseId] || new Set();
@@ -145,6 +185,14 @@ export default function DailyWorkout() {
         ...prev,
         [exerciseId]: newSets
       };
+    });
+  };
+
+  const handleSetUncheck = (exerciseId: string, setNumber: number) => {
+    uncheckSetMutation.mutate({
+      planExerciseId: exerciseId,
+      setNumber,
+      date: selectedDate
     });
   };
 
@@ -413,9 +461,19 @@ export default function DailyWorkout() {
                               </div>
                               
                               {isCompleted && (
-                                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                  Completed
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                    Completed
+                                  </Badge>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleSetUncheck(exercise.id, setNumber)}
+                                    disabled={uncheckSetMutation.isPending}
+                                  >
+                                    Uncheck
+                                  </Button>
+                                </div>
                               )}
                             </div>
                           );

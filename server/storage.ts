@@ -598,6 +598,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(workoutLogs.completedAt));
   }
 
+  async deleteWorkoutLog(id: string): Promise<void> {
+    await db.delete(workoutLogs).where(eq(workoutLogs.id, id));
+  }
+
   // Monthly evaluation operations
   async createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation> {
     const [created] = await db.insert(monthlyEvaluations).values(evaluation).returning();
