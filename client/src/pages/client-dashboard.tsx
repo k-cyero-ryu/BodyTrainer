@@ -214,8 +214,11 @@ export default function ClientDashboard() {
                       </Badge>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Duration: {plan.duration} weeks</span>
+                      <span>Duration: {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}</span>
                       <span>Status: {plan.status}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                      <span>Week cycle: {plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex justify-between text-sm text-muted-foreground mt-1">
                       <span>Sessions per week: {plan.sessionsPerWeek || 'N/A'}</span>

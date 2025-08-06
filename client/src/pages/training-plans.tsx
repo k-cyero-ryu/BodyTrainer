@@ -123,7 +123,8 @@ export default function TrainingPlans() {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       goal: formData.get('goal') as string,
-      duration: weeksCycle,
+      duration: formData.get('duration') as string, // Will be converted by schema (0 for "till-goal")
+      weekCycle: weeksCycle,
       dailyCalories: parseInt(formData.get('dailyCalories') as string) || null,
       protein: parseInt(formData.get('protein') as string) || null,
       carbs: parseInt(formData.get('carbs') as string) || null,
@@ -260,22 +261,39 @@ export default function TrainingPlans() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreatePlan} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="name">Plan Name</Label>
                   <Input id="name" name="name" placeholder="e.g., Weight Loss Program" required />
                 </div>
                 <div>
-                  <Label htmlFor="weeksCycle">Weeks Cycle</Label>
-                  <Select value={weeksCycle.toString()} onValueChange={handleWeeksCycleChange} required>
+                  <Label htmlFor="duration">Plan Duration</Label>
+                  <Select name="duration" required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select weeks cycle" />
+                      <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 week</SelectItem>
-                      <SelectItem value="2">2 weeks</SelectItem>
-                      <SelectItem value="3">3 weeks</SelectItem>
+                      <SelectItem value="till-goal">Till Goal is Met</SelectItem>
                       <SelectItem value="4">4 weeks</SelectItem>
+                      <SelectItem value="6">6 weeks</SelectItem>
+                      <SelectItem value="8">8 weeks</SelectItem>
+                      <SelectItem value="12">12 weeks</SelectItem>
+                      <SelectItem value="16">16 weeks</SelectItem>
+                      <SelectItem value="24">24 weeks</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="weeksCycle">Week Cycle Pattern</Label>
+                  <Select value={weeksCycle.toString()} onValueChange={handleWeeksCycleChange} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select pattern cycle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 week (repeat every week)</SelectItem>
+                      <SelectItem value="2">2 weeks (repeat every 2 weeks)</SelectItem>
+                      <SelectItem value="3">3 weeks (repeat every 3 weeks)</SelectItem>
+                      <SelectItem value="4">4 weeks (repeat every 4 weeks)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -487,7 +505,9 @@ export default function TrainingPlans() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
-                    <p className="text-sm text-gray-500">{plan.duration} weeks</p>
+                    <p className="text-sm text-gray-500">
+                      {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                    </p>
                   </div>
                   <Badge variant={plan.isActive ? "default" : "secondary"}>
                     {plan.isActive ? "Active" : "Draft"}
@@ -504,7 +524,13 @@ export default function TrainingPlans() {
                   </div>
                   <div>
                     <span className="text-gray-500">Duration:</span>
-                    <div className="font-medium">{plan.duration} weeks</div>
+                    <div className="font-medium">
+                      {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Week Cycle:</span>
+                    <div className="font-medium">{plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</div>
                   </div>
                   {plan.dailyCalories && (
                     <div>

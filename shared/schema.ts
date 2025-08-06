@@ -82,7 +82,8 @@ export const trainingPlans = pgTable("training_plans", {
   name: varchar("name").notNull(),
   description: text("description"),
   goal: text("goal"),
-  duration: integer("duration"), // in weeks
+  duration: integer("duration"), // Total plan duration in weeks, 0 = "till goal is met"
+  weekCycle: integer("week_cycle").default(1), // How many weeks before pattern repeats
   dailyCalories: integer("daily_calories"),
   protein: integer("protein"),
   carbs: integer("carbs"),
@@ -319,7 +320,12 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTrainerSchema = createInsertSchema(trainers).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertTrainingPlanSchema = createInsertSchema(trainingPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTrainingPlanSchema = createInsertSchema(trainingPlans).omit({ id: true, createdAt: true, updatedAt: true }).extend({
+  duration: z.union([z.number(), z.string()]).transform(val => 
+    typeof val === 'string' ? (val === 'till-goal' ? 0 : parseInt(val)) : val
+  ),
+  weekCycle: z.number().min(1).default(1)
+});
 export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPlanExerciseSchema = createInsertSchema(planExercises).omit({ id: true });
 export const insertClientPlanSchema = createInsertSchema(clientPlans).omit({ id: true, createdAt: true });

@@ -6,6 +6,22 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 6, 2025** - Enhanced Training Plan Duration and Cycle System
+- **Database Schema**: Added `weekCycle` field to training plans table to distinguish between plan duration and exercise pattern cycle
+- **Duration Logic**: Duration can now be fixed weeks (4, 6, 8, 12, 16, 24) or "till goal is met" (stored as 0)
+- **Week Cycle**: Separate field for exercise pattern repetition (1-4 weeks before cycling back)
+- **Form Enhancement**: Updated training plan creation form with separate duration and week cycle dropdowns
+- **Display Updates**: Training plan cards now show both duration ("Till goal is met" or "X weeks") and week cycle pattern
+- **API Enhancement**: Client dashboard displays calculated sessions per week based on actual workout days from plan_exercises table
+- **System Status**: Training plans now properly distinguish between total plan length and exercise pattern cycles
+
+**January 6, 2025** - Fixed Client Payment Plan Display
+- **Field Mapping**: Fixed payment plan display to use correct database fields (amount, type, features)
+- **Features Display**: Payment plan features now properly display as badges from database array
+- **Sessions Removal**: Removed incorrect sessions display from payment plan (moved to training plan section)
+- **Real Data Integration**: Client dashboard now shows authentic payment plan data with proper pricing and feature information
+- **System Status**: Payment plan section displays correctly with price, billing type, and feature badges
+
 **January 5, 2025** - Implemented Training Plan Assignment System
 - **Feature Added**: Training plan assignment functionality moved from training plan cards to client detail pages
 - **UI Enhancement**: Added "Assign Plan" button to client detail page header with blue styling
