@@ -352,12 +352,12 @@ export default function TrainingPlanDetail() {
                           </div>
                         )}
 
-                        {exercise?.mediaURL && (
+                        {(exercise?.mediaUrl || exercise?.mediaURL) && (
                           <div className="mt-3 pt-3 border-t">
                             <h4 className="text-sm font-medium mb-2">Exercise Media:</h4>
                             {exercise.mediaType === 'video' ? (
                               <video 
-                                src={exercise.mediaURL} 
+                                src={exercise.mediaUrl || exercise.mediaURL} 
                                 controls
                                 className="w-full max-w-md h-48 rounded-lg"
                               >
@@ -365,7 +365,7 @@ export default function TrainingPlanDetail() {
                               </video>
                             ) : (
                               <img 
-                                src={exercise.mediaURL} 
+                                src={exercise.mediaUrl || exercise.mediaURL} 
                                 alt={exercise.name} 
                                 className="w-full max-w-md h-48 object-cover rounded-lg"
                               />

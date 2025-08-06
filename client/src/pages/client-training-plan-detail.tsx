@@ -256,6 +256,7 @@ export default function ClientTrainingPlanDetail() {
                       <div className="grid gap-3">
                         {(dayExercises as any[]).map((planExercise: any, index: number) => {
                           const exercise = getExerciseDetails(planExercise.exerciseId);
+
                           return (
                             <div key={planExercise.id} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
                               <div className="flex items-start justify-between mb-2">
@@ -316,12 +317,12 @@ export default function ClientTrainingPlanDetail() {
                                 </div>
                               )}
 
-                              {exercise?.mediaUrl && (
+                              {(exercise?.mediaUrl || exercise?.mediaURL) && (
                                 <div className="mt-3 pt-3 border-t">
                                   <h5 className="text-sm font-medium mb-2">Exercise Media:</h5>
                                   {exercise.mediaType === 'video' ? (
                                     <video 
-                                      src={exercise.mediaUrl} 
+                                      src={exercise.mediaUrl || exercise.mediaURL} 
                                       controls
                                       className="w-full max-w-sm h-32 rounded-lg"
                                     >
@@ -329,7 +330,7 @@ export default function ClientTrainingPlanDetail() {
                                     </video>
                                   ) : (
                                     <img 
-                                      src={exercise.mediaUrl} 
+                                      src={exercise.mediaUrl || exercise.mediaURL} 
                                       alt={exercise.name} 
                                       className="w-full max-w-sm h-32 object-cover rounded-lg"
                                     />
