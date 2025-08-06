@@ -63,7 +63,12 @@ export default function ClientDashboard() {
   const todayDate = new Date().toISOString().split('T')[0];
   const { data: todaysLogs = [] } = useQuery({
     queryKey: ["/api/client/workout-logs", "today", todayDate],
-    queryFn: () => fetch(`/api/client/workout-logs?date=${todayDate}`).then(res => res.json()),
+    queryFn: () => fetch(`/api/client/workout-logs?date=${todayDate}`).then(res => {
+      if (!res.ok) {
+        return [];
+      }
+      return res.json();
+    }),
     enabled: !!user && user.role === 'client',
   });
 
@@ -180,7 +185,7 @@ export default function ClientDashboard() {
     }
 
     // Get already completed exercise IDs from today's logs
-    const alreadyCompletedIds = new Set(todaysLogs.map((log: any) => log.planExerciseId));
+    const alreadyCompletedIds = new Set((todaysLogs || []).map((log: any) => log.planExerciseId));
     
     const completedExercisesList = todayWorkout.workout.exercises.filter((ex: any) => 
       completedExercises.has(ex.id) && !alreadyCompletedIds.has(ex.id)
@@ -484,7 +489,7 @@ export default function ClientDashboard() {
               {todayWorkout?.workout?.exercises && todayWorkout.workout.exercises.length > 0 ? (
                 <div className="space-y-4">
                   {todayWorkout.workout.exercises.map((exercise: any) => {
-                    const isAlreadyCompleted = todaysLogs.some((log: any) => log.planExerciseId === exercise.id);
+                    const isAlreadyCompleted = Array.isArray(todaysLogs) && todaysLogs.some((log: any) => log.planExerciseId === exercise.id);
                     return (
                       <div key={exercise.id} className={`flex items-center justify-between p-4 border rounded-lg ${
                         isAlreadyCompleted ? 'bg-green-50 border-green-200' : 'border-gray-200'
@@ -539,7 +544,7 @@ export default function ClientDashboard() {
                   })}
                   <div className="mt-6 flex justify-center">
                     {(() => {
-                      const alreadyCompletedToday = todaysLogs.length;
+                      const alreadyCompletedToday = Array.isArray(todaysLogs) ? todaysLogs.length : 0;
                       const totalExercises = todayWorkout.workout.exercises.length;
                       const remainingExercises = totalExercises - alreadyCompletedToday;
                       
