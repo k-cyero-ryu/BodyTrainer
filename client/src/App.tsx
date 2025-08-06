@@ -31,6 +31,7 @@ import TrainingPlanDetail from "@/pages/training-plan-detail";
 import ClientTrainingPlanDetail from "@/pages/client-training-plan-detail";
 import ClientTrainingPlans from "@/pages/client-training-plans";
 import ClientProfile from "@/pages/client-profile";
+import DailyWorkout from "@/pages/daily-workout";
 import Exercises from "@/pages/exercises";
 import Reports from "@/pages/reports";
 import Navigation from "@/components/navigation";
@@ -186,6 +187,7 @@ function Router() {
                   <Route path="/" component={ClientDashboard} />
                   <Route path="/my-training-plans" component={ClientTrainingPlans} />
                   <Route path="/my-training-plan/:planId" component={ClientTrainingPlanDetail} />
+                  <Route path="/daily-workout" component={DailyWorkout} />
                   <Route path="/profile" component={ClientProfile} />
                 </>
               )}

@@ -119,6 +119,12 @@ export default function Navigation() {
       roles: ['trainer']
     },
     { 
+      href: '/daily-workout', 
+      label: 'Daily Workout', 
+      icon: Activity,
+      roles: ['client']
+    },
+    { 
       href: '/my-training-plans', 
       label: 'My Training Plans', 
       icon: Dumbbell,

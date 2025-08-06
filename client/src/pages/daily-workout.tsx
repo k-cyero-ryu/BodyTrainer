@@ -1,0 +1,455 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  CalendarDays, 
+  Dumbbell, 
+  Play, 
+  Pause, 
+  RotateCcw, 
+  Check, 
+  ChevronLeft, 
+  ChevronRight,
+  Timer,
+  Weight,
+  Target,
+  Clock
+} from "lucide-react";
+import { Link } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+export default function DailyWorkout() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [exerciseTimers, setExerciseTimers] = useState<Record<string, number>>({});
+  const [activeTimer, setActiveTimer] = useState<string | null>(null);
+  const [completedSets, setCompletedSets] = useState<Record<string, Set<number>>>({});
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (activeTimer) {
+      interval = setInterval(() => {
+        setExerciseTimers(prev => ({
+          ...prev,
+          [activeTimer]: (prev[activeTimer] || 0) + 1
+        }));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [activeTimer]);
+
+  // Fetch workout for selected date
+  const { data: workoutData, isLoading: workoutLoading } = useQuery({
+    queryKey: ["/api/client/workout-by-date", selectedDate],
+    queryFn: () => fetch(`/api/client/workout-by-date?date=${selectedDate}`).then(res => res.json()),
+    enabled: !!user && user.role === 'client' && !!selectedDate,
+  });
+
+  // Fetch workout logs for selected date
+  const { data: workoutLogs = [] } = useQuery({
+    queryKey: ["/api/client/workout-logs", selectedDate],
+    queryFn: () => fetch(`/api/client/workout-logs?date=${selectedDate}`).then(res => res.json()),
+    enabled: !!user && user.role === 'client' && !!selectedDate,
+  });
+
+  // Complete set mutation
+  const completeSetMutation = useMutation({
+    mutationFn: async ({ planExerciseId, setNumber, actualReps, actualWeight, notes }: {
+      planExerciseId: string;
+      setNumber: number;
+      actualReps?: number;
+      actualWeight?: number;
+      notes?: string;
+    }) => {
+      await apiRequest("POST", "/api/client/complete-set", {
+        planExerciseId,
+        setNumber,
+        actualReps,
+        actualWeight,
+        notes
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      toast({
+        title: "Set Completed!",
+        description: "Great work! Keep it up.",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to complete set. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSetCompletion = (exerciseId: string, setNumber: number) => {
+    setCompletedSets(prev => {
+      const exerciseSets = prev[exerciseId] || new Set();
+      const newSets = new Set(exerciseSets);
+      
+      if (newSets.has(setNumber)) {
+        newSets.delete(setNumber);
+      } else {
+        newSets.add(setNumber);
+        // Log the set completion
+        const exercise = workoutData?.workout?.exercises?.find((ex: any) => ex.id === exerciseId);
+        if (exercise) {
+          completeSetMutation.mutate({
+            planExerciseId: exerciseId,
+            setNumber,
+            actualReps: exercise.reps,
+            actualWeight: exercise.weight
+          });
+        }
+      }
+      
+      return {
+        ...prev,
+        [exerciseId]: newSets
+      };
+    });
+  };
+
+  const startTimer = (exerciseId: string) => {
+    if (activeTimer === exerciseId) {
+      setActiveTimer(null);
+    } else {
+      setActiveTimer(exerciseId);
+      setExerciseTimers(prev => ({
+        ...prev,
+        [exerciseId]: prev[exerciseId] || 0
+      }));
+    }
+  };
+
+  const resetTimer = (exerciseId: string) => {
+    setExerciseTimers(prev => ({
+      ...prev,
+      [exerciseId]: 0
+    }));
+    setActiveTimer(null);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const currentDate = new Date(selectedDate);
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
+    setSelectedDate(newDate.toISOString().split('T')[0]);
+    setCompletedSets({});
+    setExerciseTimers({});
+    setActiveTimer(null);
+  };
+
+  if (isLoading || workoutLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const isToday = selectedDate === new Date().toISOString().split('T')[0];
+  const selectedDateObj = new Date(selectedDate);
+  const dateString = selectedDateObj.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  return (
+    <main className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      {/* Header with Date Navigation */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Daily Workout</h1>
+            <p className="text-gray-600 mt-2">{dateString}</p>
+          </div>
+          <Link href="/dashboard">
+            <Button variant="outline">
+              ← Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+        
+        {/* Date Navigation */}
+        <div className="flex items-center gap-4 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigateDate('prev')}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous Day
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2"
+            />
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigateDate('next')}
+          >
+            Next Day
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          
+          {!isToday && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+            >
+              Today
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Workout Content */}
+      {workoutData?.workout?.exercises && workoutData.workout.exercises.length > 0 ? (
+        <div className="space-y-6">
+          {/* Workout Header */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Dumbbell className="h-5 w-5" />
+                {workoutData.planDetails.name}
+              </CardTitle>
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <span>Day {workoutData.workout.dayOfWeek}</span>
+                <span>•</span>
+                <span>Week {workoutData.workout.week}</span>
+                <span>•</span>
+                <span>{workoutData.workout.exercises.length} Exercises</span>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Exercises */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {workoutData.workout.exercises.map((exercise: any, index: number) => {
+              const exerciseLogs = workoutLogs.filter((log: any) => log.planExerciseId === exercise.id);
+              const completedSetsCount = exerciseLogs.length;
+              const totalSets = exercise.sets || 1;
+              const exerciseTimer = exerciseTimers[exercise.id] || 0;
+              const isTimerActive = activeTimer === exercise.id;
+
+              return (
+                <Card key={exercise.id} className="relative">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg">
+                          {exercise.exercise?.name || `Exercise ${index + 1}`}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="secondary">
+                            Sets: {completedSetsCount}/{totalSets}
+                          </Badge>
+                          {exercise.reps && (
+                            <Badge variant="outline">
+                              {exercise.reps} reps
+                            </Badge>
+                          )}
+                          {exercise.weight && (
+                            <Badge variant="outline">
+                              {exercise.weight} kg
+                            </Badge>
+                          )}
+                          {exercise.duration && (
+                            <Badge variant="outline">
+                              {exercise.duration} min
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Timer */}
+                      <div className="text-right">
+                        <div className="text-2xl font-mono font-bold text-primary">
+                          {formatTime(exerciseTimer)}
+                        </div>
+                        <div className="flex gap-1 mt-2">
+                          <Button
+                            size="sm"
+                            variant={isTimerActive ? "default" : "outline"}
+                            onClick={() => startTimer(exercise.id)}
+                          >
+                            {isTimerActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => resetTimer(exercise.id)}
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    {exercise.notes && (
+                      <p className="text-sm text-gray-600 mb-4">{exercise.notes}</p>
+                    )}
+                    
+                    {/* Sets */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900">Sets</h4>
+                      <div className="grid grid-cols-1 gap-2">
+                        {Array.from({ length: totalSets }, (_, setIndex) => {
+                          const setNumber = setIndex + 1;
+                          const isCompleted = exerciseLogs.some(log => log.setNumber === setNumber);
+                          const completedLog = exerciseLogs.find(log => log.setNumber === setNumber);
+                          
+                          return (
+                            <div
+                              key={setNumber}
+                              className={`flex items-center justify-between p-3 border rounded-lg ${
+                                isCompleted ? 'bg-green-50 border-green-200' : 'border-gray-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {isCompleted ? (
+                                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                    <Check className="w-3 h-3 text-white" />
+                                  </div>
+                                ) : (
+                                  <Checkbox
+                                    checked={completedSets[exercise.id]?.has(setNumber) || false}
+                                    onCheckedChange={() => handleSetCompletion(exercise.id, setNumber)}
+                                  />
+                                )}
+                                
+                                <div className="flex items-center gap-4">
+                                  <span className="font-medium">Set {setNumber}</span>
+                                  
+                                  {exercise.reps && (
+                                    <div className="flex items-center gap-1">
+                                      <Target className="h-4 w-4 text-gray-500" />
+                                      <span className="text-sm">
+                                        {isCompleted && completedLog?.actualReps ? 
+                                          `${completedLog.actualReps} reps` : 
+                                          `${exercise.reps} reps`
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+                                  
+                                  {exercise.weight && (
+                                    <div className="flex items-center gap-1">
+                                      <Weight className="h-4 w-4 text-gray-500" />
+                                      <span className="text-sm">
+                                        {isCompleted && completedLog?.actualWeight ? 
+                                          `${completedLog.actualWeight} kg` : 
+                                          `${exercise.weight} kg`
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+                                  
+                                  {exercise.duration && (
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-4 w-4 text-gray-500" />
+                                      <span className="text-sm">{exercise.duration} min</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {isCompleted && (
+                                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                  Completed
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    {exercise.restTime && (
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-blue-700">
+                          <Timer className="h-4 w-4" />
+                          <span>Rest: {exercise.restTime}s between sets</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Dumbbell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Workout Scheduled
+            </h3>
+            <p className="text-gray-500">
+              {isToday ? "No workout scheduled for today" : "No workout scheduled for this date"}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </main>
+  );
+}

@@ -880,6 +880,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Workout by date endpoint for Daily Workout page
+  app.get('/api/client/workout-by-date', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can access workout data" });
+      }
+
+      const { date } = req.query;
+      if (!date) {
+        return res.status(400).json({ message: "Date parameter is required" });
+      }
+
+      const targetDate = new Date(date as string);
+      const activeClientPlan = await storage.getActiveClientPlan(client.id);
+      
+      if (!activeClientPlan) {
+        return res.json({
+          workout: null,
+          planDetails: null,
+          message: "No active training plan assigned"
+        });
+      }
+
+      const plan = await storage.getTrainingPlan(activeClientPlan.planId);
+      if (!plan) {
+        return res.json({
+          workout: null,
+          planDetails: null,
+          message: "Training plan not found"
+        });
+      }
+
+      const planStartDate = new Date(activeClientPlan.startDate);
+      const daysDiff = Math.floor((targetDate.getTime() - planStartDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff < 0) {
+        return res.json({
+          workout: null,
+          planDetails: plan,
+          message: "Training plan hasn't started yet"
+        });
+      }
+
+      const currentWeekInCycle = Math.floor(daysDiff / 7) % plan.weekCycle + 1;
+      const dayOfWeek = (targetDate.getDay() === 0 ? 7 : targetDate.getDay());
+      
+      const planExercises = await storage.getPlanExercisesByPlan(plan.id);
+      const targetExercises = planExercises.filter(pe => 
+        pe.dayOfWeek === dayOfWeek && pe.week === currentWeekInCycle
+      );
+      
+      if (targetExercises.length === 0) {
+        return res.json({
+          workout: null,
+          planDetails: plan,
+          message: "No workout scheduled for this date"
+        });
+      }
+
+      const exerciseDetails = await Promise.all(
+        targetExercises.map(async (planEx: any) => {
+          const exercise = await storage.getExercise(planEx.exerciseId);
+          return {
+            id: planEx.id,
+            exercise: exercise,
+            sets: planEx.sets,
+            reps: planEx.reps,
+            weight: planEx.weight,
+            duration: planEx.duration,
+            restTime: planEx.restTime,
+            notes: planEx.notes
+          };
+        })
+      );
+
+      res.json({
+        workout: {
+          planName: plan.name,
+          dayOfWeek: dayOfWeek,
+          week: currentWeekInCycle,
+          exercises: exerciseDetails
+        },
+        planDetails: plan
+      });
+    } catch (error) {
+      console.error("Error fetching workout by date:", error);
+      res.status(500).json({ message: "Failed to fetch workout data" });
+    }
+  });
+
+  // Complete individual set endpoint
+  app.post('/api/client/complete-set', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can complete sets" });
+      }
+
+      const { planExerciseId, setNumber, actualReps, actualWeight, notes } = req.body;
+      
+      // Check if this set was already completed today
+      const today = new Date();
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+      
+      const existingLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
+      const existingSet = existingLogs.find(log => 
+        log.planExerciseId === planExerciseId && log.setNumber === setNumber
+      );
+      
+      if (existingSet) {
+        return res.status(400).json({ message: "Set already completed today" });
+      }
+
+      const workoutLog = await storage.createWorkoutLog({
+        clientId: client.id,
+        planExerciseId,
+        setNumber,
+        completedSets: 1,
+        completedReps: actualReps || null,
+        actualWeight: actualWeight || null,
+        actualDuration: null,
+        notes: notes || null
+      });
+
+      res.status(201).json(workoutLog);
+    } catch (error) {
+      console.error("Error logging set completion:", error);
+      res.status(500).json({ message: "Failed to log set completion" });
+    }
+  });
+
   // Exercise routes
   app.post('/api/exercises', isAuthenticated, async (req: any, res) => {
     try {

@@ -592,10 +592,10 @@ export class DatabaseStorage implements IStorage {
       .from(workoutLogs)
       .where(and(
         eq(workoutLogs.clientId, clientId),
-        gte(workoutLogs.completedAt, startDate),
-        lte(workoutLogs.completedAt, endDate)
+        gte(workoutLogs.createdAt, startDate),
+        lte(workoutLogs.createdAt, endDate)
       ))
-      .orderBy(desc(workoutLogs.completedAt));
+      .orderBy(desc(workoutLogs.createdAt));
   }
 
   // Monthly evaluation operations

@@ -523,6 +523,11 @@ export default function ClientDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
+                          <Link href="/daily-workout">
+                            <Button variant="outline" size="sm">
+                              View Details
+                            </Button>
+                          </Link>
                           {!isAlreadyCompleted && (
                             <Button variant="ghost" size="sm" onClick={() => startExercise(exercise.id)}>
                               <Play className="h-4 w-4" />

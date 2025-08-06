@@ -146,6 +146,7 @@ export const workoutLogs = pgTable("workout_logs", {
   planExerciseId: varchar("plan_exercise_id").notNull().references(() => planExercises.id, { onDelete: 'cascade' }),
   completedSets: integer("completed_sets"),
   completedReps: integer("completed_reps"),
+  setNumber: integer("set_number"), // Track individual set completion
   actualWeight: decimal("actual_weight", { precision: 5, scale: 2 }),
   actualDuration: integer("actual_duration"),
   notes: text("notes"),
