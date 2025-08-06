@@ -591,16 +591,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const assignedPlans = await storage.getClientPlans(client.id);
       
-      // Calculate sessions per week for each plan
-      const enrichedPlans = await Promise.all(assignedPlans.map(async (plan: any) => {
-        const planExercises = await storage.getPlanExercisesByPlan(plan.planId);
+      // Enrich with training plan details and calculate sessions per week
+      const enrichedPlans = await Promise.all(assignedPlans.map(async (clientPlan: any) => {
+        // Get the actual training plan details
+        const trainingPlan = await storage.getTrainingPlan(clientPlan.planId);
+        const planExercises = await storage.getPlanExercisesByPlan(clientPlan.planId);
         
         // Count unique days of the week that have exercises
         const uniqueDays = new Set(planExercises.map((ex: any) => ex.dayOfWeek));
         const sessionsPerWeek = uniqueDays.size;
         
         return {
-          ...plan,
+          ...clientPlan,
+          // Training plan details
+          name: trainingPlan?.name || 'Unknown Plan',
+          goal: trainingPlan?.goal || '',
+          duration: trainingPlan?.duration || 0,
+          weekCycle: trainingPlan?.weekCycle || 1,
+          // Calculated data
           sessionsPerWeek
         };
       }));

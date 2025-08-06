@@ -209,22 +209,36 @@ export default function ClientDashboard() {
                         <h4 className="font-medium">{plan.name}</h4>
                         <p className="text-sm text-muted-foreground">{plan.goal}</p>
                       </div>
-                      <Badge variant={plan.isActive ? "default" : "secondary"}>
-                        {plan.isActive ? "Active" : "Inactive"}
-                      </Badge>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground">Status:</div>
+                        <Badge variant={plan.isActive ? "default" : "secondary"}>
+                          {plan.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Duration: {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}</span>
-                      <span>Status: {plan.status}</span>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Duration:</span>
+                        <div className="font-medium">
+                          {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Week cycle:</span>
+                        <div className="font-medium">{plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                      <span>Week cycle: {plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</span>
+                    <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+                      <div>
+                        <span className="text-muted-foreground">Sessions/week:</span>
+                        <div className="font-medium">{plan.sessionsPerWeek || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Started:</span>
+                        <div className="font-medium">{plan.startDate ? new Date(plan.startDate).toLocaleDateString() : 'N/A'}</div>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                      <span>Sessions per week: {plan.sessionsPerWeek || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                      <span>Started: {new Date(plan.assignedDate).toLocaleDateString()}</span>
+                    <div className="flex justify-center pt-3 border-t mt-3">
                       <Link href={`/my-training-plan/${plan.planId}`}>
                         <Button variant="ghost" size="sm">View Details</Button>
                       </Link>
