@@ -60,8 +60,10 @@ export default function ClientDashboard() {
   });
 
   // Fetch today's workout logs to check what's already completed
+  const todayDate = new Date().toISOString().split('T')[0];
   const { data: todaysLogs = [] } = useQuery({
-    queryKey: ["/api/client/workout-logs", { date: new Date().toISOString().split('T')[0] }],
+    queryKey: ["/api/client/workout-logs", "today", todayDate],
+    queryFn: () => fetch(`/api/client/workout-logs?date=${todayDate}`).then(res => res.json()),
     enabled: !!user && user.role === 'client',
   });
 
@@ -131,6 +133,7 @@ export default function ClientDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/client/today-workout"] });
       queryClient.invalidateQueries({ queryKey: ["/api/client/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
