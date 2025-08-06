@@ -142,6 +142,26 @@ export default function ClientDashboard() {
     const totalWeightChange = Math.abs(targetWeight - startingWeight);
     const currentWeightChange = Math.abs(currentWeight - startingWeight);
     goalProgress = Math.min(100, Math.round((currentWeightChange / totalWeightChange) * 100));
+    
+    // Debug logging
+    console.log('Weight Progress Debug:', {
+      currentWeight,
+      targetWeight,
+      startingWeight,
+      totalWeightChange,
+      currentWeightChange,
+      goalProgress
+    });
+  } else {
+    console.log('Goal progress not calculated:', {
+      currentWeight,
+      targetWeight,
+      startingWeight,
+      hasTarget: !!targetWeight,
+      hasCurrent: !!currentWeight,
+      hasStarting: !!startingWeight,
+      sameStartingTarget: startingWeight === targetWeight
+    });
   }
   
   const activeAssignedPlan = assignedPlans.find((p: any) => p.isActive);
