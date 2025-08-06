@@ -113,16 +113,13 @@ export default function ClientDashboard() {
       actualDuration?: number;
       notes?: string;
     }) => {
-      await apiRequest("/api/client/complete-exercise", {
-        method: "POST",
-        body: JSON.stringify({
-          planExerciseId,
-          completedSets,
-          completedReps,
-          actualWeight,
-          actualDuration,
-          notes
-        })
+      await apiRequest("POST", "/api/client/complete-exercise", {
+        planExerciseId,
+        completedSets,
+        completedReps,
+        actualWeight,
+        actualDuration,
+        notes
       });
     },
     onSuccess: () => {
