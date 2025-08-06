@@ -166,13 +166,17 @@ export default function ClientDashboard() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Price:</span>
-                  <span className="text-sm font-bold">${paymentPlan.price}/{paymentPlan.billingCycle}</span>
+                  <span className="text-sm font-bold">${paymentPlan.amount}/{paymentPlan.type}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Sessions:</span>
-                  <span className="text-sm">{paymentPlan.sessionsPerWeek} per week</span>
+                  <span className="text-sm">
+                    {paymentPlan.type === 'weekly' ? 'Weekly sessions' : 
+                     paymentPlan.type === 'monthly' ? 'Monthly plan' : 
+                     'Per ' + paymentPlan.type}
+                  </span>
                 </div>
-                {paymentPlan.features && (
+                {paymentPlan.features && paymentPlan.features.length > 0 && (
                   <div className="pt-2 border-t">
                     <p className="text-sm font-medium mb-2">Features:</p>
                     <div className="flex flex-wrap gap-1">
