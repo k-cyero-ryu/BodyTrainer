@@ -6,7 +6,8 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
-**January 6, 2025** - Real Data Progress Overview Integration
+**January 6, 2025** - Dashboard Cleanup and Real Data Integration
+- **Removed Duplicate Section**: Eliminated redundant "My Training Plans" section from dashboard, keeping only "Current Training Plan"
 - **Authentic Weight Progress**: Weight goal progress calculated from actual evaluation data (10% loss target)
 - **Real Training Metrics**: Progress bars now show training adherence and nutrition adherence from latest evaluation
 - **Dynamic Weight Change**: Shows actual weight change between first and latest evaluations with color coding

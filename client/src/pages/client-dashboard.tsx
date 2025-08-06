@@ -776,58 +776,7 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* Training Plans Section */}
-      {trainingPlans.length > 0 && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5" />
-              My Training Plans
-            </CardTitle>
-            <p className="text-sm text-gray-500">View and track your assigned training plans</p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {trainingPlans.map((plan: any) => (
-                <div key={plan.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-medium">{plan.name}</h4>
-                      <p className="text-sm text-muted-foreground">{plan.goal}</p>
-                    </div>
-                    <Badge variant={plan.isActive ? "default" : "secondary"}>
-                      {plan.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Duration:</span>
-                      <span>{plan.duration} weeks</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Status:</span>
-                      <span className="capitalize">{plan.status}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Started:</span>
-                      <span>{new Date(plan.assignedDate).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 pt-3 border-t">
-                    <Link href={`/training-plans/${plan.id}`}>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View Full Details
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Latest Evaluation Display */}
       <Card>
