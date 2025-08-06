@@ -74,6 +74,8 @@ export default function DailyWorkout() {
     queryKey: ["/api/client/workout-logs", selectedDate],
     queryFn: () => fetch(`/api/client/workout-logs?date=${selectedDate}`).then(res => res.json()),
     enabled: !!user && user.role === 'client' && !!selectedDate,
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache the data (replaces cacheTime in v5)
   });
 
   // Complete set mutation
@@ -94,6 +96,8 @@ export default function DailyWorkout() {
       });
     },
     onSuccess: () => {
+      // Clear all workout log cache entries for all dates
+      queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
       toast({
         title: "Set Completed!",
@@ -134,9 +138,9 @@ export default function DailyWorkout() {
       });
     },
     onSuccess: () => {
-      // Force a complete cache refresh to ensure accurate counts
+      // Clear all workout log cache entries for all dates
+      queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
-      queryClient.refetchQueries({ queryKey: ["/api/client/workout-logs"] });
       toast({
         title: "Set Unchecked",
         description: "Set has been unchecked successfully.",
