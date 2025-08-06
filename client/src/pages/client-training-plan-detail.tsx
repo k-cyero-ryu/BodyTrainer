@@ -324,7 +324,8 @@ export default function ClientTrainingPlanDetail() {
                                     <video 
                                       src={exercise.mediaUrl || exercise.mediaURL} 
                                       controls
-                                      className="w-full max-w-sm h-32 rounded-lg"
+                                      className="w-full max-w-sm h-48 rounded-lg"
+                                      poster=""
                                     >
                                       Your browser does not support the video tag.
                                     </video>
@@ -332,7 +333,7 @@ export default function ClientTrainingPlanDetail() {
                                     <img 
                                       src={exercise.mediaUrl || exercise.mediaURL} 
                                       alt={exercise.name} 
-                                      className="w-full max-w-sm h-32 object-cover rounded-lg"
+                                      className="w-full max-w-sm h-48 object-cover rounded-lg"
                                     />
                                   )}
                                 </div>

@@ -360,6 +360,7 @@ export default function TrainingPlanDetail() {
                                 src={exercise.mediaUrl || exercise.mediaURL} 
                                 controls
                                 className="w-full max-w-md h-48 rounded-lg"
+                                poster=""
                               >
                                 Your browser does not support the video tag.
                               </video>
