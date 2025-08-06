@@ -355,11 +355,21 @@ export default function TrainingPlanDetail() {
                         {exercise?.mediaURL && (
                           <div className="mt-3 pt-3 border-t">
                             <h4 className="text-sm font-medium mb-2">Exercise Media:</h4>
-                            <img 
-                              src={exercise.mediaURL} 
-                              alt={exercise.name} 
-                              className="w-full max-w-md h-48 object-cover rounded-lg"
-                            />
+                            {exercise.mediaType === 'video' ? (
+                              <video 
+                                src={exercise.mediaURL} 
+                                controls
+                                className="w-full max-w-md h-48 rounded-lg"
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                            ) : (
+                              <img 
+                                src={exercise.mediaURL} 
+                                alt={exercise.name} 
+                                className="w-full max-w-md h-48 object-cover rounded-lg"
+                              />
+                            )}
                           </div>
                         )}
                       </div>

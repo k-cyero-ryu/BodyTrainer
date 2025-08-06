@@ -315,6 +315,27 @@ export default function ClientTrainingPlanDetail() {
                                   </p>
                                 </div>
                               )}
+
+                              {exercise?.mediaUrl && (
+                                <div className="mt-3 pt-3 border-t">
+                                  <h5 className="text-sm font-medium mb-2">Exercise Media:</h5>
+                                  {exercise.mediaType === 'video' ? (
+                                    <video 
+                                      src={exercise.mediaUrl} 
+                                      controls
+                                      className="w-full max-w-sm h-32 rounded-lg"
+                                    >
+                                      Your browser does not support the video tag.
+                                    </video>
+                                  ) : (
+                                    <img 
+                                      src={exercise.mediaUrl} 
+                                      alt={exercise.name} 
+                                      className="w-full max-w-sm h-32 object-cover rounded-lg"
+                                    />
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
