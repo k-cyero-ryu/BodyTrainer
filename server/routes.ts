@@ -986,12 +986,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only clients can complete sets" });
       }
 
-      const { planExerciseId, setNumber, actualReps, actualWeight, notes } = req.body;
+      const { planExerciseId, setNumber, actualReps, actualWeight, notes, date } = req.body;
+      console.log(`[DEBUG] Complete set request:`, { planExerciseId, setNumber, actualReps, actualWeight, notes, date });
       
-      // Check if this set was already completed today
-      const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+      // Check if this set was already completed for the target date
+      const targetDate = date ? new Date(date) : new Date();
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
       
       const existingLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
       const existingSet = existingLogs.find(log => 
@@ -999,7 +1000,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       if (existingSet) {
-        return res.status(400).json({ message: "Set already completed today" });
+        return res.status(400).json({ message: "Set already completed for this date" });
       }
 
       const workoutLog = await storage.createWorkoutLog({
@@ -1010,7 +1011,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedReps: actualReps || null,
         actualWeight: actualWeight || null,
         actualDuration: null,
-        notes: notes || null
+        notes: notes || null,
+        completedAt: targetDate  // Use the target date instead of now
       });
 
       res.status(201).json(workoutLog);
@@ -1063,8 +1065,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`[DEBUG] Completing exercise for client ID: ${client.id}, user ID: ${userId}`);
+      console.log(`[DEBUG] Request body:`, { planExerciseId, totalSets, actualWeight, actualReps, actualDuration, notes: req.body.notes, date: req.body.date });
 
-      const { planExerciseId, totalSets, actualWeight, actualReps, actualDuration, date } = req.body;
+      const { planExerciseId, totalSets, actualWeight, actualReps, actualDuration, notes, date } = req.body;
       
       // Use the provided date or default to today
       const targetDate = date ? new Date(date) : new Date();
@@ -1095,7 +1098,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             setNumber,
             actualWeight: actualWeight || null,
             actualDuration: actualDuration || null,
-            notes: null,
+            notes: notes || null,
             completedAt: targetDate  // Use the target date instead of now
           });
           workoutLogs.push(workoutLog);

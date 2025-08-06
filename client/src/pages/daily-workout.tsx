@@ -270,11 +270,14 @@ export default function DailyWorkout() {
         // Log the set completion
         const exercise = workoutData?.workout?.exercises?.find((ex: any) => ex.id === exerciseId);
         if (exercise) {
+          const currentNotes = exerciseNotes[exerciseId] || '';
           completeSetMutation.mutate({
             planExerciseId: exerciseId,
             setNumber,
             actualReps: exercise.reps,
-            actualWeight: exercise.weight
+            actualWeight: exercise.weight,
+            notes: currentNotes,
+            date: selectedDate
           });
         }
       }
