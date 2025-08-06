@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, Weight, Ruler } from "lucide-react";
+import { Calendar, TrendingUp, Weight, Ruler, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -17,6 +17,7 @@ export default function MonthlyEvaluation() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -37,6 +38,25 @@ export default function MonthlyEvaluation() {
     queryKey: ["/api/evaluations"],
     enabled: !!user && user.role === 'client',
   });
+
+  // Navigation functions
+  const navigateEvaluation = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && currentEvaluationIndex < evaluations.length - 1) {
+      setCurrentEvaluationIndex(currentEvaluationIndex + 1);
+    } else if (direction === 'next' && currentEvaluationIndex > 0) {
+      setCurrentEvaluationIndex(currentEvaluationIndex - 1);
+    }
+  };
+
+  const goToLatest = () => {
+    setCurrentEvaluationIndex(0);
+  };
+
+  // Get current evaluation to display
+  const currentEvaluation = evaluations[currentEvaluationIndex];
+  const isLatest = currentEvaluationIndex === 0;
+  const canGoPrev = currentEvaluationIndex < evaluations.length - 1;
+  const canGoNext = currentEvaluationIndex > 0;
 
   const evaluationMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -116,101 +136,135 @@ export default function MonthlyEvaluation() {
         </div>
       </div>
 
-      {/* Previous Evaluations */}
-      {evaluations.length > 0 && (
+      {/* Navigation and Current Evaluation */}
+      {evaluations.length > 0 && currentEvaluation && (
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Previous Evaluations
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Monthly Evaluations
+                <Badge variant={isLatest ? "default" : "secondary"}>
+                  {currentEvaluationIndex + 1} of {evaluations.length}
+                </Badge>
+              </CardTitle>
+              
+              {/* Navigation Controls */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateEvaluation('prev')}
+                  disabled={!canGoPrev}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateEvaluation('next')}
+                  disabled={!canGoNext}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                
+                {!isLatest && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={goToLatest}
+                  >
+                    Latest
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {evaluations.map((evaluation: any, index: number) => (
-                <div key={evaluation.id} className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={index === 0 ? "default" : "secondary"}>
-                        Week {evaluation.weekNumber}
-                      </Badge>
-                      <span className="text-sm text-gray-500">
-                        {new Date(evaluation.createdAt).toLocaleDateString()}
-                      </span>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant={isLatest ? "default" : "secondary"}>
+                    Week {currentEvaluation.weekNumber}
+                  </Badge>
+                  <span className="text-sm text-gray-500">
+                    {new Date(currentEvaluation.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                {isLatest && (
+                  <Badge variant="outline" className="text-green-600 border-green-600">
+                    Latest
+                  </Badge>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Physical Stats */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1">
+                    <Weight className="h-4 w-4" />
+                    Physical Stats
+                  </h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Weight:</span>
+                      <span className="font-medium">{currentEvaluation.weight} kg</span>
                     </div>
-                    {index === 0 && (
-                      <Badge variant="outline" className="text-green-600 border-green-600">
-                        Latest
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Physical Stats */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1">
-                        <Weight className="h-4 w-4" />
-                        Physical Stats
-                      </h4>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>Weight:</span>
-                          <span className="font-medium">{evaluation.weight} kg</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Body Fat:</span>
-                          <span className="font-medium">{evaluation.bodyFatPercentage}%</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Body Measurements */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1">
-                        <Ruler className="h-4 w-4" />
-                        Measurements (cm)
-                      </h4>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>Waist:</span>
-                          <span className="font-medium">{evaluation.waistMeasurement}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Chest:</span>
-                          <span className="font-medium">{evaluation.chestMeasurement}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Hips:</span>
-                          <span className="font-medium">{evaluation.hipsMeasurement}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Thigh:</span>
-                          <span className="font-medium">{evaluation.thighMeasurement}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Self-Evaluation */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Self-Assessment</h4>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>Training:</span>
-                          <span className="font-medium">{evaluation.trainingAdherence}/10</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Nutrition:</span>
-                          <span className="font-medium">{evaluation.mealAdherence}/10</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Overall:</span>
-                          <span className="font-medium">{evaluation.selfEvaluation}/10</span>
-                        </div>
-                      </div>
+                    <div className="flex justify-between">
+                      <span>Body Fat:</span>
+                      <span className="font-medium">{currentEvaluation.bodyFatPercentage}%</span>
                     </div>
                   </div>
                 </div>
-              ))}
+
+                {/* Body Measurements */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1">
+                    <Ruler className="h-4 w-4" />
+                    Measurements (cm)
+                  </h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Waist:</span>
+                      <span className="font-medium">{currentEvaluation.waistMeasurement}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Chest:</span>
+                      <span className="font-medium">{currentEvaluation.chestMeasurement}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Hips:</span>
+                      <span className="font-medium">{currentEvaluation.hipsMeasurement}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Thigh:</span>
+                      <span className="font-medium">{currentEvaluation.thighMeasurement}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Self-Evaluation */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Self-Assessment</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span>Training:</span>
+                      <span className="font-medium">{currentEvaluation.trainingAdherence}/10</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Nutrition:</span>
+                      <span className="font-medium">{currentEvaluation.mealAdherence}/10</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Overall:</span>
+                      <span className="font-medium">{currentEvaluation.selfEvaluation}/10</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

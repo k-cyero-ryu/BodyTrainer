@@ -6,6 +6,15 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 6, 2025** - Monthly Evaluation Navigation System
+- **Navigation Controls**: Added Previous, Next, and Latest buttons similar to workout page navigation
+- **Single Evaluation View**: Replaced evaluation list with focused single evaluation display with navigation
+- **Evaluation Counter**: Shows "X of Y" evaluation counter in header badge
+- **Smart Navigation**: Previous/Next buttons are disabled when at boundaries, Latest button appears when not viewing latest
+- **Consistent UI Pattern**: Matches workout page navigation design for familiar user experience
+- **Enhanced User Flow**: Users can now easily browse through their evaluation history without scrolling through long lists
+- **System Status**: Monthly evaluation page now provides intuitive navigation through historical evaluations
+
 **January 6, 2025** - Dedicated Monthly Evaluation Page and Enhanced Body Measurements
 - **New Evaluation Page**: Created `/monthly-evaluation` page with comprehensive form and evaluation history
 - **Complete Body Measurements**: Added abdomen, hip, thigh, and calf fields to monthly evaluation form
