@@ -243,6 +243,18 @@ export default function MonthlyEvaluation() {
                       <span>Thigh:</span>
                       <span className="font-medium">{currentEvaluation.thighMeasurement}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>Biceps:</span>
+                      <span className="font-medium">{currentEvaluation.bicepsMeasurement}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Abdomen:</span>
+                      <span className="font-medium">{currentEvaluation.abdomenMeasurement}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Calf:</span>
+                      <span className="font-medium">{currentEvaluation.calfMeasurement}</span>
+                    </div>
                   </div>
                 </div>
 
