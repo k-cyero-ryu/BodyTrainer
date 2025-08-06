@@ -59,6 +59,12 @@ export default function ClientDashboard() {
     enabled: !!user && user.role === 'client',
   });
 
+  // Fetch today's workout logs to check what's already completed
+  const { data: todaysLogs = [] } = useQuery({
+    queryKey: ["/api/client/workout-logs", { date: new Date().toISOString().split('T')[0] }],
+    enabled: !!user && user.role === 'client',
+  });
+
   // Fetch training plans list
   const { data: trainingPlans = [] } = useQuery({
     queryKey: ["/api/training-plans"],
@@ -170,12 +176,24 @@ export default function ClientDashboard() {
       return;
     }
 
+    // Get already completed exercise IDs from today's logs
+    const alreadyCompletedIds = new Set(todaysLogs.map((log: any) => log.planExerciseId));
+    
     const completedExercisesList = todayWorkout.workout.exercises.filter((ex: any) => 
-      completedExercises.has(ex.id)
+      completedExercises.has(ex.id) && !alreadyCompletedIds.has(ex.id)
     );
 
+    if (completedExercisesList.length === 0) {
+      toast({
+        title: "No New Exercises to Complete",
+        description: "All selected exercises have already been completed today.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Log completion for each selected exercise
+      // Log completion for each selected exercise that hasn't been completed today
       await Promise.all(
         completedExercisesList.map((exercise: any) =>
           completeExerciseMutation.mutateAsync({
@@ -190,7 +208,7 @@ export default function ClientDashboard() {
 
       toast({
         title: "Workout Completed!",
-        description: `Great job! You completed ${completedExercises.size} exercises today.`,
+        description: `Great job! You completed ${completedExercisesList.length} new exercises today.`,
       });
 
       // Reset completed exercises
@@ -462,45 +480,82 @@ export default function ClientDashboard() {
             <CardContent>
               {todayWorkout?.workout?.exercises && todayWorkout.workout.exercises.length > 0 ? (
                 <div className="space-y-4">
-                  {todayWorkout.workout.exercises.map((exercise: any) => (
-                    <div key={exercise.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <Checkbox 
-                          id={`exercise-${exercise.id}`}
-                          checked={completedExercises.has(exercise.id)}
-                          onCheckedChange={(checked) => handleExerciseCompletion(exercise.id, checked)}
-                        />
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <Dumbbell className="h-5 w-5 text-gray-500" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-gray-900">{exercise.exercise?.name || exercise.exerciseName}</h4>
-                          <div className="text-sm text-gray-500 space-y-1">
-                            {exercise.sets && <span>Sets: {exercise.sets}</span>}
-                            {exercise.reps && <span> • Reps: {exercise.reps}</span>}
-                            {exercise.duration && <span> • Duration: {exercise.duration} min</span>}
-                            {exercise.weight && <span> • Weight: {exercise.weight} kg</span>}
+                  {todayWorkout.workout.exercises.map((exercise: any) => {
+                    const isAlreadyCompleted = todaysLogs.some((log: any) => log.planExerciseId === exercise.id);
+                    return (
+                      <div key={exercise.id} className={`flex items-center justify-between p-4 border rounded-lg ${
+                        isAlreadyCompleted ? 'bg-green-50 border-green-200' : 'border-gray-200'
+                      }`}>
+                        <div className="flex items-center space-x-4">
+                          {!isAlreadyCompleted ? (
+                            <Checkbox 
+                              id={`exercise-${exercise.id}`}
+                              checked={completedExercises.has(exercise.id)}
+                              onCheckedChange={(checked) => handleExerciseCompletion(exercise.id, checked)}
+                            />
+                          ) : (
+                            <div className="w-4 h-4 bg-green-500 rounded-sm flex items-center justify-center">
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <Dumbbell className="h-5 w-5 text-gray-500" />
                           </div>
-                          {exercise.notes && (
-                            <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
+                          <div>
+                            <h4 className={`font-medium ${isAlreadyCompleted ? 'text-green-700' : 'text-gray-900'}`}>
+                              {exercise.exercise?.name || exercise.exerciseName}
+                              {isAlreadyCompleted && <span className="ml-2 text-sm text-green-600">(Completed)</span>}
+                            </h4>
+                            <div className="text-sm text-gray-500 space-y-1">
+                              {exercise.sets && <span>Sets: {exercise.sets}</span>}
+                              {exercise.reps && <span> • Reps: {exercise.reps}</span>}
+                              {exercise.duration && <span> • Duration: {exercise.duration} min</span>}
+                              {exercise.weight && <span> • Weight: {exercise.weight} kg</span>}
+                            </div>
+                            {exercise.notes && (
+                              <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {!isAlreadyCompleted && (
+                            <Button variant="ghost" size="sm" onClick={() => startExercise(exercise.id)}>
+                              <Play className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => startExercise(exercise.id)}>
-                          <Play className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div className="mt-6 flex justify-center">
-                    <Button 
-                      className="px-6 py-3" 
-                      onClick={handleCompleteWorkout}
-                      disabled={completedExercises.size === 0}
-                    >
-                      Complete Workout ({completedExercises.size}/{todayWorkout.workout.exercises.length})
-                    </Button>
+                    {(() => {
+                      const alreadyCompletedToday = todaysLogs.length;
+                      const totalExercises = todayWorkout.workout.exercises.length;
+                      const remainingExercises = totalExercises - alreadyCompletedToday;
+                      
+                      if (remainingExercises === 0) {
+                        return (
+                          <Button 
+                            className="px-6 py-3 bg-green-600 hover:bg-green-700" 
+                            disabled={true}
+                          >
+                            All Exercises Completed Today! ✓
+                          </Button>
+                        );
+                      }
+                      
+                      return (
+                        <Button 
+                          className="px-6 py-3" 
+                          onClick={handleCompleteWorkout}
+                          disabled={completedExercises.size === 0}
+                        >
+                          Complete Workout ({completedExercises.size} selected, {remainingExercises} remaining)
+                        </Button>
+                      );
+                    })()}
                   </div>
                 </div>
               ) : (
