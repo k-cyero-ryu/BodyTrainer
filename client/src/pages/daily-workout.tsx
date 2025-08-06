@@ -166,6 +166,57 @@ export default function DailyWorkout() {
     },
   });
 
+  // Complete entire exercise mutation
+  const completeExerciseMutation = useMutation({
+    mutationFn: async ({ planExerciseId, exerciseData, totalSets }: { 
+      planExerciseId: string; 
+      exerciseData: any; 
+      totalSets: number;
+    }) => {
+      await apiRequest("POST", "/api/client/complete-exercise-all-sets", {
+        planExerciseId,
+        totalSets,
+        actualWeight: exerciseData.weight,
+        actualReps: exerciseData.reps,
+        actualDuration: exerciseData.duration
+      });
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      toast({
+        title: "Exercise Completed!",
+        description: "All sets have been marked as complete. Great work!",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to complete exercise. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCompleteExercise = (exerciseId: string, exerciseData: any, totalSets: number) => {
+    completeExerciseMutation.mutate({
+      planExerciseId: exerciseId,
+      exerciseData,
+      totalSets
+    });
+  };
+
   const handleSetCompletion = (exerciseId: string, setNumber: number) => {
     setCompletedSets(prev => {
       const exerciseSets = prev[exerciseId] || new Set();
@@ -376,6 +427,26 @@ export default function DailyWorkout() {
                             </Badge>
                           )}
                         </div>
+                      </div>
+                      
+                      {/* Exercise Actions */}
+                      <div className="flex items-center gap-2">
+                        {completedSetsCount < totalSets && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleCompleteExercise(exercise.id, exercise, totalSets)}
+                            disabled={completeExerciseMutation.isPending}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            {completeExerciseMutation.isPending ? "Completing..." : "Complete Exercise"}
+                          </Button>
+                        )}
+                        {completedSetsCount === totalSets && (
+                          <Badge variant="default" className="bg-green-600 text-white">
+                            Exercise Complete!
+                          </Badge>
+                        )}
                       </div>
                       
                       {/* Timer */}

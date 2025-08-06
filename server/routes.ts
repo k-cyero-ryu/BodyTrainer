@@ -1048,6 +1048,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete entire exercise endpoint
+  app.post('/api/client/complete-exercise-all-sets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can complete exercises" });
+      }
+
+      const { planExerciseId, totalSets, actualWeight, actualReps, actualDuration } = req.body;
+      
+      // Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+      
+      // Get existing workout logs for this exercise today to see which sets are already completed
+      const existingLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
+      const exerciseLogs = existingLogs.filter(log => log.planExerciseId === planExerciseId);
+      
+      const completedSetNumbers = new Set(
+        exerciseLogs
+          .filter(log => log.setNumber != null && log.setNumber > 0)
+          .map(log => log.setNumber)
+      );
+
+      // Create workout log entries for all remaining sets
+      const workoutLogs = [];
+      for (let setNumber = 1; setNumber <= totalSets; setNumber++) {
+        if (!completedSetNumbers.has(setNumber)) {
+          const workoutLog = await storage.createWorkoutLog({
+            clientId: client.id,
+            planExerciseId,
+            completedSets: 1,
+            completedReps: actualReps || null,
+            setNumber,
+            actualWeight: actualWeight || null,
+            actualDuration: actualDuration || null,
+            notes: null
+          });
+          workoutLogs.push(workoutLog);
+        }
+      }
+
+      res.status(201).json({ 
+        message: "Exercise completed successfully", 
+        completedSets: workoutLogs.length,
+        totalSets,
+        workoutLogs
+      });
+    } catch (error) {
+      console.error("Error completing exercise:", error);
+      res.status(500).json({ message: "Failed to complete exercise" });
+    }
+  });
+
   // Exercise routes
   app.post('/api/exercises', isAuthenticated, async (req: any, res) => {
     try {
