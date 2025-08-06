@@ -90,7 +90,7 @@ export default function ClientTrainingPlanDetail() {
           <p className="text-muted-foreground mb-4">
             {isUnauthorizedError(planError) ? "You are not authorized to view this plan." : "Failed to load training plan details."}
           </p>
-          <Link href="/dashboard">
+          <Link href="/">
             <Button>Return to Dashboard</Button>
           </Link>
         </div>
@@ -104,7 +104,7 @@ export default function ClientTrainingPlanDetail() {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Training Plan Not Found</h2>
           <p className="text-muted-foreground mb-4">The training plan you're looking for doesn't exist.</p>
-          <Link href="/dashboard">
+          <Link href="/">
             <Button>Return to Dashboard</Button>
           </Link>
         </div>
@@ -136,7 +136,7 @@ export default function ClientTrainingPlanDetail() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard">
+          <Link href="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard

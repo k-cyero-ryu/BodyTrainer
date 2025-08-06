@@ -80,7 +80,7 @@ export default function ClientTrainingPlans() {
           <p className="text-muted-foreground mb-4">
             {isUnauthorizedError(error) ? "You are not authorized to view training plans." : "Failed to load your training plans."}
           </p>
-          <Link href="/dashboard">
+          <Link href="/">
             <Button>Return to Dashboard</Button>
           </Link>
         </div>
@@ -198,7 +198,7 @@ export default function ClientTrainingPlans() {
             <p className="text-muted-foreground mb-4">
               Your trainer hasn't assigned any training plans yet. Check back soon or contact your trainer.
             </p>
-            <Link href="/dashboard">
+            <Link href="/">
               <Button variant="outline">
                 <Play className="h-4 w-4 mr-2" />
                 Return to Dashboard
