@@ -337,20 +337,14 @@ export default function DailyWorkout() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {workoutData.workout.exercises.map((exercise: any, index: number) => {
               const exerciseLogs = workoutLogs.filter((log: any) => log.planExerciseId === exercise.id);
-              // Count unique completed set numbers to avoid duplicates
-              const uniqueCompletedSets = new Set(exerciseLogs.map((log: any) => log.setNumber));
+              // Filter out records with null/empty set numbers and count unique completed sets
+              const validSetNumbers = exerciseLogs
+                .filter((log: any) => log.setNumber != null && log.setNumber !== '' && log.setNumber > 0)
+                .map((log: any) => log.setNumber);
+              const uniqueCompletedSets = new Set(validSetNumbers);
               const completedSetsCount = uniqueCompletedSets.size;
               const totalSets = exercise.sets || 1;
-              
-              // Debug logging for troubleshooting
-              if (exercise.exercise?.name === "Bench Press") {
-                console.log("Bench Press Debug:", {
-                  exerciseLogs,
-                  uniqueCompletedSets: Array.from(uniqueCompletedSets),
-                  completedSetsCount,
-                  totalSets
-                });
-              }
+
               const exerciseTimer = exerciseTimers[exercise.id] || 0;
               const isTimerActive = activeTimer === exercise.id;
 
