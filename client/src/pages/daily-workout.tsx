@@ -70,7 +70,7 @@ export default function DailyWorkout() {
   });
 
   // Fetch workout logs for selected date
-  const { data: workoutLogs = [] } = useQuery({
+  const { data: workoutLogs = [], refetch: refetchLogs } = useQuery({
     queryKey: ["/api/client/workout-logs", selectedDate],
     queryFn: () => fetch(`/api/client/workout-logs?date=${selectedDate}`).then(res => res.json()),
     enabled: !!user && user.role === 'client' && !!selectedDate,
@@ -182,8 +182,11 @@ export default function DailyWorkout() {
       });
     },
     onSuccess: () => {
+      // Clear all workout log cache entries for all dates and refetch current data
       queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      // Force refetch current date's logs
+      refetchLogs();
       toast({
         title: "Exercise Completed!",
         description: "All sets have been marked as complete. Great work!",
