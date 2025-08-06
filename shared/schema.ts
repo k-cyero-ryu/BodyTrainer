@@ -118,7 +118,8 @@ export const planExercises = pgTable("plan_exercises", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   planId: varchar("plan_id").notNull().references(() => trainingPlans.id, { onDelete: 'cascade' }),
   exerciseId: varchar("exercise_id").notNull().references(() => exercises.id, { onDelete: 'cascade' }),
-  dayOfWeek: integer("day_of_week").notNull(), // 1-7
+  dayOfWeek: integer("day_of_week").notNull(), // 1-7 (1 = Monday, 7 = Sunday)
+  week: integer("week").notNull().default(1), // Week number in the plan cycle (1-4)
   sets: integer("sets"),
   reps: integer("reps"),
   weight: decimal("weight", { precision: 5, scale: 2 }),

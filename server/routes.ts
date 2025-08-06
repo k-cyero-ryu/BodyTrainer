@@ -743,32 +743,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ workout: null, message: "No active training plan assigned" });
       }
       
-      // Calculate which day of the plan the client is on
+      // Calculate which day and week of the plan the client is on
+      if (!activePlan.startDate) {
+        return res.json({ workout: null, message: "Training plan start date not set" });
+      }
+      
       const startDate = new Date(activePlan.startDate);
       const today = new Date();
       const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
       const weeksSinceStart = Math.floor(daysSinceStart / 7);
-      const dayOfWeek = daysSinceStart % 7;
       
-      // Get plan details with exercises
+      // Get current day of the week (1 = Monday, 7 = Sunday)
+      const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const dayOfWeek = currentDayOfWeek === 0 ? 7 : currentDayOfWeek; // Convert to 1-7 where 1 = Monday
+      
+      // Get plan details
       const plan = await storage.getTrainingPlan(activePlan.planId);
       if (!plan) {
         return res.json({ workout: null, message: "Training plan not found" });
       }
       
+      // Calculate current week in the cycle (1-based)
+      const currentWeekInCycle = (weeksSinceStart % (plan.weekCycle || 1)) + 1;
+      
+      // Get all plan exercises and filter for today
       const planExercises = await storage.getPlanExercisesByPlan(activePlan.planId);
       
-      // Filter exercises for today (assuming exercises have day and week info)
+      // Filter exercises for today's day of week and current week in cycle
       const todayExercises = planExercises.filter((ex: any) => 
-        ex.day === dayOfWeek + 1 && ex.week === (weeksSinceStart % plan.weeksCycle) + 1
+        ex.dayOfWeek === dayOfWeek && ex.week === currentWeekInCycle
+      );
+      
+      // If no exercises for today, return appropriate message
+      if (todayExercises.length === 0) {
+        return res.json({
+          workout: {
+            planName: plan.name,
+            dayOfWeek: dayOfWeek,
+            week: currentWeekInCycle,
+            exercises: []
+          },
+          planDetails: plan,
+          message: "No workout scheduled for today"
+        });
+      }
+      
+      // Get exercise details for each plan exercise
+      const exerciseDetails = await Promise.all(
+        todayExercises.map(async (planEx: any) => {
+          const exercise = await storage.getExercise(planEx.exerciseId);
+          return {
+            id: planEx.id,
+            exercise: exercise,
+            sets: planEx.sets,
+            reps: planEx.reps,
+            weight: planEx.weight,
+            duration: planEx.duration,
+            restTime: planEx.restTime,
+            notes: planEx.notes
+          };
+        })
       );
       
       res.json({
         workout: {
           planName: plan.name,
-          dayOfWeek: dayOfWeek + 1,
-          week: (weeksSinceStart % plan.weeksCycle) + 1,
-          exercises: todayExercises
+          dayOfWeek: dayOfWeek,
+          week: currentWeekInCycle,
+          exercises: exerciseDetails
         },
         planDetails: plan
       });
