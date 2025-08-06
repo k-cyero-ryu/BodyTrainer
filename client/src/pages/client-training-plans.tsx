@@ -34,7 +34,7 @@ export default function ClientTrainingPlans() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: assignedPlans = [], isLoading: plansLoading, error } = useQuery({
+  const { data: assignedPlans = [], isLoading: plansLoading, error } = useQuery<any[]>({
     queryKey: ["/api/client/assigned-plans"],
     enabled: !!user && user.role === 'client',
     retry: (failureCount, error) => {
@@ -52,6 +52,8 @@ export default function ClientTrainingPlans() {
       return failureCount < 3;
     },
   });
+
+  console.log('Debug - assignedPlans:', assignedPlans, 'isLoading:', plansLoading, 'error:', error);
 
   if (isLoading || plansLoading) {
     return (
