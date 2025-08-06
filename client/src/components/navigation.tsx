@@ -29,7 +29,8 @@ import {
   CreditCard,
   UserCheck,
   Activity,
-  User
+  User,
+  Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSelector from "@/components/language-selector";
