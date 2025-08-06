@@ -340,7 +340,7 @@ export const insertExerciseSchema = createInsertSchema(exercises).omit({ id: tru
 export const insertPlanExerciseSchema = createInsertSchema(planExercises).omit({ id: true });
 export const insertClientPlanSchema = createInsertSchema(clientPlans).omit({ id: true, createdAt: true });
 export const insertWorkoutLogSchema = createInsertSchema(workoutLogs).omit({ id: true, completedAt: true });
-export const insertMonthlyEvaluationSchema = createInsertSchema(monthlyEvaluations).omit({ id: true, createdAt: true }).extend({
+export const insertMonthlyEvaluationSchema = createInsertSchema(monthlyEvaluations).omit({ id: true, createdAt: true, clientId: true }).extend({
   weight: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
   bodyFatPercentage: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
   waistMeasurement: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
