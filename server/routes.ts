@@ -689,7 +689,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         height,
         activityLevel,
         medicalConditions,
-        dietaryRestrictions
+        dietaryRestrictions,
+        referralSource
       } = req.body;
       
       // Update user information
@@ -710,7 +711,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         height,
         activityLevel,
         medicalConditions,
-        dietaryRestrictions
+        dietaryRestrictions,
+        referralSource
       });
       
       // Return updated profile

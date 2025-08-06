@@ -114,6 +114,7 @@ export default function ClientProfile() {
       activityLevel: formData.get('activityLevel'),
       medicalConditions: formData.get('medicalConditions'),
       dietaryRestrictions: formData.get('dietaryRestrictions'),
+      referralSource: formData.get('referralSource'),
     };
     updateProfileMutation.mutate(profileData);
   };
@@ -239,15 +240,28 @@ export default function ClientProfile() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
-              <Input
-                id="dateOfBirth"
-                name="dateOfBirth"
-                type="date"
-                defaultValue={clientProfile.dateOfBirth ? new Date(clientProfile.dateOfBirth).toISOString().split('T')[0] : ''}
-                disabled={!isEditing}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  type="date"
+                  defaultValue={clientProfile.dateOfBirth ? new Date(clientProfile.dateOfBirth).toISOString().split('T')[0] : ''}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <Label htmlFor="referralSource">Referral Source</Label>
+                <Input
+                  id="referralSource"
+                  name="referralSource"
+                  placeholder="How did you hear about me?"
+                  defaultValue={clientProfile.referralSource || ''}
+                  disabled={!isEditing}
+                />
+                <p className="text-xs text-muted-foreground mt-1">How did you hear about your trainer?</p>
+              </div>
             </div>
           </CardContent>
         </Card>
