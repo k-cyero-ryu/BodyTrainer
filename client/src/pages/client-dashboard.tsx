@@ -11,14 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock } from "lucide-react";
+import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock, Ruler } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function ClientDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
-  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
+  // Remove showEvaluationForm state - no longer needed
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
 
   // Redirect to login if not authenticated
@@ -761,146 +761,118 @@ export default function ClientDashboard() {
         </Card>
       )}
 
-      {/* Monthly Evaluation Form */}
+      {/* Latest Evaluation Display */}
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Evaluation</CardTitle>
-          <p className="text-sm text-gray-500">Track your progress with monthly measurements</p>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Latest Monthly Evaluation
+            </span>
+            <Link href="/monthly-evaluation">
+              <Button variant="outline" size="sm">
+                View All / Add New
+              </Button>
+            </Link>
+          </CardTitle>
+          <p className="text-sm text-gray-500">Your most recent progress evaluation</p>
         </CardHeader>
         <CardContent>
-          {!showEvaluationForm ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">Submit your monthly evaluation to track progress</p>
-              <Button onClick={() => setShowEvaluationForm(true)}>
-                Start Evaluation
-              </Button>
+          {evaluations && evaluations.length > 0 ? (
+            <div className="space-y-4">
+              {(() => {
+                const latestEvaluation = evaluations[0];
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Badge>Week {latestEvaluation.weekNumber}</Badge>
+                        <span className="text-sm text-gray-500">
+                          {new Date(latestEvaluation.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        Latest
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Physical Stats */}
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-1">
+                          <Weight className="h-4 w-4" />
+                          Physical Stats
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Weight:</span>
+                            <span className="font-medium">{latestEvaluation.weight} kg</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Body Fat:</span>
+                            <span className="font-medium">{latestEvaluation.bodyFatPercentage}%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Body Measurements */}
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-1">
+                          <Ruler className="h-4 w-4" />
+                          Measurements (cm)
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Waist:</span>
+                            <span className="font-medium">{latestEvaluation.waistMeasurement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Chest:</span>
+                            <span className="font-medium">{latestEvaluation.chestMeasurement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Hips:</span>
+                            <span className="font-medium">{latestEvaluation.hipsMeasurement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Biceps:</span>
+                            <span className="font-medium">{latestEvaluation.bicepsMeasurement}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Self-Assessment */}
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-3">Self-Assessment</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Training:</span>
+                            <span className="font-medium">{latestEvaluation.trainingAdherence}/10</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Nutrition:</span>
+                            <span className="font-medium">{latestEvaluation.mealAdherence}/10</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Overall:</span>
+                            <span className="font-medium">{latestEvaluation.selfEvaluation}/10</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           ) : (
-            <form onSubmit={handleEvaluationSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Body Measurements */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Body Measurements (cm)</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="waist">Waist</Label>
-                      <Input id="waist" name="waist" type="number" step="0.1" placeholder="80" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="chest">Chest</Label>
-                      <Input id="chest" name="chest" type="number" step="0.1" placeholder="95" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="biceps">Biceps</Label>
-                      <Input id="biceps" name="biceps" type="number" step="0.1" placeholder="32" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="abdomen">Abdomen</Label>
-                      <Input id="abdomen" name="abdomen" type="number" step="0.1" placeholder="85" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="hips">Hips</Label>
-                      <Input id="hips" name="hips" type="number" step="0.1" placeholder="100" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="thigh">Thigh</Label>
-                      <Input id="thigh" name="thigh" type="number" step="0.1" placeholder="55" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="calf">Calf</Label>
-                      <Input id="calf" name="calf" type="number" step="0.1" placeholder="38" required />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Physical Stats */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Physical Stats</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="weight">Weight (kg)</Label>
-                      <Input id="weight" name="weight" type="number" step="0.1" placeholder="68" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="bodyFat">Body Fat %</Label>
-                      <Input id="bodyFat" name="bodyFat" type="number" step="0.1" placeholder="18" required />
-                    </div>
-                    <div>
-                      <Label htmlFor="weekNumber">Week #</Label>
-                      <Input id="weekNumber" name="weekNumber" type="number" placeholder="8" required />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Self-Evaluation */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Self-Evaluation (1-10)</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="trainingAdherence">Training Adherence</Label>
-                      <Select name="trainingAdherence" required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select rating" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[...Array(10)].map((_, i) => (
-                            <SelectItem key={i + 1} value={(i + 1).toString()}>
-                              {i + 1} - {i + 1 === 10 ? 'Perfect' : i + 1 >= 8 ? 'Excellent' : i + 1 >= 6 ? 'Good' : 'Needs Improvement'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="mealAdherence">Meal Plan Adherence</Label>
-                      <Select name="mealAdherence" required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select rating" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[...Array(10)].map((_, i) => (
-                            <SelectItem key={i + 1} value={(i + 1).toString()}>
-                              {i + 1} - {i + 1 === 10 ? 'Perfect' : i + 1 >= 8 ? 'Excellent' : i + 1 >= 6 ? 'Good' : 'Needs Improvement'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="selfEvaluation">Overall Satisfaction</Label>
-                      <Select name="selfEvaluation" required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select rating" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[...Array(10)].map((_, i) => (
-                            <SelectItem key={i + 1} value={(i + 1).toString()}>
-                              {i + 1} - {i + 1 === 10 ? 'Perfect' : i + 1 >= 8 ? 'Excellent' : i + 1 >= 6 ? 'Good' : 'Needs Improvement'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowEvaluationForm(false)}
-                >
-                  Cancel
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">No evaluations submitted yet</p>
+              <Link href="/monthly-evaluation">
+                <Button>
+                  Submit Your First Evaluation
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={evaluationMutation.isPending}
-                >
-                  {evaluationMutation.isPending ? "Submitting..." : "Submit Evaluation"}
-                </Button>
-              </div>
-            </form>
+              </Link>
+            </div>
           )}
         </CardContent>
       </Card>

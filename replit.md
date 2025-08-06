@@ -6,6 +6,16 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 6, 2025** - Dedicated Monthly Evaluation Page and Enhanced Body Measurements
+- **New Evaluation Page**: Created `/monthly-evaluation` page with comprehensive form and evaluation history
+- **Complete Body Measurements**: Added abdomen, hip, thigh, and calf fields to monthly evaluation form
+- **Dashboard Restructure**: Dashboard now displays latest evaluation summary with "View All / Add New" button
+- **Form Organization**: Separated evaluation form logic from dashboard for better user experience
+- **Enhanced Precision**: All measurement fields support decimal input (step="0.1") for accurate tracking
+- **History Display**: Monthly evaluation page shows all previous evaluations with latest badge
+- **Navigation Integration**: Added monthly evaluation route to client navigation system
+- **System Status**: Clients can now submit and view comprehensive monthly progress evaluations
+
 **January 6, 2025** - Enhanced Dashboard with Real Workout Analytics
 - **Weekly Stats API**: New `/api/client/weekly-stats` endpoint calculates actual completed workouts vs planned sessions per week
 - **Workout Streak API**: New `/api/client/workout-streak` endpoint calculates consecutive workout days with 1-day gap tolerance for rest days
