@@ -664,16 +664,25 @@ export default function ClientDashboard() {
                 {(() => {
                   // Calculate weight goal progress if we have evaluations
                   let weightGoalProgress = 0;
-                  if (evaluations.length >= 2) {
+                  console.log('Evaluations for weight calc:', evaluations);
+                  
+                  if (Array.isArray(evaluations) && evaluations.length >= 2) {
                     const firstEvaluation = evaluations[evaluations.length - 1]; // Oldest
                     const latestEvaluation = evaluations[0]; // Latest
-                    const startWeight = firstEvaluation.weight;
-                    const currentWeight = latestEvaluation.weight;
+                    const startWeight = firstEvaluation?.weight || 0;
+                    const currentWeight = latestEvaluation?.weight || 0;
                     const weightChange = startWeight - currentWeight;
+                    
+                    console.log('Weight calculation:', { startWeight, currentWeight, weightChange });
                     
                     // Assume a reasonable goal (10% weight loss from start)
                     const targetWeightLoss = startWeight * 0.1;
-                    weightGoalProgress = Math.min(100, Math.max(0, (weightChange / targetWeightLoss) * 100));
+                    if (targetWeightLoss > 0) {
+                      weightGoalProgress = Math.min(100, Math.max(0, (weightChange / targetWeightLoss) * 100));
+                    }
+                  } else if (Array.isArray(evaluations) && evaluations.length === 1) {
+                    // If only one evaluation, show 50% as baseline progress
+                    weightGoalProgress = 50;
                   }
 
                   return (
@@ -690,8 +699,8 @@ export default function ClientDashboard() {
                 {(() => {
                   // Calculate training adherence from latest evaluation
                   let trainingAdherence = 0;
-                  if (evaluations.length > 0) {
-                    trainingAdherence = evaluations[0].trainingAdherence * 10; // Convert from /10 to percentage
+                  if (Array.isArray(evaluations) && evaluations.length > 0) {
+                    trainingAdherence = (evaluations[0]?.trainingAdherence || 0) * 10; // Convert from /10 to percentage
                   }
 
                   return (
@@ -708,8 +717,8 @@ export default function ClientDashboard() {
                 {(() => {
                   // Calculate nutrition adherence from latest evaluation
                   let nutritionAdherence = 0;
-                  if (evaluations.length > 0) {
-                    nutritionAdherence = evaluations[0].mealAdherence * 10; // Convert from /10 to percentage
+                  if (Array.isArray(evaluations) && evaluations.length > 0) {
+                    nutritionAdherence = (evaluations[0]?.mealAdherence || 0) * 10; // Convert from /10 to percentage
                   }
 
                   return (
@@ -738,10 +747,10 @@ export default function ClientDashboard() {
                     let weightChange = 0;
                     let weightChangeColor = "text-gray-600";
                     
-                    if (evaluations.length >= 2) {
+                    if (Array.isArray(evaluations) && evaluations.length >= 2) {
                       const firstEvaluation = evaluations[evaluations.length - 1]; // Oldest
                       const latestEvaluation = evaluations[0]; // Latest
-                      weightChange = latestEvaluation.weight - firstEvaluation.weight;
+                      weightChange = (latestEvaluation?.weight || 0) - (firstEvaluation?.weight || 0);
                       weightChangeColor = weightChange < 0 ? "text-green-600" : weightChange > 0 ? "text-red-600" : "text-gray-600";
                     }
 
