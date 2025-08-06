@@ -39,6 +39,7 @@ export default function DailyWorkout() {
   const [activeTimer, setActiveTimer] = useState<string | null>(null);
   const [completedSets, setCompletedSets] = useState<Record<string, Set<number>>>({});
   const [exerciseNotes, setExerciseNotes] = useState<Record<string, string>>({});
+  const [savingNotes, setSavingNotes] = useState<Record<string, boolean>>({});
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -297,6 +298,78 @@ export default function DailyWorkout() {
     });
   };
 
+  // Save notes independently mutation
+  const saveNotesMutation = useMutation({
+    mutationFn: async ({ planExerciseId, notes, date }: { 
+      planExerciseId: string; 
+      notes: string;
+      date: string;
+    }) => {
+      await apiRequest("POST", "/api/client/save-exercise-notes", {
+        planExerciseId,
+        notes,
+        date
+      });
+    },
+    onSuccess: async () => {
+      // Force clear all related cache and refetch immediately
+      await queryClient.cancelQueries({ queryKey: ["/api/client/workout-logs"] });
+      queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      // Force refetch current date's logs with a slight delay to ensure DB consistency
+      setTimeout(() => {
+        setRefreshCounter(prev => prev + 1);
+        refetchLogs();
+      }, 100);
+      toast({
+        title: "Notes Saved",
+        description: "Your workout notes have been saved successfully.",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to save notes. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveNotes = (exerciseId: string) => {
+    const notes = exerciseNotes[exerciseId] || '';
+    if (!notes.trim()) {
+      toast({
+        title: "No Notes",
+        description: "Please add some notes before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSavingNotes(prev => ({ ...prev, [exerciseId]: true }));
+    saveNotesMutation.mutate({
+      planExerciseId: exerciseId,
+      notes: notes.trim(),
+      date: selectedDate
+    });
+    
+    // Reset saving state after a delay
+    setTimeout(() => {
+      setSavingNotes(prev => ({ ...prev, [exerciseId]: false }));
+    }, 1000);
+  };
+
   const startTimer = (exerciseId: string) => {
     if (activeTimer === exerciseId) {
       setActiveTimer(null);
@@ -530,10 +603,21 @@ export default function DailyWorkout() {
 
                     {/* Notes for Exercise Completion */}
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FileText className="h-4 w-4 inline mr-1" />
-                        Workout Notes (optional)
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          <FileText className="h-4 w-4 inline mr-1" />
+                          Workout Notes (optional)
+                        </label>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSaveNotes(exercise.id)}
+                          disabled={savingNotes[exercise.id] || !exerciseNotes[exercise.id]?.trim()}
+                          className="text-xs px-2 py-1 h-7"
+                        >
+                          {savingNotes[exercise.id] ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
                       <Textarea
                         placeholder="Add notes about this workout (e.g., how it felt, adjustments made, etc.)"
                         value={exerciseNotes[exercise.id] || ''}

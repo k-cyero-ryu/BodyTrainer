@@ -1055,6 +1055,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save exercise notes independently endpoint
+  app.post('/api/client/save-exercise-notes', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can save exercise notes" });
+      }
+
+      const { planExerciseId, notes, date } = req.body;
+      console.log(`[DEBUG] Save notes request:`, { planExerciseId, notes, date });
+      
+      if (!notes || !notes.trim()) {
+        return res.status(400).json({ message: "Notes cannot be empty" });
+      }
+
+      // Use the provided date or default to today
+      const targetDate = date ? new Date(date) : new Date();
+      
+      // Create a special workout log entry just for notes (no sets completed)
+      const workoutLog = await storage.createWorkoutLog({
+        clientId: client.id,
+        planExerciseId,
+        completedSets: null,
+        completedReps: null,
+        setNumber: null,
+        actualWeight: null,
+        actualDuration: null,
+        notes: notes.trim(),
+        completedAt: targetDate
+      });
+
+      res.status(201).json({ 
+        message: "Notes saved successfully",
+        workoutLog
+      });
+    } catch (error) {
+      console.error("Error saving exercise notes:", error);
+      res.status(500).json({ message: "Failed to save exercise notes" });
+    }
+  });
+
   // Complete entire exercise endpoint
   app.post('/api/client/complete-exercise-all-sets', isAuthenticated, async (req: any, res) => {
     try {
