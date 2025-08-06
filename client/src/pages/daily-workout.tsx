@@ -69,13 +69,24 @@ export default function DailyWorkout() {
     enabled: !!user && user.role === 'client' && !!selectedDate,
   });
 
+  // Force refresh counter to invalidate cache
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  
   // Fetch workout logs for selected date
   const { data: workoutLogs = [], refetch: refetchLogs } = useQuery({
-    queryKey: ["/api/client/workout-logs", selectedDate],
-    queryFn: () => fetch(`/api/client/workout-logs?date=${selectedDate}`).then(res => res.json()),
+    queryKey: ["/api/client/workout-logs", selectedDate, refreshCounter],
+    queryFn: async () => {
+      const response = await fetch(`/api/client/workout-logs?date=${selectedDate}&t=${Date.now()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch workout logs');
+      }
+      return response.json();
+    },
     enabled: !!user && user.role === 'client' && !!selectedDate,
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache the data (replaces cacheTime in v5)
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   // Complete set mutation
@@ -95,10 +106,16 @@ export default function DailyWorkout() {
         notes
       });
     },
-    onSuccess: () => {
-      // Clear all workout log cache entries for all dates
+    onSuccess: async () => {
+      // Force clear all related cache and refetch immediately
+      await queryClient.cancelQueries({ queryKey: ["/api/client/workout-logs"] });
       queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      // Force refetch current date's logs with a slight delay to ensure DB consistency
+      setTimeout(() => {
+        setRefreshCounter(prev => prev + 1);
+        refetchLogs();
+      }, 100);
       toast({
         title: "Set Completed!",
         description: "Great work! Keep it up.",
@@ -137,10 +154,16 @@ export default function DailyWorkout() {
         date
       });
     },
-    onSuccess: () => {
-      // Clear all workout log cache entries for all dates
+    onSuccess: async () => {
+      // Force clear all related cache and refetch immediately
+      await queryClient.cancelQueries({ queryKey: ["/api/client/workout-logs"] });
       queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      // Force refetch current date's logs with a slight delay to ensure DB consistency
+      setTimeout(() => {
+        setRefreshCounter(prev => prev + 1);
+        refetchLogs();
+      }, 100);
       toast({
         title: "Set Unchecked",
         description: "Set has been unchecked successfully.",
@@ -181,12 +204,16 @@ export default function DailyWorkout() {
         actualDuration: exerciseData.duration
       });
     },
-    onSuccess: () => {
-      // Clear all workout log cache entries for all dates and refetch current data
+    onSuccess: async () => {
+      // Force clear all related cache and refetch immediately
+      await queryClient.cancelQueries({ queryKey: ["/api/client/workout-logs"] });
       queryClient.removeQueries({ queryKey: ["/api/client/workout-logs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
-      // Force refetch current date's logs
-      refetchLogs();
+      await queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      // Force refetch current date's logs with a slight delay to ensure DB consistency
+      setTimeout(() => {
+        setRefreshCounter(prev => prev + 1);
+        refetchLogs();
+      }, 100);
       toast({
         title: "Exercise Completed!",
         description: "All sets have been marked as complete. Great work!",
