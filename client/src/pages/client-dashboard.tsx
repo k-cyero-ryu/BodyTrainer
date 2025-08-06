@@ -63,6 +63,12 @@ export default function ClientDashboard() {
     enabled: !!user && user.role === 'client',
   });
 
+  // Fetch client profile for real weight data
+  const { data: clientProfile } = useQuery({
+    queryKey: ["/api/client/profile"],
+    enabled: !!user && user.role === 'client',
+  });
+
   const evaluationMutation = useMutation({
     mutationFn: async (data: any) => {
       await apiRequest("POST", "/api/evaluations", data);
@@ -124,19 +130,32 @@ export default function ClientDashboard() {
 
   // Calculate client stats from real data
   const latestEvaluation = evaluations?.[0];
-  const currentWeight = latestEvaluation?.weight || 0;
+  
+  // Use client profile data for weights, fallback to evaluation
+  const currentWeight = clientProfile?.currentWeight || latestEvaluation?.weight || 0;
+  const targetWeight = clientProfile?.targetWeight || 0;
+  const startingWeight = clientProfile?.weight || currentWeight; // Use legacy weight field as starting weight
+  
+  // Calculate goal progress based on actual weight data
+  let goalProgress = 0;
+  if (targetWeight && currentWeight && startingWeight && startingWeight !== targetWeight) {
+    const totalWeightChange = Math.abs(targetWeight - startingWeight);
+    const currentWeightChange = Math.abs(currentWeight - startingWeight);
+    goalProgress = Math.min(100, Math.round((currentWeightChange / totalWeightChange) * 100));
+  }
+  
   const activeAssignedPlan = assignedPlans.find((p: any) => p.isActive);
   
   // Calculate workout completion stats
-  const totalWorkoutsThisWeek = activeAssignedPlan ? 5 : 0; // Assume 5 workouts per week if plan exists
-  const completedWorkoutsThisWeek = todayWorkout?.workout ? 4 : 0; // Mock completion for now
+  const totalWorkoutsThisWeek = activeAssignedPlan?.sessionsPerWeek || 0;
+  const completedWorkoutsThisWeek = todayWorkout?.workout ? 4 : 0; // This would need workout tracking data
   
   const clientStats = {
     workoutsThisWeek: completedWorkoutsThisWeek,
     totalWorkouts: totalWorkoutsThisWeek,
     currentWeight: currentWeight,
-    goalProgress: activeAssignedPlan ? 75 : 0, // Mock progress
-    streak: 12, // Mock streak - could be calculated from workout history
+    goalProgress: goalProgress,
+    streak: 12, // This would need workout streak calculation from actual data
   };
 
   return (
