@@ -168,14 +168,7 @@ export default function ClientDashboard() {
                   <span className="text-sm font-medium">Price:</span>
                   <span className="text-sm font-bold">${paymentPlan.amount}/{paymentPlan.type}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Sessions:</span>
-                  <span className="text-sm">
-                    {paymentPlan.type === 'weekly' ? 'Weekly sessions' : 
-                     paymentPlan.type === 'monthly' ? 'Monthly plan' : 
-                     'Per ' + paymentPlan.type}
-                  </span>
-                </div>
+
                 {paymentPlan.features && paymentPlan.features.length > 0 && (
                   <div className="pt-2 border-t">
                     <p className="text-sm font-medium mb-2">Features:</p>
@@ -223,6 +216,9 @@ export default function ClientDashboard() {
                     <div className="flex justify-between text-sm">
                       <span>Duration: {plan.duration} weeks</span>
                       <span>Status: {plan.status}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                      <span>Sessions per week: {plan.sessionsPerWeek || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between text-sm text-muted-foreground mt-1">
                       <span>Started: {new Date(plan.assignedDate).toLocaleDateString()}</span>

@@ -590,7 +590,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const assignedPlans = await storage.getClientPlans(client.id);
-      res.json(assignedPlans);
+      
+      // Calculate sessions per week for each plan
+      const enrichedPlans = await Promise.all(assignedPlans.map(async (plan: any) => {
+        const planExercises = await storage.getPlanExercisesByPlan(plan.planId);
+        
+        // Count unique days of the week that have exercises
+        const uniqueDays = new Set(planExercises.map((ex: any) => ex.dayOfWeek));
+        const sessionsPerWeek = uniqueDays.size;
+        
+        return {
+          ...plan,
+          sessionsPerWeek
+        };
+      }));
+      
+      res.json(enrichedPlans);
     } catch (error) {
       console.error("Error fetching assigned plans:", error);
       res.status(500).json({ message: "Failed to fetch assigned plans" });
