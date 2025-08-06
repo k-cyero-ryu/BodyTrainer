@@ -136,12 +136,12 @@ export default function ClientDashboard() {
   const targetWeight = clientProfile?.targetWeight || 0;
   const startingWeight = clientProfile?.weight || currentWeight; // Use legacy weight field as starting weight
   
-  // Calculate goal progress: how much distance covered from current to target
+  // Calculate goal progress: simple percentage from current to target
   let goalProgress = 0;
-  if (targetWeight && currentWeight && targetWeight !== currentWeight) {
-    // Simple progress: how far along are we from current to target (always 0% to start)
-    // Since we're starting from current weight to reach target weight, progress is always 0% until we reach target
-    goalProgress = currentWeight === targetWeight ? 100 : 0;
+  if (targetWeight && currentWeight) {
+    const weightDifference = Math.abs(currentWeight - targetWeight);
+    const maxWeight = Math.max(currentWeight, targetWeight);
+    goalProgress = Math.max(0, Math.round((1 - (weightDifference / maxWeight)) * 100));
   }
   
   const activeAssignedPlan = assignedPlans.find((p: any) => p.isActive);
