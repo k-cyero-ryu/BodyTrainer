@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
 export default function ClientTrainingPlans() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -53,7 +54,17 @@ export default function ClientTrainingPlans() {
     },
   });
 
-  console.log('Debug - assignedPlans:', assignedPlans, 'isLoading:', plansLoading, 'error:', error);
+  // Auto-redirect to active plan if there's exactly one active plan
+  useEffect(() => {
+    if (!plansLoading && assignedPlans && assignedPlans.length > 0) {
+      const activePlans = assignedPlans.filter((plan: any) => plan.isActive);
+      if (activePlans.length === 1) {
+        // Redirect to the single active plan details
+        setLocation(`/my-training-plan/${activePlans[0].planId}`);
+        return;
+      }
+    }
+  }, [assignedPlans, plansLoading, setLocation]);
 
   if (isLoading || plansLoading) {
     return (

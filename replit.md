@@ -13,6 +13,7 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 - **Dashboard Integration**: Updated client dashboard links to use client-specific training plan routes
 - **Role-Based Access**: Proper role separation - clients access their own training plan views, trainers access management views
 - **Enhanced Display**: Shows duration, week cycle, nutrition info, and organized daily exercise schedules
+- **Auto-Redirect Feature**: "My Training Plans" menu automatically redirects to active plan details for single active plans
 - **System Status**: Clients now have complete access to view their training plans and exercises independently
 
 **January 6, 2025** - Enhanced Training Plan Duration and Cycle System
