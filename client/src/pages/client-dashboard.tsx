@@ -838,6 +838,18 @@ export default function ClientDashboard() {
                             <span>Biceps:</span>
                             <span className="font-medium">{latestEvaluation.bicepsMeasurement}</span>
                           </div>
+                          <div className="flex justify-between">
+                            <span>Thigh:</span>
+                            <span className="font-medium">{latestEvaluation.thighMeasurement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Abdomen:</span>
+                            <span className="font-medium">{latestEvaluation.abdomenMeasurement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Calf:</span>
+                            <span className="font-medium">{latestEvaluation.calfMeasurement}</span>
+                          </div>
                         </div>
                       </div>
 
