@@ -174,7 +174,18 @@ export default function TrainingPlanDetail() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">Duration</p>
-                  <p className="text-sm text-muted-foreground">{plan.duration} weeks</p>
+                  <p className="text-sm text-muted-foreground">
+                    {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Week Cycle</p>
+                  <p className="text-sm text-muted-foreground">
+                    {plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''} pattern
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

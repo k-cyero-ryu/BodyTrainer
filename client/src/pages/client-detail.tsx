@@ -418,8 +418,9 @@ export default function ClientDetail() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {clientPlan.plan?.duration} weeks
+                          {clientPlan.plan?.duration === 0 ? 'Till goal is met' : `${clientPlan.plan?.duration} weeks`}
                         </span>
+                        <span>Cycle: {clientPlan.plan?.weekCycle || 1}w</span>
                         <span>{clientPlan.plan?.exercises?.length || 0} exercises</span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
