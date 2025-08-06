@@ -107,7 +107,8 @@ export default function DailyWorkout() {
         setNumber,
         actualReps,
         actualWeight,
-        notes
+        notes,
+        date: selectedDate  // Pass the selected date from date picker
       });
     },
     onSuccess: async () => {
@@ -205,7 +206,8 @@ export default function DailyWorkout() {
         totalSets,
         actualWeight: exerciseData.weight,
         actualReps: exerciseData.reps,
-        actualDuration: exerciseData.duration
+        actualDuration: exerciseData.duration,
+        date: selectedDate  // Pass the selected date from date picker
       });
     },
     onSuccess: async () => {

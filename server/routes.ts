@@ -829,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only clients can complete exercises" });
       }
 
-      const { planExerciseId, completedSets, completedReps, actualWeight, actualDuration, notes } = req.body;
+      const { planExerciseId, completedSets, completedReps, actualWeight, actualDuration, notes, date } = req.body;
       
       const workoutLog = await storage.createWorkoutLog({
         clientId: client.id,
@@ -838,7 +838,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedReps: completedReps || null,
         actualWeight: actualWeight || null,
         actualDuration: actualDuration || null,
-        notes: notes || null
+        notes: notes || null,
+        completedAt: date ? new Date(date) : new Date()  // Use provided date or default to now
       });
 
       res.status(201).json(workoutLog);
@@ -1063,14 +1064,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`[DEBUG] Completing exercise for client ID: ${client.id}, user ID: ${userId}`);
 
-      const { planExerciseId, totalSets, actualWeight, actualReps, actualDuration } = req.body;
+      const { planExerciseId, totalSets, actualWeight, actualReps, actualDuration, date } = req.body;
       
-      // Get today's date range
-      const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+      // Use the provided date or default to today
+      const targetDate = date ? new Date(date) : new Date();
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
       
-      console.log(`[DEBUG] Creating workout logs for today: ${today.toISOString().split('T')[0]}`);
+      console.log(`[DEBUG] Creating workout logs for date: ${targetDate.toISOString().split('T')[0]}`);
       
       // Get existing workout logs for this exercise today to see which sets are already completed
       const existingLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
@@ -1094,7 +1095,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             setNumber,
             actualWeight: actualWeight || null,
             actualDuration: actualDuration || null,
-            notes: null
+            notes: null,
+            completedAt: targetDate  // Use the target date instead of now
           });
           workoutLogs.push(workoutLog);
         }
