@@ -331,7 +331,9 @@ export default function DailyWorkout() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {workoutData.workout.exercises.map((exercise: any, index: number) => {
               const exerciseLogs = workoutLogs.filter((log: any) => log.planExerciseId === exercise.id);
-              const completedSetsCount = exerciseLogs.length;
+              // Count unique completed set numbers to avoid duplicates
+              const uniqueCompletedSets = new Set(exerciseLogs.map((log: any) => log.setNumber));
+              const completedSetsCount = uniqueCompletedSets.size;
               const totalSets = exercise.sets || 1;
               const exerciseTimer = exerciseTimers[exercise.id] || 0;
               const isTimerActive = activeTimer === exercise.id;

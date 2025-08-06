@@ -6,6 +6,16 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 6, 2025** - Enhanced Daily Workout with Set Unchecking Feature
+- **Set Unchecking**: Added ability to uncheck accidentally completed sets with dedicated "Uncheck" button
+- **API Endpoint**: New `/api/client/uncheck-set` DELETE endpoint for removing workout log entries
+- **Database Method**: Added `deleteWorkoutLog` method in storage class for proper set deletion
+- **Fixed Set Counter**: Corrected set counting logic to show unique completed sets instead of total log entries
+- **Error Prevention**: Prevents counting duplicate set completions when sets are unchecked and rechecked
+- **User Interface**: Clean "Uncheck" button appears next to completed sets with loading states
+- **Date Support**: Unchecking works for any selected date, not just today
+- **System Status**: Set completion tracking now accurately reflects actual completion state
+
 **January 6, 2025** - Complete Client Training Plan Portal System
 - **Client Navigation**: Added "My Training Plans" menu item for clients separate from trainer training plans
 - **Client Training Plans Page**: New dedicated page (`/my-training-plans`) showing assigned plans with full details
