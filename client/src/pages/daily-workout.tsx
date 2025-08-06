@@ -134,7 +134,9 @@ export default function DailyWorkout() {
       });
     },
     onSuccess: () => {
+      // Force a complete cache refresh to ensure accurate counts
       queryClient.invalidateQueries({ queryKey: ["/api/client/workout-logs"] });
+      queryClient.refetchQueries({ queryKey: ["/api/client/workout-logs"] });
       toast({
         title: "Set Unchecked",
         description: "Set has been unchecked successfully.",
@@ -335,6 +337,16 @@ export default function DailyWorkout() {
               const uniqueCompletedSets = new Set(exerciseLogs.map((log: any) => log.setNumber));
               const completedSetsCount = uniqueCompletedSets.size;
               const totalSets = exercise.sets || 1;
+              
+              // Debug logging for troubleshooting
+              if (exercise.exercise?.name === "Bench Press") {
+                console.log("Bench Press Debug:", {
+                  exerciseLogs,
+                  uniqueCompletedSets: Array.from(uniqueCompletedSets),
+                  completedSetsCount,
+                  totalSets
+                });
+              }
               const exerciseTimer = exerciseTimers[exercise.id] || 0;
               const isTimerActive = activeTimer === exercise.id;
 
