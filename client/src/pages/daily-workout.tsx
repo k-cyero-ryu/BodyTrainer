@@ -6,6 +6,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
@@ -20,7 +21,8 @@ import {
   Timer,
   Weight,
   Target,
-  Clock
+  Clock,
+  FileText
 } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -36,6 +38,7 @@ export default function DailyWorkout() {
   const [exerciseTimers, setExerciseTimers] = useState<Record<string, number>>({});
   const [activeTimer, setActiveTimer] = useState<string | null>(null);
   const [completedSets, setCompletedSets] = useState<Record<string, Set<number>>>({});
+  const [exerciseNotes, setExerciseNotes] = useState<Record<string, string>>({});
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -207,6 +210,7 @@ export default function DailyWorkout() {
         actualWeight: exerciseData.weight,
         actualReps: exerciseData.reps,
         actualDuration: exerciseData.duration,
+        notes: exerciseData.notes,
         date: selectedDate  // Pass the selected date from date picker
       });
     },
@@ -246,9 +250,10 @@ export default function DailyWorkout() {
   });
 
   const handleCompleteExercise = (exerciseId: string, exerciseData: any, totalSets: number) => {
+    const notes = exerciseNotes[exerciseId] || '';
     completeExerciseMutation.mutate({
       planExerciseId: exerciseId,
-      exerciseData,
+      exerciseData: { ...exerciseData, notes },
       totalSets
     });
   };
@@ -518,6 +523,46 @@ export default function DailyWorkout() {
                   <CardContent>
                     {exercise.notes && (
                       <p className="text-sm text-gray-600 mb-4">{exercise.notes}</p>
+                    )}
+
+                    {/* Notes for Exercise Completion */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <FileText className="h-4 w-4 inline mr-1" />
+                        Workout Notes (optional)
+                      </label>
+                      <Textarea
+                        placeholder="Add notes about this workout (e.g., how it felt, adjustments made, etc.)"
+                        value={exerciseNotes[exercise.id] || ''}
+                        onChange={(e) => setExerciseNotes(prev => ({
+                          ...prev,
+                          [exercise.id]: e.target.value
+                        }))}
+                        className="resize-none"
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* Display existing notes from completed sets */}
+                    {exerciseLogs.length > 0 && (
+                      <div className="mb-4">
+                        {exerciseLogs
+                          .filter(log => log.notes && log.notes.trim() !== '')
+                          .map((log, index) => (
+                            <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+                              <div className="flex items-start gap-2">
+                                <FileText className="h-4 w-4 text-blue-600 mt-0.5" />
+                                <div className="flex-1">
+                                  <p className="text-sm text-blue-800">{log.notes}</p>
+                                  <p className="text-xs text-blue-600 mt-1">
+                                    Set {log.setNumber} - {new Date(log.completedAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        }
+                      </div>
                     )}
                     
                     {/* Sets */}
