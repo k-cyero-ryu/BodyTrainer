@@ -757,7 +757,7 @@ export default function ClientDashboard() {
                   <div className="flex justify-between">
                     <span>Best Streak:</span>
                     <span className="font-medium">
-                      {workoutStreak ? `${workoutStreak.streak} days` : "0 days"}
+                      {streakData ? `${streakData.streak} days` : "0 days"}
                     </span>
                   </div>
                 </div>
