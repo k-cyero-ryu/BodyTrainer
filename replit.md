@@ -6,6 +6,15 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 6, 2025** - Monthly Evaluation Comparison Feature
+- **Comparison Page**: New dedicated page for comparing two different monthly evaluations
+- **Percentage Analysis**: Shows percentage differences between measurements with visual indicators
+- **Smart Color Coding**: Green for positive changes (muscle gain), red for negative changes (fat loss goals)
+- **Absolute Values**: Displays both percentage and absolute differences for all measurements
+- **Complete Metrics**: Compares physical stats, body measurements, and self-assessment scores
+- **Navigation Integration**: Added "Compare Evaluations" button on monthly evaluation page
+- **System Status**: Clients can now analyze progress trends between any two evaluation periods
+
 **January 6, 2025** - Monthly Evaluation Navigation System
 - **Navigation Controls**: Added Previous, Next, and Latest buttons similar to workout page navigation
 - **Single Evaluation View**: Replaced evaluation list with focused single evaluation display with navigation

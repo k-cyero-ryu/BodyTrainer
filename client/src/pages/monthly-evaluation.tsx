@@ -130,9 +130,14 @@ export default function MonthlyEvaluation() {
             <h1 className="text-3xl font-bold text-gray-900">Monthly Evaluation</h1>
             <p className="text-gray-600 mt-2">Track your progress with monthly measurements and self-assessment</p>
           </div>
-          <Link href="/">
-            <Button variant="outline">Back to Dashboard</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/monthly-evaluation-comparison">
+              <Button variant="default">Compare Evaluations</Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline">Back to Dashboard</Button>
+            </Link>
+          </div>
         </div>
       </div>
 
