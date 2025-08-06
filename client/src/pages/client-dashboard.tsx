@@ -139,29 +139,17 @@ export default function ClientDashboard() {
   // Calculate goal progress based on actual weight data
   let goalProgress = 0;
   if (targetWeight && currentWeight && startingWeight && startingWeight !== targetWeight) {
-    const totalWeightChange = Math.abs(targetWeight - startingWeight);
-    const currentWeightChange = Math.abs(currentWeight - startingWeight);
-    goalProgress = Math.min(100, Math.round((currentWeightChange / totalWeightChange) * 100));
+    const totalWeightChange = targetWeight - startingWeight; // Keep sign to know direction
+    const currentWeightChange = currentWeight - startingWeight; // Keep sign to know direction
     
-    // Debug logging
-    console.log('Weight Progress Debug:', {
-      currentWeight,
-      targetWeight,
-      startingWeight,
-      totalWeightChange,
-      currentWeightChange,
-      goalProgress
-    });
-  } else {
-    console.log('Goal progress not calculated:', {
-      currentWeight,
-      targetWeight,
-      startingWeight,
-      hasTarget: !!targetWeight,
-      hasCurrent: !!currentWeight,
-      hasStarting: !!startingWeight,
-      sameStartingTarget: startingWeight === targetWeight
-    });
+    // Check if moving in the right direction
+    if ((totalWeightChange > 0 && currentWeightChange >= 0) || (totalWeightChange < 0 && currentWeightChange <= 0)) {
+      // Moving in correct direction
+      goalProgress = Math.min(100, Math.max(0, Math.round((currentWeightChange / totalWeightChange) * 100)));
+    } else {
+      // Moving in wrong direction - 0% progress
+      goalProgress = 0;
+    }
   }
   
   const activeAssignedPlan = assignedPlans.find((p: any) => p.isActive);
