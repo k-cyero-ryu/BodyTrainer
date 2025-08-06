@@ -856,6 +856,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only clients can view workout logs" });
       }
 
+      console.log(`[DEBUG] Fetching workout logs for client ID: ${client.id}, user ID: ${userId}`);
+
       const { date, planExerciseId } = req.query;
       let workoutLogs;
 
@@ -867,7 +869,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const targetDate = new Date(date as string);
         const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
         const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+        console.log(`[DEBUG] Querying for date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
         workoutLogs = await storage.getWorkoutLogsByDateRange(client.id, startOfDay, endOfDay);
+        console.log(`[DEBUG] Found ${workoutLogs.length} workout logs for client ${client.id}`);
       } else {
         // Get all logs for client
         workoutLogs = await storage.getWorkoutLogsByClient(client.id);
@@ -1056,6 +1060,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!client) {
         return res.status(403).json({ message: "Only clients can complete exercises" });
       }
+
+      console.log(`[DEBUG] Completing exercise for client ID: ${client.id}, user ID: ${userId}`);
 
       const { planExerciseId, totalSets, actualWeight, actualReps, actualDuration } = req.body;
       
