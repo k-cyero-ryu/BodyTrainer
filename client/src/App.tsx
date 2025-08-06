@@ -28,6 +28,8 @@ import PaymentPlans from "@/pages/payment-plans";
 import ClientPaymentPlansPage from "@/pages/client-payment-plans";
 import TrainingPlans from "@/pages/training-plans";
 import TrainingPlanDetail from "@/pages/training-plan-detail";
+import ClientTrainingPlanDetail from "@/pages/client-training-plan-detail";
+import ClientTrainingPlans from "@/pages/client-training-plans";
 import Exercises from "@/pages/exercises";
 import Reports from "@/pages/reports";
 import Navigation from "@/components/navigation";
@@ -181,7 +183,8 @@ function Router() {
               {user?.role === 'client' && (
                 <>
                   <Route path="/" component={ClientDashboard} />
-                  <Route path="/training-plans" component={TrainingPlans} />
+                  <Route path="/my-training-plans" component={ClientTrainingPlans} />
+                  <Route path="/my-training-plan/:planId" component={ClientTrainingPlanDetail} />
                 </>
               )}
               <Route component={NotFound} />

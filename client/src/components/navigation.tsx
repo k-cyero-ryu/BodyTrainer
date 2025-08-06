@@ -115,7 +115,13 @@ export default function Navigation() {
       href: '/training-plans', 
       label: 'Training Plans', 
       icon: Dumbbell,
-      roles: ['trainer', 'client']
+      roles: ['trainer']
+    },
+    { 
+      href: '/my-training-plans', 
+      label: 'My Training Plans', 
+      icon: Dumbbell,
+      roles: ['client']
     },
     { 
       href: '/exercises', 

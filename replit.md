@@ -6,6 +6,15 @@ My Body Trainer Manager is a comprehensive fitness management platform that conn
 
 ## Recent Changes
 
+**January 6, 2025** - Complete Client Training Plan Portal System
+- **Client Navigation**: Added "My Training Plans" menu item for clients separate from trainer training plans
+- **Client Training Plans Page**: New dedicated page (`/my-training-plans`) showing assigned plans with full details
+- **Client Training Plan Detail**: New detailed view (`/my-training-plan/:planId`) showing complete exercise schedule by day
+- **Dashboard Integration**: Updated client dashboard links to use client-specific training plan routes
+- **Role-Based Access**: Proper role separation - clients access their own training plan views, trainers access management views
+- **Enhanced Display**: Shows duration, week cycle, nutrition info, and organized daily exercise schedules
+- **System Status**: Clients now have complete access to view their training plans and exercises independently
+
 **January 6, 2025** - Enhanced Training Plan Duration and Cycle System
 - **Database Schema**: Added `weekCycle` field to training plans table to distinguish between plan duration and exercise pattern cycle
 - **Duration Logic**: Duration can now be fixed weeks (4, 6, 8, 12, 16, 24) or "till goal is met" (stored as 0)

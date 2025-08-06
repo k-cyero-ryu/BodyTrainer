@@ -225,7 +225,7 @@ export default function ClientDashboard() {
                     </div>
                     <div className="flex justify-between text-sm text-muted-foreground mt-1">
                       <span>Started: {new Date(plan.assignedDate).toLocaleDateString()}</span>
-                      <Link href={`/training-plans/${plan.planId}`}>
+                      <Link href={`/my-training-plan/${plan.planId}`}>
                         <Button variant="ghost" size="sm">View Details</Button>
                       </Link>
                     </div>
