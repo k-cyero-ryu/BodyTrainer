@@ -116,23 +116,21 @@ export default function ClientDashboard() {
     },
   });
 
-  // Exercise completion mutation
+  // Exercise completion mutation - now uses set-based completion
   const completeExerciseMutation = useMutation({
-    mutationFn: async ({ planExerciseId, completedSets, completedReps, actualWeight, actualDuration, notes }: {
+    mutationFn: async ({ planExerciseId, totalSets, actualWeight, actualReps, actualDuration }: {
       planExerciseId: string;
-      completedSets?: number;
-      completedReps?: number;
+      totalSets: number;
       actualWeight?: number;
+      actualReps?: number;
       actualDuration?: number;
-      notes?: string;
     }) => {
-      await apiRequest("POST", "/api/client/complete-exercise", {
+      await apiRequest("POST", "/api/client/complete-exercise-all-sets", {
         planExerciseId,
-        completedSets,
-        completedReps,
+        totalSets,
         actualWeight,
-        actualDuration,
-        notes
+        actualReps,
+        actualDuration
       });
     },
     onSuccess: () => {
@@ -184,8 +182,29 @@ export default function ClientDashboard() {
       return;
     }
 
-    // Get already completed exercise IDs from today's logs
-    const alreadyCompletedIds = new Set((todaysLogs || []).map((log: any) => log.planExerciseId));
+    // Check which exercises are already fully completed today based on sets
+    const alreadyCompletedIds = new Set();
+    (todaysLogs || []).forEach((log: any) => {
+      if (log.planExerciseId) {
+        // Get the exercise to check total sets
+        const exercise = todayWorkout.workout.exercises.find((ex: any) => ex.id === log.planExerciseId);
+        if (exercise) {
+          // Get all logs for this exercise today
+          const exerciseLogs = (todaysLogs || []).filter((l: any) => l.planExerciseId === log.planExerciseId);
+          // Count unique valid set numbers
+          const validSetNumbers = exerciseLogs
+            .filter((l: any) => l.setNumber != null && l.setNumber !== '' && l.setNumber > 0)
+            .map((l: any) => l.setNumber);
+          const uniqueCompletedSets = new Set(validSetNumbers);
+          const totalSets = exercise.sets || 1;
+          
+          // If all sets are completed, mark exercise as completed
+          if (uniqueCompletedSets.size >= totalSets) {
+            alreadyCompletedIds.add(log.planExerciseId);
+          }
+        }
+      }
+    });
     
     const completedExercisesList = todayWorkout.workout.exercises.filter((ex: any) => 
       completedExercises.has(ex.id) && !alreadyCompletedIds.has(ex.id)
@@ -206,8 +225,8 @@ export default function ClientDashboard() {
         completedExercisesList.map((exercise: any) =>
           completeExerciseMutation.mutateAsync({
             planExerciseId: exercise.id,
-            completedSets: exercise.sets,
-            completedReps: exercise.reps,
+            totalSets: exercise.sets || 1,
+            actualReps: exercise.reps,
             actualWeight: exercise.weight,
             actualDuration: exercise.duration
           })
@@ -489,7 +508,20 @@ export default function ClientDashboard() {
               {todayWorkout?.workout?.exercises && todayWorkout.workout.exercises.length > 0 ? (
                 <div className="space-y-4">
                   {todayWorkout.workout.exercises.map((exercise: any) => {
-                    const isAlreadyCompleted = Array.isArray(todaysLogs) && todaysLogs.some((log: any) => log.planExerciseId === exercise.id);
+                    // Check if exercise is fully completed based on set completion
+                    let isAlreadyCompleted = false;
+                    if (Array.isArray(todaysLogs)) {
+                      const exerciseLogs = todaysLogs.filter((log: any) => log.planExerciseId === exercise.id);
+                      if (exerciseLogs.length > 0) {
+                        // Count unique valid set numbers
+                        const validSetNumbers = exerciseLogs
+                          .filter((log: any) => log.setNumber != null && log.setNumber !== '' && log.setNumber > 0)
+                          .map((log: any) => log.setNumber);
+                        const uniqueCompletedSets = new Set(validSetNumbers);
+                        const totalSets = exercise.sets || 1;
+                        isAlreadyCompleted = uniqueCompletedSets.size >= totalSets;
+                      }
+                    }
                     return (
                       <div key={exercise.id} className={`flex items-center justify-between p-4 border rounded-lg ${
                         isAlreadyCompleted ? 'bg-green-50 border-green-200' : 'border-gray-200'
@@ -544,7 +576,23 @@ export default function ClientDashboard() {
                   })}
                   <div className="mt-6 flex justify-center">
                     {(() => {
-                      const alreadyCompletedToday = Array.isArray(todaysLogs) ? todaysLogs.length : 0;
+                      // Count exercises that are fully completed (all sets done)
+                      let alreadyCompletedToday = 0;
+                      if (Array.isArray(todaysLogs)) {
+                        todayWorkout.workout.exercises.forEach((exercise: any) => {
+                          const exerciseLogs = todaysLogs.filter((log: any) => log.planExerciseId === exercise.id);
+                          if (exerciseLogs.length > 0) {
+                            const validSetNumbers = exerciseLogs
+                              .filter((log: any) => log.setNumber != null && log.setNumber !== '' && log.setNumber > 0)
+                              .map((log: any) => log.setNumber);
+                            const uniqueCompletedSets = new Set(validSetNumbers);
+                            const totalSets = exercise.sets || 1;
+                            if (uniqueCompletedSets.size >= totalSets) {
+                              alreadyCompletedToday++;
+                            }
+                          }
+                        });
+                      }
                       const totalExercises = todayWorkout.workout.exercises.length;
                       const remainingExercises = totalExercises - alreadyCompletedToday;
                       
