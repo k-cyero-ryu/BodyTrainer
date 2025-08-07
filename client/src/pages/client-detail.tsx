@@ -511,24 +511,39 @@ export default function ClientDetail() {
                     <div key={evaluation.id} className="p-3 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-medium">
-                          {new Date(evaluation.month).toLocaleDateString('en-US', { 
+                          Week {evaluation.weekNumber} - {new Date(evaluation.createdAt).toLocaleDateString('en-US', { 
                             year: 'numeric', 
-                            month: 'long' 
+                            month: 'short',
+                            day: 'numeric'
                           })}
                         </h3>
-                        <Badge variant="outline">Score: {evaluation.overallScore}/10</Badge>
+                        <Badge variant="outline">Self Score: {evaluation.selfEvaluation}/10</Badge>
                       </div>
                       {evaluation.notes && (
                         <p className="text-sm text-muted-foreground">{evaluation.notes}</p>
                       )}
-                      <div className="mt-2 grid grid-cols-2 gap-4 text-xs">
+                      <div className="mt-2 grid grid-cols-3 gap-3 text-xs">
                         <div>
-                          <span className="font-medium">Progress: </span>
-                          <span>{evaluation.progressScore}/10</span>
+                          <span className="font-medium">Training: </span>
+                          <span>{evaluation.trainingAdherence}/10</span>
                         </div>
                         <div>
-                          <span className="font-medium">Consistency: </span>
-                          <span>{evaluation.consistencyScore}/10</span>
+                          <span className="font-medium">Nutrition: </span>
+                          <span>{evaluation.mealAdherence}/10</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Weight: </span>
+                          <span>{evaluation.weight} kg</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="font-medium">Body Fat: </span>
+                          <span>{evaluation.bodyFatPercentage}%</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Waist: </span>
+                          <span>{evaluation.waistMeasurement} cm</span>
                         </div>
                       </div>
                     </div>
