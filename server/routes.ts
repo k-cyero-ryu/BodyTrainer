@@ -1501,9 +1501,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/evaluations', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const { clientId } = req.query;
+
+      // Check if user is a trainer accessing client evaluations
+      if (clientId) {
+        const trainer = await storage.getTrainerByUserId(userId);
+        if (trainer) {
+          // Verify the client belongs to this trainer
+          const client = await storage.getClientById(clientId);
+          if (!client || client.trainerId !== trainer.id) {
+            return res.status(403).json({ message: "Client not found or access denied" });
+          }
+          
+          const evaluations = await storage.getMonthlyEvaluationsByClient(clientId);
+          return res.json(evaluations);
+        }
+      }
+
+      // Default behavior for clients viewing their own evaluations
       const client = await storage.getClientByUserId(userId);
       if (!client) {
-        return res.status(403).json({ message: "Only clients can view evaluations" });
+        return res.status(403).json({ message: "Access denied" });
       }
       
       const evaluations = await storage.getMonthlyEvaluationsByClient(client.id);

@@ -91,7 +91,14 @@ export default function ClientDetail() {
   });
 
   const { data: evaluations = [] } = useQuery({
-    queryKey: ["/api/evaluations", { clientId }],
+    queryKey: ["/api/evaluations", clientId],
+    queryFn: async () => {
+      const response = await fetch(`/api/evaluations?clientId=${clientId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch evaluations');
+      return response.json();
+    },
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
