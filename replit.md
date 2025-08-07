@@ -16,6 +16,9 @@ Preferred communication style: Simple, everyday language.
 - **Internationalization**: i18next for multi-language support (English, Spanish, French, Portuguese).
 - **File Uploads**: Uppy for media file handling.
 
+### Recent Changes (August 2025)
+- **Media System**: Exercise videos/photos and T-pose evaluation photos both use `/objects/` route for public file serving without authentication. System stabilized after resolving path inconsistencies between `/objects/` and `/public-objects/` routes.
+
 ### Backend
 - **Runtime**: Node.js with Express.js (TypeScript, ESM modules).
 - **API Design**: RESTful API with WebSocket support for real-time chat.
