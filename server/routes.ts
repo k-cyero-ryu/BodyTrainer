@@ -312,19 +312,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/trainers/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log('[DEBUG] Fetching trainer profile for user ID:', userId);
+      
       const trainer = await storage.getTrainerByUserId(userId);
+      console.log('[DEBUG] Found trainer:', trainer);
+      
       if (!trainer) {
+        console.log('[DEBUG] No trainer found for user ID:', userId);
         return res.status(404).json({ message: "Trainer not found" });
       }
       
       // Get user details
       const user = await storage.getUser(userId);
+      console.log('[DEBUG] Found user:', user);
       
       // Get assigned payment plan
       let paymentPlan = null;
       if (trainer.paymentPlanId) {
         const [plan] = await db.select().from(paymentPlans).where(eq(paymentPlans.id, trainer.paymentPlanId));
         paymentPlan = plan;
+        console.log('[DEBUG] Found payment plan:', paymentPlan);
       }
       
       res.json({
@@ -342,12 +349,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/trainers/stats', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log('[DEBUG] Fetching trainer stats for user ID:', userId);
+      
       const trainer = await storage.getTrainerByUserId(userId);
+      console.log('[DEBUG] Found trainer:', trainer);
+      
       if (!trainer) {
+        console.log('[DEBUG] No trainer found for user ID:', userId);
         return res.status(404).json({ message: "Trainer not found" });
       }
       
       const stats = await storage.getTrainerStats(trainer.id);
+      console.log('[DEBUG] Trainer stats:', stats);
       res.json(stats);
     } catch (error) {
       console.error("Error fetching trainer stats:", error);
