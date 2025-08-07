@@ -1401,7 +1401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.photoURL,
         {
           owner: userId,
-          visibility: "private", // Evaluation photos should be private
+          visibility: "public", // Make evaluation photos public like exercises
         },
       );
 

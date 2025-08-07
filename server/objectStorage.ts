@@ -184,33 +184,26 @@ export class ObjectStorageService {
   normalizeObjectEntityPath(
     rawPath: string,
   ): string {
-    console.log('Normalizing path:', rawPath);
-    
     if (!rawPath.startsWith("https://storage.googleapis.com/")) {
-      console.log('Path does not start with googleapis, returning as-is');
       return rawPath;
     }
   
     // Extract the path from the URL by removing query parameters and domain
     const url = new URL(rawPath);
     const rawObjectPath = url.pathname;
-    console.log('Raw object path from URL:', rawObjectPath);
   
     // For Google Cloud Storage URLs, the path structure is /{bucketName}/{objectPath}
     // We need to extract just the object path portion after the bucket name
     const pathParts = rawObjectPath.split('/');
     if (pathParts.length < 3) {
-      console.log('Invalid path structure');
       return rawPath;
     }
     
     // Skip the first empty element and bucket name, get the object path
     const objectPath = pathParts.slice(2).join('/');
-    console.log('Extracted object path:', objectPath);
     
     // Convert to our normalized format
     const normalizedPath = `/objects/${objectPath}`;
-    console.log('Normalized path:', normalizedPath);
     return normalizedPath;
   }
 
