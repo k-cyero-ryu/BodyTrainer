@@ -6,6 +6,8 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 // Extend WebSocket type to include userId
 interface ExtendedWebSocket extends WebSocket {
