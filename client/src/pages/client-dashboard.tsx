@@ -105,7 +105,7 @@ export default function ClientDashboard() {
         title: "Success",
         description: "Monthly evaluation submitted successfully",
       });
-      setShowEvaluationForm(false);
+
       queryClient.invalidateQueries({ queryKey: ["/api/evaluations"] });
     },
     onError: (error) => {
@@ -335,114 +335,7 @@ export default function ClientDashboard() {
         <p className="text-gray-600 mt-2">Track your fitness journey and progress</p>
       </div>
 
-      {/* Current Payment Plan and Training Plan */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Current Payment Plan */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Current Payment Plan
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {paymentPlan ? (
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Plan:</span>
-                  <span className="text-sm">{paymentPlan.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Price:</span>
-                  <span className="text-sm font-bold">${paymentPlan.amount}/{paymentPlan.type}</span>
-                </div>
 
-                {paymentPlan.features && paymentPlan.features.length > 0 && (
-                  <div className="pt-2 border-t">
-                    <p className="text-sm font-medium mb-2">Features:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {paymentPlan.features.map((feature: string, idx: number) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">
-                          {feature}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No payment plan assigned yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Contact your trainer to set up a plan</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Current Training Plan */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5" />
-              Current Training Plan
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {assignedPlans.length > 0 ? (
-              <div className="space-y-3">
-                {assignedPlans.map((plan: any) => (
-                  <div key={plan.planId} className="p-3 border rounded-lg">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-medium">{plan.name}</h4>
-                        <p className="text-sm text-muted-foreground">{plan.goal}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">Status:</div>
-                        <Badge variant={plan.isActive ? "default" : "secondary"}>
-                          {plan.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Duration:</span>
-                        <div className="font-medium">
-                          {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Week cycle:</span>
-                        <div className="font-medium">{plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm mt-2">
-                      <div>
-                        <span className="text-muted-foreground">Sessions/week:</span>
-                        <div className="font-medium">{plan.sessionsPerWeek || 'N/A'}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Started:</span>
-                        <div className="font-medium">{plan.startDate ? new Date(plan.startDate).toLocaleDateString() : 'N/A'}</div>
-                      </div>
-                    </div>
-                    <div className="flex justify-center pt-3 border-t mt-3">
-                      <Link href={`/my-training-plan/${plan.planId}`}>
-                        <Button variant="ghost" size="sm">View Details</Button>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No training plan assigned yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Your trainer will assign a plan soon</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Client Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -905,6 +798,115 @@ export default function ClientDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Current Payment Plan and Training Plan */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        {/* Current Payment Plan */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Current Payment Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {paymentPlan ? (
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Plan:</span>
+                  <span className="text-sm">{paymentPlan.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Price:</span>
+                  <span className="text-sm font-bold">${paymentPlan.amount}/{paymentPlan.type}</span>
+                </div>
+
+                {paymentPlan.features && paymentPlan.features.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <p className="text-sm font-medium mb-2">Features:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {paymentPlan.features.map((feature: string, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No payment plan assigned yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Contact your trainer to set up a plan</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Current Training Plan */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Dumbbell className="h-5 w-5" />
+              Current Training Plan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {assignedPlans.length > 0 ? (
+              <div className="space-y-3">
+                {assignedPlans.map((plan: any) => (
+                  <div key={plan.planId} className="p-3 border rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-medium">{plan.name}</h4>
+                        <p className="text-sm text-muted-foreground">{plan.goal}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground">Status:</div>
+                        <Badge variant={plan.isActive ? "default" : "secondary"}>
+                          {plan.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Duration:</span>
+                        <div className="font-medium">
+                          {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Week cycle:</span>
+                        <div className="font-medium">{plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+                      <div>
+                        <span className="text-muted-foreground">Sessions/week:</span>
+                        <div className="font-medium">{plan.sessionsPerWeek || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Started:</span>
+                        <div className="font-medium">{plan.startDate ? new Date(plan.startDate).toLocaleDateString() : 'N/A'}</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-center pt-3 border-t mt-3">
+                      <Link href={`/my-training-plan/${plan.planId}`}>
+                        <Button variant="ghost" size="sm">View Details</Button>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No training plan assigned yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Your trainer will assign a plan soon</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
