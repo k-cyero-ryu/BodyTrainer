@@ -1388,6 +1388,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint for setting ACL policy on evaluation photos
+  app.put('/api/evaluation-photos', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      if (!req.body.photoURL) {
+        return res.status(400).json({ error: "photoURL is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.photoURL,
+        {
+          owner: userId,
+          visibility: "private", // Evaluation photos should be private
+        },
+      );
+
+      res.status(200).json({ objectPath });
+    } catch (error) {
+      console.error("Error setting evaluation photo ACL:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Client plan assignment routes
   app.post('/api/client-plans', isAuthenticated, async (req: any, res) => {
     try {

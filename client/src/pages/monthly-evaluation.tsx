@@ -39,7 +39,7 @@ export default function MonthlyEvaluation() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: evaluations = [] } = useQuery({
+  const { data: evaluations = [] } = useQuery<any[]>({
     queryKey: ["/api/evaluations"],
     enabled: !!user && user.role === 'client',
   });
@@ -59,26 +59,60 @@ export default function MonthlyEvaluation() {
 
   // Photo upload helpers
   const handlePhotoUpload = async () => {
-    const response = await apiRequest('POST', '/api/objects/upload');
-    return {
-      method: 'PUT' as const,
-      url: response.uploadURL,
-    };
+    try {
+      const response = await apiRequest('POST', '/api/objects/upload') as { uploadURL: string };
+      console.log('Upload response:', response);
+      
+      if (!response.uploadURL) {
+        throw new Error('No upload URL received');
+      }
+      
+      return {
+        method: 'PUT' as const,
+        url: response.uploadURL,
+      };
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to get upload URL. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
-  const handlePhotoComplete = (
+  const handlePhotoComplete = async (
     result: UploadResult<Record<string, unknown>, Record<string, unknown>>,
     setPhotoUrl: (url: string) => void
   ) => {
+    console.log('Upload result:', result);
+    
     if (result.successful && result.successful.length > 0) {
       const uploadURL = result.successful[0].uploadURL;
+      console.log('Upload URL from result:', uploadURL);
+      
       if (uploadURL) {
+        // For now, just use the upload URL directly
         setPhotoUrl(uploadURL);
         toast({
           title: "Success",
           description: "Photo uploaded successfully",
         });
+      } else {
+        toast({
+          title: "Upload Warning",
+          description: "Photo uploaded but no URL returned",
+          variant: "destructive",
+        });
       }
+    } else if (result.failed && result.failed.length > 0) {
+      console.error('Upload failed:', result.failed);
+      toast({
+        title: "Upload Failed",
+        description: `Failed to upload: ${result.failed[0].error?.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -101,7 +135,7 @@ export default function MonthlyEvaluation() {
       queryClient.invalidateQueries({ queryKey: ["/api/evaluations"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
+      if (isUnauthorizedError(error as Error)) {
         toast({
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
