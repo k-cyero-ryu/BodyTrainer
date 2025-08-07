@@ -155,127 +155,174 @@ export default function Chat() {
   }) : [];
 
   return (
-    <div className="flex h-full bg-white dark:bg-gray-900">
-      {/* Users List */}
-      <div className="w-1/3 border-r border-gray-200 dark:border-gray-700">
-        <Card className="h-full rounded-none border-0">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5" />
-              {userRole === 'trainer' ? 'Clients & Support' : 
-               userRole === 'superadmin' ? 'Users' : 'Trainers'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="space-y-1">
-              {filteredChatUsers.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No users available to chat
-                </div>
-              ) : (
-                filteredChatUsers.map((chatUser: ChatUser) => (
-                  <Button
-                    key={chatUser.id}
-                    variant={selectedUser === chatUser.id ? "secondary" : "ghost"}
-                    className="w-full justify-start p-3 h-auto"
-                    onClick={() => setSelectedUser(chatUser.id)}
-                  >
-                    <Avatar className="w-8 h-8 mr-3">
-                      <AvatarImage src={chatUser.profileImageUrl || undefined} />
-                      <AvatarFallback>{getUserInitials(chatUser)}</AvatarFallback>
-                    </Avatar>
-                    <div className="text-left">
-                      <div className="font-medium">{getUserDisplayName(chatUser)}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                        {chatUser.role}
-                      </div>
-                    </div>
-                  </Button>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div 
+      className="fixed bottom-6 right-6 z-50" 
+      data-chat-widget
+    >
+      {!isOpen && (
+        <Button
+          onClick={() => setIsOpen(true)}
+          size="lg"
+          className="w-16 h-16 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </Button>
+      )}
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {selectedUser ? (
-          <>
-            {/* Messages */}
-            <div className="flex-1 p-4 overflow-y-auto">
-              <div className="space-y-4">
-                {Array.isArray(messages) && messages.length === 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    No messages yet. Start the conversation!
-                  </div>
-                ) : (
-                  Array.isArray(messages) && messages.map((message: Message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.senderId === user?.id ? 'justify-end' : 'justify-start'
-                      }`}
-                    >
-                      <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          message.senderId === user?.id
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
-                        }`}
+      {isOpen && (
+        <Card className="w-96 h-96 shadow-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+          {!selectedUser ? (
+            // Users List View
+            <>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <MessageCircle className="w-4 h-4" />
+                    {userRole === 'trainer' ? 'Clients & Support' : 
+                     userRole === 'superadmin' ? 'Users' : 'Trainers'}
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0 overflow-y-auto" style={{ height: 'calc(100% - 80px)' }}>
+                <div className="space-y-1 p-2">
+                  {filteredChatUsers.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                      No users available to chat
+                    </div>
+                  ) : (
+                    filteredChatUsers.map((chatUser: ChatUser) => (
+                      <Button
+                        key={chatUser.id}
+                        variant="ghost"
+                        className="w-full justify-start p-2 h-auto text-left"
+                        onClick={() => setSelectedUser(chatUser.id)}
                       >
-                        <div className="text-sm">{message.message}</div>
-                        <div
-                          className={`text-xs mt-1 ${
-                            message.senderId === user?.id
-                              ? 'text-blue-100'
-                              : 'text-gray-500 dark:text-gray-400'
-                          }`}
-                        >
-                          {format(new Date(message.createdAt), 'HH:mm')}
+                        <Avatar className="w-6 h-6 mr-2">
+                          <AvatarImage src={chatUser.profileImageUrl || undefined} />
+                          <AvatarFallback className="text-xs">{getUserInitials(chatUser)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium text-sm">{getUserDisplayName(chatUser)}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                            {chatUser.role}
+                          </div>
+                        </div>
+                      </Button>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </>
+          ) : (
+            // Chat View
+            <>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedUser(null)}
+                    className="text-left p-0 h-auto"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6">
+                        <AvatarImage src={filteredChatUsers.find(u => u.id === selectedUser)?.profileImageUrl || undefined} />
+                        <AvatarFallback className="text-xs">
+                          {filteredChatUsers.find(u => u.id === selectedUser) ? getUserInitials(filteredChatUsers.find(u => u.id === selectedUser)!) : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-sm">
+                          {filteredChatUsers.find(u => u.id === selectedUser) ? getUserDisplayName(filteredChatUsers.find(u => u.id === selectedUser)!) : 'User'}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                          {filteredChatUsers.find(u => u.id === selectedUser)?.role}
                         </div>
                       </div>
                     </div>
-                  ))
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              </CardHeader>
 
-            {/* Message Input */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex gap-2">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  disabled={sendMessageMutation.isPending}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || sendMessageMutation.isPending}
-                  size="icon"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+              {/* Messages */}
+              <div className="flex-1 px-3 overflow-y-auto" style={{ height: 'calc(100% - 140px)' }}>
+                <div className="space-y-3">
+                  {Array.isArray(messages) && messages.length === 0 ? (
+                    <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
+                      No messages yet. Start the conversation!
+                    </div>
+                  ) : (
+                    Array.isArray(messages) && messages.map((message: Message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${
+                          message.senderId === user?.id ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        <div
+                          className={`max-w-xs px-3 py-2 rounded-lg ${
+                            message.senderId === user?.id
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                          }`}
+                        >
+                          <div className="text-xs">{message.message}</div>
+                          <div
+                            className={`text-xs mt-1 opacity-70`}
+                          >
+                            {format(new Date(message.createdAt), 'HH:mm')}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
               </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              <MessageCircle className="w-12 h-12 mx-auto mb-4" />
-              <p>Select a {userRole === 'trainer' ? 'client' : 'trainer'} to start chatting</p>
-            </div>
-          </div>
-        )}
-      </div>
+
+              {/* Message Input */}
+              <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex gap-2">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    disabled={sendMessageMutation.isPending}
+                    className="text-sm"
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                    size="sm"
+                  >
+                    <Send className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
