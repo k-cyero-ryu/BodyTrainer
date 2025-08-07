@@ -31,7 +31,10 @@ import {
   TrendingUp,
   Clock,
   X,
-  Plus
+  Plus,
+  Users,
+  Heart,
+  Apple
 } from "lucide-react";
 
 const formatCurrency = (amount: number, currency: string = "USD") => {
@@ -317,32 +320,87 @@ export default function ClientDetail() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{client.user?.email}</span>
+                <span className="text-sm">{client.user?.email || client.email}</span>
               </div>
-              {client.age && (
+              
+              {client.phone && (
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{client.age} years old</span>
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{client.phone}</span>
                 </div>
               )}
+              
+              {(client.age || client.dateOfBirth) && (
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {client.age ? `${client.age} years old` : 
+                     client.dateOfBirth ? `Born ${new Date(client.dateOfBirth).toLocaleDateString()}` : ''}
+                  </span>
+                </div>
+              )}
+              
               {client.height && (
                 <div className="flex items-center gap-3">
                   <Ruler className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">{client.height} cm</span>
                 </div>
               )}
-              {client.weight && (
+              
+              {(client.currentWeight || client.weight) && (
                 <div className="flex items-center gap-3">
                   <Weight className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{client.weight} kg</span>
+                  <span className="text-sm">Current: {client.currentWeight || client.weight} kg</span>
                 </div>
               )}
-              {client.bodyGoal && (
+              
+              {client.targetWeight && (
+                <div className="flex items-center gap-3">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Target: {client.targetWeight} kg</span>
+                </div>
+              )}
+              
+              {client.activityLevel && (
+                <div className="flex items-center gap-3">
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Activity: {client.activityLevel}</span>
+                </div>
+              )}
+              
+              {client.referralSource && (
+                <div className="flex items-center gap-3">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Referral: {client.referralSource}</span>
+                </div>
+              )}
+              
+              {(client.goals || client.bodyGoal) && (
                 <div className="flex items-start gap-3">
                   <Target className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Goal</p>
-                    <p className="text-sm text-muted-foreground">{client.bodyGoal}</p>
+                    <p className="text-sm font-medium">Goals</p>
+                    <p className="text-sm text-muted-foreground">{client.goals || client.bodyGoal}</p>
+                  </div>
+                </div>
+              )}
+              
+              {client.medicalConditions && (
+                <div className="flex items-start gap-3">
+                  <Heart className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Medical Conditions</p>
+                    <p className="text-sm text-muted-foreground">{client.medicalConditions}</p>
+                  </div>
+                </div>
+              )}
+              
+              {client.dietaryRestrictions && (
+                <div className="flex items-start gap-3">
+                  <Apple className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Dietary Restrictions</p>
+                    <p className="text-sm text-muted-foreground">{client.dietaryRestrictions}</p>
                   </div>
                 </div>
               )}
@@ -374,12 +432,7 @@ export default function ClientDetail() {
                   <span className="text-sm">None</span>
                 )}
               </div>
-              {client.referralSource && (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Referral</span>
-                  <span className="text-sm">{client.referralSource}</span>
-                </div>
-              )}
+
             </CardContent>
           </Card>
 
