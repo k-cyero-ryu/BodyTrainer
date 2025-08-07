@@ -2102,7 +2102,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Client not found" });
       }
 
-      res.json(client);
+      // Get user details for this client
+      const clientUser = await storage.getUser(client.userId);
+      
+      // Combine client and user data
+      const clientWithUserData = {
+        ...client,
+        user: clientUser,
+        // Also include user fields directly for backward compatibility
+        firstName: clientUser?.firstName,
+        lastName: clientUser?.lastName,
+        email: clientUser?.email,
+        profileImageUrl: clientUser?.profileImageUrl
+      };
+
+      res.json(clientWithUserData);
     } catch (error) {
       console.error("Error fetching client:", error);
       res.status(500).json({ message: "Failed to fetch client" });
