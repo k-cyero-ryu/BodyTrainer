@@ -227,7 +227,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTrainerByUserId(userId: string): Promise<Trainer | undefined> {
-    const [trainer] = await db.select().from(trainers).where(eq(trainers.userId, userId));
+    console.log('[DEBUG STORAGE] Looking for trainer with userId:', userId);
+    const result = await db.select().from(trainers).where(eq(trainers.userId, userId));
+    console.log('[DEBUG STORAGE] Found trainers:', result);
+    const [trainer] = result;
+    console.log('[DEBUG STORAGE] Returning trainer:', trainer);
     return trainer;
   }
 
