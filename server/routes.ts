@@ -316,6 +316,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const trainer = await storage.getTrainerByUserId(userId);
       console.log('[DEBUG] Found trainer:', trainer);
+      console.log('[DEBUG] Trainer exists check:', !!trainer);
+      console.log('[DEBUG] Trainer type:', typeof trainer);
       
       if (!trainer) {
         console.log('[DEBUG] No trainer found for user ID:', userId);
@@ -353,6 +355,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const trainer = await storage.getTrainerByUserId(userId);
       console.log('[DEBUG] Found trainer:', trainer);
+      console.log('[DEBUG] Trainer exists check:', !!trainer);
+      console.log('[DEBUG] Trainer type:', typeof trainer);
       
       if (!trainer) {
         console.log('[DEBUG] No trainer found for user ID:', userId);
