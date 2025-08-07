@@ -223,36 +223,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Private object storage routes
+  // Object storage routes - serve public files without authentication
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      
-      // First check if the object is public (no authentication needed)
-      const canAccessPublic = await objectStorageService.canAccessObjectEntity({
-        objectFile,
-        requestedPermission: ObjectPermission.READ,
-      });
-      
-      if (canAccessPublic) {
-        return objectStorageService.downloadObject(objectFile, res);
-      }
-      
-      // If not public, require authentication
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.sendStatus(401);
-      }
-      
-      const userId = (req.user as any)?.claims?.sub;
-      const canAccess = await objectStorageService.canAccessObjectEntity({
-        objectFile,
-        userId: userId,
-        requestedPermission: ObjectPermission.READ,
-      });
-      if (!canAccess) {
-        return res.sendStatus(401);
-      }
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error checking object access:", error);
@@ -1408,15 +1383,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       );
 
-      // Convert to public path for exercises
-      const publicPath = objectPath.replace('/objects/', '/public-objects/');
-      
       await storage.updateExercise(req.params.id, {
-        mediaUrl: publicPath,
+        mediaUrl: objectPath,
         mediaType: req.body.mediaType || 'image',
       });
 
-      res.status(200).json({ objectPath: publicPath });
+      res.status(200).json({ objectPath });
     } catch (error) {
       console.error("Error updating exercise media:", error);
       res.status(500).json({ error: "Internal server error" });
@@ -1440,10 +1412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       );
 
-      // Convert to public path for evaluation photos  
-      const publicPath = objectPath.replace('/objects/', '/public-objects/');
-
-      res.status(200).json({ objectPath: publicPath });
+      res.status(200).json({ objectPath });
     } catch (error) {
       console.error("Error setting evaluation photo ACL:", error);
       res.status(500).json({ error: "Internal server error" });
