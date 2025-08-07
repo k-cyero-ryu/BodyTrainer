@@ -94,12 +94,30 @@ export default function MonthlyEvaluation() {
       console.log('Upload URL from result:', uploadURL);
       
       if (uploadURL) {
-        // For now, just use the upload URL directly
-        setPhotoUrl(uploadURL);
-        toast({
-          title: "Success",
-          description: "Photo uploaded successfully",
-        });
+        try {
+          // Set ACL policy for the uploaded photo and get normalized path
+          const response = await apiRequest('PUT', '/api/evaluation-photos', {
+            photoURL: uploadURL,
+          });
+          const data = await response.json() as { objectPath: string };
+          
+          const normalizedPath = data.objectPath || uploadURL;
+          setPhotoUrl(normalizedPath);
+          
+          toast({
+            title: "Success",
+            description: "Photo uploaded successfully",
+          });
+        } catch (error) {
+          console.error('Error setting photo ACL:', error);
+          // Still set the URL even if ACL setting fails
+          setPhotoUrl(uploadURL);
+          toast({
+            title: "Photo uploaded",
+            description: "Photo uploaded but there was an issue with permissions",
+            variant: "default",
+          });
+        }
       } else {
         toast({
           title: "Upload Warning",
