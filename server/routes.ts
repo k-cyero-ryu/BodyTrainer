@@ -207,7 +207,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object storage routes for exercise media
+  // Public object storage routes for exercise media and evaluation photos
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Private object storage routes
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
@@ -1392,12 +1408,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       );
 
+      // Convert to public path for exercises
+      const publicPath = objectPath.replace('/objects/', '/public-objects/');
+      
       await storage.updateExercise(req.params.id, {
-        mediaUrl: objectPath,
+        mediaUrl: publicPath,
         mediaType: req.body.mediaType || 'image',
       });
 
-      res.status(200).json({ objectPath });
+      res.status(200).json({ objectPath: publicPath });
     } catch (error) {
       console.error("Error updating exercise media:", error);
       res.status(500).json({ error: "Internal server error" });
@@ -1421,7 +1440,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       );
 
-      res.status(200).json({ objectPath });
+      // Convert to public path for evaluation photos  
+      const publicPath = objectPath.replace('/objects/', '/public-objects/');
+
+      res.status(200).json({ objectPath: publicPath });
     } catch (error) {
       console.error("Error setting evaluation photo ACL:", error);
       res.status(500).json({ error: "Internal server error" });
