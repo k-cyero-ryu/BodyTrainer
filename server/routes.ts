@@ -208,11 +208,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object storage routes for exercise media
-  app.get("/objects/:objectPath(*)", isAuthenticated, async (req, res) => {
-    const userId = (req.user as any)?.claims?.sub;
+  app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      
+      // First check if the object is public (no authentication needed)
+      const canAccessPublic = await objectStorageService.canAccessObjectEntity({
+        objectFile,
+        requestedPermission: ObjectPermission.READ,
+      });
+      
+      if (canAccessPublic) {
+        return objectStorageService.downloadObject(objectFile, res);
+      }
+      
+      // If not public, require authentication
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.sendStatus(401);
+      }
+      
+      const userId = (req.user as any)?.claims?.sub;
       const canAccess = await objectStorageService.canAccessObjectEntity({
         objectFile,
         userId: userId,
