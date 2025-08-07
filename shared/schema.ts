@@ -172,6 +172,10 @@ export const monthlyEvaluations = pgTable("monthly_evaluations", {
   cardioAdherence: integer("cardio_adherence"), // 1-10
   selfEvaluation: integer("self_evaluation"), // 1-10
   notes: text("notes"),
+  // T-pose photos for visual intelligence
+  frontPhotoUrl: varchar("front_photo_url"),
+  backPhotoUrl: varchar("back_photo_url"),
+  sidePhotoUrl: varchar("side_photo_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

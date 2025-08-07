@@ -9,15 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, Weight, Ruler, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, TrendingUp, Weight, Ruler, ChevronLeft, ChevronRight, Camera } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 export default function MonthlyEvaluation() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
+  const [frontPhotoUrl, setFrontPhotoUrl] = useState<string>("");
+  const [backPhotoUrl, setBackPhotoUrl] = useState<string>("");
+  const [sidePhotoUrl, setSidePhotoUrl] = useState<string>("");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -50,6 +55,31 @@ export default function MonthlyEvaluation() {
 
   const goToLatest = () => {
     setCurrentEvaluationIndex(0);
+  };
+
+  // Photo upload helpers
+  const handlePhotoUpload = async () => {
+    const response = await apiRequest('POST', '/api/objects/upload');
+    return {
+      method: 'PUT' as const,
+      url: response.uploadURL,
+    };
+  };
+
+  const handlePhotoComplete = (
+    result: UploadResult<Record<string, unknown>, Record<string, unknown>>,
+    setPhotoUrl: (url: string) => void
+  ) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadURL = result.successful[0].uploadURL;
+      if (uploadURL) {
+        setPhotoUrl(uploadURL);
+        toast({
+          title: "Success",
+          description: "Photo uploaded successfully",
+        });
+      }
+    }
   };
 
   // Get current evaluation to display
@@ -108,6 +138,9 @@ export default function MonthlyEvaluation() {
       trainingAdherence: parseInt(formData.get('trainingAdherence') as string),
       mealAdherence: parseInt(formData.get('mealAdherence') as string),
       selfEvaluation: parseInt(formData.get('selfEvaluation') as string),
+      frontPhotoUrl: frontPhotoUrl || null,
+      backPhotoUrl: backPhotoUrl || null,
+      sidePhotoUrl: sidePhotoUrl || null,
     };
 
     evaluationMutation.mutate(data);
@@ -282,6 +315,48 @@ export default function MonthlyEvaluation() {
                   </div>
                 </div>
               </div>
+
+              {/* T-Pose Photos Display */}
+              {(currentEvaluation.frontPhotoUrl || currentEvaluation.backPhotoUrl || currentEvaluation.sidePhotoUrl) && (
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <Camera className="h-4 w-4" />
+                    T-Pose Photos
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {currentEvaluation.frontPhotoUrl && (
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Front View</p>
+                        <img 
+                          src={currentEvaluation.frontPhotoUrl} 
+                          alt="Front view T-pose" 
+                          className="w-full h-48 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                    {currentEvaluation.backPhotoUrl && (
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Back View</p>
+                        <img 
+                          src={currentEvaluation.backPhotoUrl} 
+                          alt="Back view T-pose" 
+                          className="w-full h-48 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                    {currentEvaluation.sidePhotoUrl && (
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Side View</p>
+                        <img 
+                          src={currentEvaluation.sidePhotoUrl} 
+                          alt="Side view T-pose" 
+                          className="w-full h-48 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -411,6 +486,92 @@ export default function MonthlyEvaluation() {
                       </Select>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* T-Pose Photos Section */}
+              <div className="border-t pt-6">
+                <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  T-Pose Photos for Visual Intelligence
+                </h4>
+                <p className="text-sm text-gray-600 mb-6">
+                  Upload three T-pose photos (front, back, and side view) for better progress tracking and visual analysis.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Front Photo */}
+                  <div className="space-y-3">
+                    <Label htmlFor="frontPhoto">Front View</Label>
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={10485760} // 10MB
+                      onGetUploadParameters={handlePhotoUpload}
+                      onComplete={(result) => handlePhotoComplete(result, setFrontPhotoUrl)}
+                      buttonClassName="w-full"
+                    >
+                      <div className="flex items-center justify-center gap-2 py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <Camera className="h-5 w-5" />
+                        {frontPhotoUrl ? "Change Front Photo" : "Upload Front Photo"}
+                      </div>
+                    </ObjectUploader>
+                    {frontPhotoUrl && (
+                      <div className="text-sm text-green-600 flex items-center gap-1">
+                        ✓ Front photo uploaded successfully
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Back Photo */}
+                  <div className="space-y-3">
+                    <Label htmlFor="backPhoto">Back View</Label>
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={10485760} // 10MB
+                      onGetUploadParameters={handlePhotoUpload}
+                      onComplete={(result) => handlePhotoComplete(result, setBackPhotoUrl)}
+                      buttonClassName="w-full"
+                    >
+                      <div className="flex items-center justify-center gap-2 py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <Camera className="h-5 w-5" />
+                        {backPhotoUrl ? "Change Back Photo" : "Upload Back Photo"}
+                      </div>
+                    </ObjectUploader>
+                    {backPhotoUrl && (
+                      <div className="text-sm text-green-600 flex items-center gap-1">
+                        ✓ Back photo uploaded successfully
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Side Photo */}
+                  <div className="space-y-3">
+                    <Label htmlFor="sidePhoto">Side View</Label>
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={10485760} // 10MB
+                      onGetUploadParameters={handlePhotoUpload}
+                      onComplete={(result) => handlePhotoComplete(result, setSidePhotoUrl)}
+                      buttonClassName="w-full"
+                    >
+                      <div className="flex items-center justify-center gap-2 py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <Camera className="h-5 w-5" />
+                        {sidePhotoUrl ? "Change Side Photo" : "Upload Side Photo"}
+                      </div>
+                    </ObjectUploader>
+                    {sidePhotoUrl && (
+                      <div className="text-sm text-green-600 flex items-center gap-1">
+                        ✓ Side photo uploaded successfully
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Photo Guidelines:</strong> Stand in a T-pose with arms extended horizontally. 
+                    Wear fitted clothing for best results. These photos help with visual progress tracking and measurements.
+                  </p>
                 </div>
               </div>
 
