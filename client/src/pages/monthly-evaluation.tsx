@@ -60,16 +60,17 @@ export default function MonthlyEvaluation() {
   // Photo upload helpers
   const handlePhotoUpload = async () => {
     try {
-      const response = await apiRequest('POST', '/api/objects/upload') as { uploadURL: string };
-      console.log('Upload response:', response);
+      const response = await apiRequest('POST', '/api/objects/upload');
+      const data = await response.json() as { uploadURL: string };
+      console.log('Upload response:', data);
       
-      if (!response.uploadURL) {
+      if (!data.uploadURL) {
         throw new Error('No upload URL received');
       }
       
       return {
         method: 'PUT' as const,
-        url: response.uploadURL,
+        url: data.uploadURL,
       };
     } catch (error) {
       console.error('Error getting upload URL:', error);
