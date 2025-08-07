@@ -1498,6 +1498,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual evaluation by ID
+  app.get('/api/evaluations/:evaluationId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { evaluationId } = req.params;
+
+      const evaluation = await storage.getMonthlyEvaluation(evaluationId);
+      if (!evaluation) {
+        return res.status(404).json({ message: "Evaluation not found" });
+      }
+
+      // Check if user is a trainer accessing client evaluations
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (trainer) {
+        // Verify the client belongs to this trainer
+        const client = await storage.getClientById(evaluation.clientId);
+        if (!client || client.trainerId !== trainer.id) {
+          return res.status(403).json({ message: "Client not found or access denied" });
+        }
+        
+        return res.json(evaluation);
+      }
+
+      // Check if user is a client accessing their own evaluation
+      const client = await storage.getClientByUserId(userId);
+      if (client && evaluation.clientId === client.id) {
+        return res.json(evaluation);
+      }
+
+      return res.status(403).json({ message: "Access denied" });
+    } catch (error) {
+      console.error("Error fetching evaluation:", error);
+      res.status(500).json({ message: "Failed to fetch evaluation" });
+    }
+  });
+
   app.get('/api/evaluations', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

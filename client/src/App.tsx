@@ -36,6 +36,9 @@ import ClientProfile from "@/pages/client-profile";
 import DailyWorkout from "@/pages/daily-workout";
 import Exercises from "@/pages/exercises";
 import Reports from "@/pages/reports";
+import ClientEvaluationDetail from "@/pages/client-evaluation-detail";
+import ClientEvaluationsList from "@/pages/client-evaluations-list";
+import ClientEvaluationsCompare from "@/pages/client-evaluations-compare";
 import Navigation from "@/components/navigation";
 import Chat from "@/components/chat";
 import "@/lib/i18n";
@@ -177,6 +180,9 @@ function Router() {
                   <Route path="/clients" component={Clients} />
                   <Route path="/clients/:clientId/edit" component={EditClient} />
                   <Route path="/clients/:clientId" component={ClientDetail} />
+                  <Route path="/clients/:clientId/evaluations" component={ClientEvaluationsList} />
+                  <Route path="/clients/:clientId/evaluations/compare" component={ClientEvaluationsCompare} />
+                  <Route path="/clients/:clientId/evaluation/:evaluationId" component={ClientEvaluationDetail} />
                   <Route path="/training-plans" component={TrainingPlans} />
                   <Route path="/training-plans/:planId" component={TrainingPlanDetail} />
                   <Route path="/exercises" component={Exercises} />

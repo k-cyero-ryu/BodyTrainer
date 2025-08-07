@@ -105,6 +105,7 @@ export interface IStorage {
 
   // Monthly evaluation operations
   createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation>;
+  getMonthlyEvaluation(id: string): Promise<MonthlyEvaluation | undefined>;
   getMonthlyEvaluationsByClient(clientId: string): Promise<MonthlyEvaluation[]>;
 
   // Post operations
@@ -615,6 +616,11 @@ export class DatabaseStorage implements IStorage {
   async createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation> {
     const [created] = await db.insert(monthlyEvaluations).values(evaluation).returning();
     return created;
+  }
+
+  async getMonthlyEvaluation(id: string): Promise<MonthlyEvaluation | undefined> {
+    const [evaluation] = await db.select().from(monthlyEvaluations).where(eq(monthlyEvaluations.id, id));
+    return evaluation;
   }
 
   async getMonthlyEvaluationsByClient(clientId: string): Promise<MonthlyEvaluation[]> {

@@ -499,9 +499,23 @@ export default function ClientDetail() {
           {/* Recent Evaluations */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Recent Evaluations
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Recent Evaluations
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link href={`/clients/${clientId}/evaluations`}>
+                    <Button variant="outline" size="sm">
+                      View All
+                    </Button>
+                  </Link>
+                  <Link href={`/clients/${clientId}/evaluations/compare`}>
+                    <Button variant="secondary" size="sm">
+                      Compare
+                    </Button>
+                  </Link>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -545,6 +559,13 @@ export default function ClientDetail() {
                           <span className="font-medium">Waist: </span>
                           <span>{evaluation.waistMeasurement} cm</span>
                         </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t">
+                        <Link href={`/clients/${clientId}/evaluation/${evaluation.id}`}>
+                          <Button variant="outline" size="sm" className="w-full">
+                            View Full Evaluation
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   ))}
