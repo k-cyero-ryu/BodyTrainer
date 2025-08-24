@@ -122,7 +122,80 @@ npm run db:push
 
 This command will create all necessary tables in your database using Drizzle ORM.
 
-### 5. Google Cloud Storage Setup (Optional)
+### 5. Creating the First Admin User (SuperAdmin Setup)
+
+After setting up the database schema, you need to create the first SuperAdmin user to manage the platform.
+
+#### Prerequisites for Admin Setup
+
+1. **First, login to create your user account**:
+   - Start the application: `npm run dev`
+   - Visit `http://localhost:5000`
+   - Login using Replit authentication (this creates your user account in the database)
+   - Note down the email address you used to login
+
+#### Creating the SuperAdmin Account
+
+2. **Access the SuperAdmin setup page**:
+   - Navigate to: `http://localhost:5000/setup-superadmin`
+   - You'll see a SuperAdmin Setup form
+
+3. **Complete the setup form**:
+   - **Email Address**: Enter the exact email you used when logging in above
+   - **Setup Key**: Enter the setup key (default: `replit-fitness-admin-2025`)
+     - You can customize this by setting `SUPERADMIN_SETUP_KEY` in your `.env` file
+   - Click "Create SuperAdmin Account"
+
+4. **Login as SuperAdmin**:
+   - After successful setup, you'll be redirected to login
+   - Login with the same credentials you used before
+   - You now have SuperAdmin access to the entire platform
+
+#### Setup Key Security
+
+For production deployments, make sure to:
+- Set a custom `SUPERADMIN_SETUP_KEY` in your environment variables
+- Use a strong, unique setup key that only authorized personnel know
+- The setup endpoint only works when no SuperAdmins exist in the system
+
+```env
+# Add to your .env file for custom setup key
+SUPERADMIN_SETUP_KEY=your-custom-secure-setup-key-here
+```
+
+#### What SuperAdmins Can Do
+
+Once logged in as SuperAdmin, you can:
+- **Manage Trainers**: Approve, reject, or suspend trainer applications
+- **View All Data**: Access all clients, training plans, and exercises across the platform
+- **Manage Payment Plans**: Create and configure payment plans for trainers
+- **Platform Administration**: Monitor system statistics and user activity
+- **Promote Other Users**: Promote existing users to SuperAdmin role
+
+#### Creating Additional SuperAdmins
+
+After the initial setup, existing SuperAdmins can promote other users:
+1. The user must first login to create their account
+2. Use the "Manage Trainers" section in the admin dashboard
+3. Use the promote functionality to grant SuperAdmin access
+
+#### Troubleshooting Admin Setup
+
+**Common Issues:**
+
+1. **"User not found" error**: 
+   - Make sure you've logged in at least once to create the user account
+   - Use the exact same email address
+
+2. **"Invalid setup key" error**:
+   - Check your `SUPERADMIN_SETUP_KEY` environment variable
+   - Default key is: `replit-fitness-admin-2025`
+
+3. **"SuperAdmin already exists" error**:
+   - The setup endpoint only works for the very first SuperAdmin
+   - Use the promote user functionality from existing SuperAdmin account
+
+### 6. Google Cloud Storage Setup (Optional)
 
 For file upload functionality:
 
