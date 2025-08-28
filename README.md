@@ -195,7 +195,81 @@ After the initial setup, existing SuperAdmins can promote other users:
    - The setup endpoint only works for the very first SuperAdmin
    - Use the promote user functionality from existing SuperAdmin account
 
-### 6. Google Cloud Storage Setup (Optional)
+### 6. Create Test Users for Production (SQL Queries)
+
+To quickly set up test users for immediate production testing, run these SQL queries in your PostgreSQL database:
+
+```sql
+-- Create required enums if they don't exist
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('superadmin', 'trainer', 'client');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE user_status AS ENUM ('active', 'inactive', 'pending');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Create test users
+INSERT INTO users (id, email, first_name, last_name, role, status, created_at, updated_at) 
+VALUES 
+    ('39363427', 'darkryuudan@gmail.com', 'Ronny', 'SuperAdmin', 'superadmin', 'active', NOW(), NOW()),
+    ('46005006', 'kuban.solutions@gmail.com', 'Test', 'Trainer', 'trainer', 'active', NOW(), NOW()),
+    ('client001', 'client.test@example.com', 'John', 'Client', 'client', 'active', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Create trainer profile for the trainer user
+INSERT INTO trainers (id, user_id, referral_code, expertise, experience, created_at, updated_at)
+VALUES 
+    (gen_random_uuid(), '46005006', 'TR240001', 'Weight Training & Nutrition', '5+ Years', NOW(), NOW())
+ON CONFLICT (user_id) DO NOTHING;
+
+-- Create client profile linked to the trainer
+INSERT INTO clients (id, user_id, trainer_id, phone, age, height, weight, current_weight, target_weight, body_goal, activity_level, created_at, updated_at)
+SELECT 
+    gen_random_uuid(), 
+    'client001', 
+    t.id, 
+    '+1-555-0123', 
+    28, 
+    175.00, 
+    80.00, 
+    80.00, 
+    75.00, 
+    'Build lean muscle and improve overall fitness', 
+    'moderate',
+    NOW(), 
+    NOW()
+FROM trainers t 
+WHERE t.user_id = '46005006'
+ON CONFLICT (user_id) DO NOTHING;
+```
+
+**What these queries create:**
+
+1. **SuperAdmin Account** (`darkryuudan@gmail.com`)
+   - Full admin access to manage trainers and system settings
+   - Can approve/reject trainer applications
+
+2. **Trainer Account** (`kuban.solutions@gmail.com`) 
+   - Referral code: `TR240001`
+   - Can create training plans and manage clients
+   - Has expertise in weight training & nutrition
+
+3. **Client Account** (`client.test@example.com`)
+   - Linked to the trainer account
+   - Sample fitness profile with goals and measurements
+   - Can view training plans and track progress
+
+**After running these queries:**
+- You can immediately test all three user roles
+- The client-trainer relationship is pre-configured
+- All accounts are active and ready for testing
+
+### 7. Google Cloud Storage Setup (Optional)
 
 For file upload functionality:
 
