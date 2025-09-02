@@ -11,6 +11,8 @@ import { MessageCircle, X, Clock, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 import RoleSelection from "@/pages/role-selection";
 import SuperAdminSetup from "@/pages/superadmin-setup";
 import ClientRegistration from "@/pages/client-registration";
@@ -56,7 +58,14 @@ function Router() {
   }
 
   if (!isAuthenticated) {
-    return <Landing />;
+    return (
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/" component={Landing} />
+        <Route component={NotFound} />
+      </Switch>
+    );
   }
 
   // If user is authenticated but has default 'client' role and no associated records, show role selection
