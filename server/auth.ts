@@ -183,4 +183,47 @@ export async function setupAuth(app: Express) {
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
+
+  // SuperAdmin password reset endpoint
+  app.post('/api/auth/reset-password', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUser = req.user as User;
+      
+      // Only SuperAdmin can reset passwords
+      if (currentUser.role !== 'superadmin') {
+        return res.status(403).json({ message: "Access denied. SuperAdmin role required." });
+      }
+
+      const { userId, newPassword } = req.body;
+      
+      if (!userId || !newPassword) {
+        return res.status(400).json({ message: "User ID and new password are required" });
+      }
+
+      // Validate password length
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      // Check if target user exists
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Update the password
+      await storage.resetUserPassword(userId, hashedPassword);
+
+      res.json({ 
+        success: true, 
+        message: `Password reset successfully for ${targetUser.firstName || targetUser.username}` 
+      });
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      res.status(500).json({ message: "Password reset failed" });
+    }
+  });
 }

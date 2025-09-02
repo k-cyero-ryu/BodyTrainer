@@ -108,6 +108,12 @@ export default function Navigation() {
       roles: ['superadmin']
     },
     { 
+      href: '/user-management', 
+      label: 'User Management', 
+      icon: UserCog,
+      roles: ['superadmin']
+    },
+    { 
       href: '/clients', 
       label: 'My Clients', 
       icon: Users,

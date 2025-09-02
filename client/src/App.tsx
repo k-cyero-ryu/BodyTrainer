@@ -23,6 +23,7 @@ import ManageTrainersPage from "@/pages/manage-trainers";
 import AdminClients from "@/pages/admin-clients";
 import AdminPlans from "@/pages/admin-plans";
 import AdminExercises from "@/pages/admin-exercises";
+import UserManagement from "@/pages/user-management";
 import Clients from "@/pages/clients";
 import ClientDetail from "@/pages/client-detail";
 import EditClient from "@/pages/edit-client";
@@ -181,6 +182,7 @@ function Router() {
                   <Route path="/admin-plans" component={AdminPlans} />
                   <Route path="/admin-exercises" component={AdminExercises} />
                   <Route path="/payment-plans" component={PaymentPlans} />
+                  <Route path="/user-management" component={UserManagement} />
                 </>
               )}
               {user?.role === 'trainer' && (

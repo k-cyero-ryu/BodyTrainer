@@ -52,6 +52,7 @@ export interface IStorage {
   getUsersByRole(role: string): Promise<User[]>;
   createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  resetUserPassword(userId: string, newPassword: string): Promise<void>;
 
   // Trainer operations
   createTrainer(trainer: InsertTrainer): Promise<Trainer>;
@@ -228,6 +229,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async resetUserPassword(userId: string, newPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password: newPassword, updatedAt: new Date() })
+      .where(eq(users.id, userId));
   }
 
   // Trainer operations
