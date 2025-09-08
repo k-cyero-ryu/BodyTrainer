@@ -69,6 +69,21 @@ export async function setupAuth(app: Express) {
     try {
       const validatedData = registerUserSchema.parse(req.body);
       
+      // Special handling for SuperAdmin registration
+      if (validatedData.role === 'superadmin') {
+        // Validate setup key for SuperAdmin accounts
+        const expectedSetupKey = process.env.SUPERADMIN_SETUP_KEY || 'your-secure-setup-key-2025';
+        if (!validatedData.setupKey || validatedData.setupKey !== expectedSetupKey) {
+          return res.status(400).json({ message: "Invalid setup key" });
+        }
+
+        // Check if any SuperAdmin already exists
+        const existingSuperAdmin = await storage.getUsersByRole('superadmin');
+        if (existingSuperAdmin.length > 0) {
+          return res.status(400).json({ message: "SuperAdmin already exists. Contact existing SuperAdmin for account creation." });
+        }
+      }
+      
       // Check if username or email already exists
       const existingUser = await storage.getUserByEmailOrUsername(validatedData.email, validatedData.username);
       if (existingUser) {
