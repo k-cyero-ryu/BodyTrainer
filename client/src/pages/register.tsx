@@ -44,7 +44,10 @@ export default function Register() {
         title: "Registration successful",
         description: "Welcome to My Body Trainer Manager!",
       });
-      // Redirect will happen automatically via useAuth hook
+      // Redirect to dashboard after successful registration
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
     },
     onError: (error: any) => {
       toast({

@@ -64,7 +64,13 @@ function Router() {
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/" component={Landing} />
-        <Route component={NotFound} />
+        <Route path="*">
+          {/* Redirect any other path to login for unauthenticated users */}
+          {() => { 
+            window.location.href = '/login';
+            return null;
+          }}
+        </Route>
       </Switch>
     );
   }

@@ -17,6 +17,8 @@ export function useAuth() {
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
       queryClient.clear();
+      // Redirect to login page after logout
+      window.location.href = '/login';
     },
   });
 

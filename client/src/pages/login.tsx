@@ -35,7 +35,10 @@ export default function Login() {
         title: "Login successful",
         description: "Welcome back!",
       });
-      // Redirect will happen automatically via useAuth hook
+      // Redirect to dashboard after successful login
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
     },
     onError: (error: any) => {
       toast({
