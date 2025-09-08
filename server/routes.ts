@@ -654,6 +654,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let trainer = null;
       if (client.trainerId) {
         trainer = await storage.getTrainer(client.trainerId);
+        if (trainer) {
+          // Fetch user details for the trainer
+          const trainerUser = await storage.getUser(trainer.userId);
+          if (trainerUser) {
+            // Include trainer user information in the trainer object
+            trainer = {
+              ...trainer,
+              firstName: trainerUser.firstName,
+              lastName: trainerUser.lastName,
+              email: trainerUser.email,
+              user: trainerUser
+            };
+          }
+        }
       }
       
       res.json({
