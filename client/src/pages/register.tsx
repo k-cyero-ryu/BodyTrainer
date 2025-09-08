@@ -27,8 +27,11 @@ export default function Register() {
       firstName: "",
       lastName: "",
       role: "client",
+      referralCode: "",
     },
   });
+
+  const selectedRole = form.watch("role");
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterUser) => {
@@ -201,6 +204,28 @@ export default function Register() {
                   </FormItem>
                 )}
               />
+              {selectedRole === "client" && (
+                <FormField
+                  control={form.control}
+                  name="referralCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trainer Referral Code (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter trainer's referral code" 
+                          {...field} 
+                          data-testid="input-referralCode"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-sm text-gray-500">
+                        If you have a trainer's referral code, enter it to be automatically assigned to them.
+                      </p>
+                    </FormItem>
+                  )}
+                />
+              )}
               <Button 
                 type="submit" 
                 className="w-full" 

@@ -90,8 +90,37 @@ export async function setupAuth(app: Express) {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         role: validatedData.role || 'client',
-        status: 'active'
+        status: validatedData.role === 'trainer' ? 'pending' : 'active' // Trainers need approval
       });
+
+      // Handle role-specific setup
+      if (validatedData.role === 'trainer') {
+        // Generate unique referral code for trainer
+        const referralCodeValue = `TR${Date.now().toString().slice(-6)}${newUser.id.slice(-2)}`;
+        await storage.createTrainer({
+          userId: newUser.id,
+          referralCode: referralCodeValue,
+          expertise: '',
+          experience: '',
+        });
+      } else if (validatedData.role === 'client' || !validatedData.role) {
+        // Handle referral code for client
+        let trainerId = null;
+        if (validatedData.referralCode) {
+          const trainer = await storage.getTrainerByReferralCode(validatedData.referralCode);
+          if (trainer) {
+            trainerId = trainer.id;
+          }
+        }
+
+        // Create client record (with or without trainer assignment)
+        if (trainerId) {
+          await storage.createClient({
+            userId: newUser.id,
+            trainerId: trainerId,
+          });
+        }
+      }
 
       // Set session
       (req.session as any).userId = newUser.id;

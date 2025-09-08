@@ -335,7 +335,8 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export const registerUserSchema = insertUserSchema.extend({
-  confirmPassword: z.string().min(8)
+  confirmPassword: z.string().min(8),
+  referralCode: z.string().optional()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
