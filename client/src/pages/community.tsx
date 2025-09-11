@@ -55,6 +55,12 @@ export default function Community() {
   // Get community messages
   const { data: messages = [], isLoading: messagesLoading } = useQuery<CommunityMessage[]>({
     queryKey: ['/api/community/messages', group?.id],
+    queryFn: async () => {
+      if (!group?.id) return [];
+      const response = await fetch(`/api/community/messages/${group.id}`);
+      if (!response.ok) throw new Error('Failed to fetch messages');
+      return response.json();
+    },
     enabled: !!group?.id,
   });
 
