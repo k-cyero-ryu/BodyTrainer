@@ -58,15 +58,35 @@ export default function Community() {
     queryFn: async () => {
       if (!group?.id) return [];
       console.log('Fetching messages for group:', group.id);
-      const response = await fetch(`/api/community/messages/${group.id}`);
-      if (!response.ok) throw new Error('Failed to fetch messages');
-      const data = await response.json();
-      console.log('Messages received:', data);
-      return data;
+      try {
+        const response = await fetch(`/api/community/${group.id}/messages`, {
+          credentials: 'include', // Ensure cookies are sent
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', response.status, errorText);
+          throw new Error(`Failed to fetch messages: ${response.status} ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Messages received:', data);
+        console.log('Messages array length:', data?.length);
+        return data;
+      } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+      }
     },
     enabled: !!group?.id,
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache data
+    gcTime: 0, // Don't cache data
   });
 
   // Create message mutation
