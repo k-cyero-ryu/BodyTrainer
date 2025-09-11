@@ -35,10 +35,13 @@ export default function TrainerDashboard() {
     enabled: !!user && user.role === 'trainer',
   });
 
-  const { data: clients = [] } = useQuery({
+  const { data: clientsData = {} } = useQuery({
     queryKey: ["/api/trainers/clients"],
     enabled: !!user && user.role === 'trainer',
   });
+
+  const clients = clientsData.clients || [];
+  const referralCode = clientsData.referralCode;
 
   const { data: trainer } = useQuery({
     queryKey: ["/api/trainers/profile"],
@@ -46,8 +49,8 @@ export default function TrainerDashboard() {
   });
 
   const copyReferralCode = () => {
-    if (trainer?.referralCode) {
-      navigator.clipboard.writeText(trainer.referralCode);
+    if (referralCode) {
+      navigator.clipboard.writeText(referralCode);
       toast({
         title: "Copied!",
         description: "Referral code copied to clipboard",
@@ -251,7 +254,7 @@ export default function TrainerDashboard() {
             <CardContent>
               <div className="bg-gray-50 rounded-lg p-4 text-center">
                 <p className="text-sm text-gray-600 mb-2">Share this code with new clients:</p>
-                <p className="text-2xl font-bold text-primary">{trainer?.referralCode || 'Loading...'}</p>
+                <p className="text-2xl font-bold text-primary">{referralCode || 'Loading...'}</p>
                 <Button 
                   variant="ghost" 
                   size="sm" 
