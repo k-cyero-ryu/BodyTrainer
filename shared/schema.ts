@@ -225,6 +225,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   sentMessages: many(chatMessages, { relationName: "sender" }),
   receivedMessages: many(chatMessages, { relationName: "receiver" }),
+  communityMemberships: many(communityMembers),
+  communitySentMessages: many(communityMessages),
 }));
 
 export const trainersRelations = relations(trainers, ({ one, many }) => ({
@@ -241,6 +243,7 @@ export const trainersRelations = relations(trainers, ({ one, many }) => ({
   exercises: many(exercises),
   posts: many(posts),
   clientPaymentPlans: many(clientPaymentPlans),
+  communityGroups: many(communityGroups),
 }));
 
 export const clientsRelations = relations(clients, ({ one, many }) => ({
@@ -380,6 +383,9 @@ export const insertMonthlyEvaluationSchema = createInsertSchema(monthlyEvaluatio
 });
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
+export const insertCommunityGroupSchema = createInsertSchema(communityGroups).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCommunityMemberSchema = createInsertSchema(communityMembers).omit({ id: true, joinedAt: true });
+export const insertCommunityMessageSchema = createInsertSchema(communityMessages).omit({ id: true, createdAt: true });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
@@ -406,6 +412,12 @@ export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Post = typeof posts.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertCommunityGroup = z.infer<typeof insertCommunityGroupSchema>;
+export type CommunityGroup = typeof communityGroups.$inferSelect;
+export type InsertCommunityMember = z.infer<typeof insertCommunityMemberSchema>;
+export type CommunityMember = typeof communityMembers.$inferSelect;
+export type InsertCommunityMessage = z.infer<typeof insertCommunityMessageSchema>;
+export type CommunityMessage = typeof communityMessages.$inferSelect;
 
 // Payment Plans Configuration Table
 // Payment plans table (SuperAdmin creates for trainers)
@@ -455,4 +467,77 @@ export const clientPaymentPlansRelations = relations(clientPaymentPlans, ({ one,
     references: [trainers.id],
   }),
   clients: many(clients),
+}));
+
+// Community Groups (for group chat between trainer and their clients)
+export const communityGroups = pgTable("community_groups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(), // e.g., "John Doe's Training Community"
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Community Members (join table for users in community groups)
+export const communityMembers = pgTable("community_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => communityGroups.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  role: varchar("role").notNull().default("member"), // "admin" (trainer), "member" (client)
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Community Messages (group chat messages with file support)
+export const communityMessages = pgTable("community_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => communityGroups.id, { onDelete: 'cascade' }),
+  senderId: varchar("sender_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  message: text("message"), // Can be null if it's just a file share
+  messageType: varchar("message_type").notNull().default("text"), // "text", "file", "url"
+  // File attachment fields
+  attachmentUrl: varchar("attachment_url"), // URL to the uploaded file
+  attachmentName: varchar("attachment_name"), // Original filename
+  attachmentType: varchar("attachment_type"), // "document", "image", "video"
+  attachmentSize: integer("attachment_size"), // File size in bytes
+  // URL preview fields (for shared URLs)
+  urlPreviewTitle: varchar("url_preview_title"),
+  urlPreviewDescription: text("url_preview_description"),
+  urlPreviewImage: varchar("url_preview_image"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Community Groups Relations
+export const communityGroupsRelations = relations(communityGroups, ({ one, many }) => ({
+  trainer: one(trainers, {
+    fields: [communityGroups.trainerId],
+    references: [trainers.id],
+  }),
+  members: many(communityMembers),
+  messages: many(communityMessages),
+}));
+
+// Community Members Relations
+export const communityMembersRelations = relations(communityMembers, ({ one }) => ({
+  group: one(communityGroups, {
+    fields: [communityMembers.groupId],
+    references: [communityGroups.id],
+  }),
+  user: one(users, {
+    fields: [communityMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+// Community Messages Relations
+export const communityMessagesRelations = relations(communityMessages, ({ one }) => ({
+  group: one(communityGroups, {
+    fields: [communityMessages.groupId],
+    references: [communityGroups.id],
+  }),
+  sender: one(users, {
+    fields: [communityMessages.senderId],
+    references: [users.id],
+  }),
 }));
