@@ -1839,8 +1839,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!group) {
           group = await storage.createCommunityGroup({
             trainerId: trainer.id,
-            name: `${trainer.firstName || user.username}'s Community`,
-            description: `Community group for ${trainer.firstName || user.username} and their clients`,
+            name: `${user.firstName || user.username}'s Community`,
+            description: `Community group for ${user.firstName || user.username} and their clients`,
             isActive: true,
           });
           
@@ -1876,10 +1876,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(404).json({ message: "Trainer not found" });
           }
           
+          const trainerUser = await storage.getUser(trainer.userId);
           group = await storage.createCommunityGroup({
             trainerId: trainer.id,
-            name: `${trainer.firstName || 'Trainer'}'s Community`,
-            description: `Community group for ${trainer.firstName || 'Trainer'} and their clients`,
+            name: `${trainerUser?.firstName || 'Trainer'}'s Community`,
+            description: `Community group for ${trainerUser?.firstName || 'Trainer'} and their clients`,
             isActive: true,
           });
           
@@ -1934,9 +1935,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       
+      // Prepare message data with senderId from authenticated user
+      const messageData = {
+        ...req.body,
+        senderId: userId, // Always use authenticated user ID
+      };
+      
       // Validate request body with zod
-      const validationResult = insertCommunityMessageSchema.safeParse(req.body);
+      const validationResult = insertCommunityMessageSchema.safeParse(messageData);
       if (!validationResult.success) {
+        console.error('Community message validation failed:', validationResult.error.errors);
         return res.status(400).json({ 
           message: "Invalid message data", 
           errors: validationResult.error.errors 
@@ -1951,13 +1959,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied - not a member of this community" });
       }
       
-      // Create message data with validated input and sender ID
-      const messageData = {
-        ...validationResult.data,
-        senderId: userId,
-      };
-      
-      const communityMessage = await storage.createCommunityMessage(messageData);
+      // Create message using validated data (senderId already included)
+      const communityMessage = await storage.createCommunityMessage(validationResult.data);
       
       // Broadcast to WebSocket clients in the specific community group only
       const broadcastData = {
