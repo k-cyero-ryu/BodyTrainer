@@ -43,6 +43,7 @@ import ClientEvaluationDetail from "@/pages/client-evaluation-detail";
 import ClientEvaluationsList from "@/pages/client-evaluations-list";
 import ClientEvaluationsCompare from "@/pages/client-evaluations-compare";
 import TrainerProfile from "@/pages/trainer-profile";
+import Community from "@/pages/community";
 import Navigation from "@/components/navigation";
 import Chat from "@/components/chat";
 import "@/lib/i18n";
@@ -207,6 +208,7 @@ function Router() {
                   <Route path="/exercises" component={Exercises} />
                   <Route path="/client-payment-plans" component={ClientPaymentPlansPage} />
                   <Route path="/reports" component={Reports} />
+                  <Route path="/community" component={Community} />
                 </>
               )}
               {user?.role === 'client' && (
@@ -218,6 +220,7 @@ function Router() {
                   <Route path="/monthly-evaluation" component={MonthlyEvaluation} />
                   <Route path="/monthly-evaluation-comparison" component={MonthlyEvaluationComparison} />
                   <Route path="/profile" component={ClientProfile} />
+                  <Route path="/community" component={Community} />
                 </>
               )}
               <Route component={NotFound} />

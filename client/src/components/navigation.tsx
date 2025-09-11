@@ -150,6 +150,12 @@ export default function Navigation() {
       label: 'Reports', 
       icon: BarChart3,
       roles: ['trainer']
+    },
+    { 
+      href: '/community', 
+      label: 'Community Chat', 
+      icon: MessageCircle,
+      roles: ['trainer', 'client']
     }
   ].filter(item => item.roles.includes(userRole));
 
