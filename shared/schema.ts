@@ -383,9 +383,6 @@ export const insertMonthlyEvaluationSchema = createInsertSchema(monthlyEvaluatio
 });
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
-export const insertCommunityGroupSchema = createInsertSchema(communityGroups).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertCommunityMemberSchema = createInsertSchema(communityMembers).omit({ id: true, joinedAt: true });
-export const insertCommunityMessageSchema = createInsertSchema(communityMessages).omit({ id: true, createdAt: true });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
@@ -412,12 +409,6 @@ export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Post = typeof posts.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
-export type InsertCommunityGroup = z.infer<typeof insertCommunityGroupSchema>;
-export type CommunityGroup = typeof communityGroups.$inferSelect;
-export type InsertCommunityMember = z.infer<typeof insertCommunityMemberSchema>;
-export type CommunityMember = typeof communityMembers.$inferSelect;
-export type InsertCommunityMessage = z.infer<typeof insertCommunityMessageSchema>;
-export type CommunityMessage = typeof communityMessages.$inferSelect;
 
 // Payment Plans Configuration Table
 // Payment plans table (SuperAdmin creates for trainers)
@@ -541,3 +532,15 @@ export const communityMessagesRelations = relations(communityMessages, ({ one })
     references: [users.id],
   }),
 }));
+
+// Community insert schemas and types (defined after tables)
+export const insertCommunityGroupSchema = createInsertSchema(communityGroups).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCommunityMemberSchema = createInsertSchema(communityMembers).omit({ id: true, joinedAt: true });
+export const insertCommunityMessageSchema = createInsertSchema(communityMessages).omit({ id: true, createdAt: true });
+
+export type InsertCommunityGroup = z.infer<typeof insertCommunityGroupSchema>;
+export type CommunityGroup = typeof communityGroups.$inferSelect;
+export type InsertCommunityMember = z.infer<typeof insertCommunityMemberSchema>;
+export type CommunityMember = typeof communityMembers.$inferSelect;
+export type InsertCommunityMessage = z.infer<typeof insertCommunityMessageSchema>;
+export type CommunityMessage = typeof communityMessages.$inferSelect;

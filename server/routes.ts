@@ -4,8 +4,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { ObjectPermission } from "./objectAcl";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
+import { ObjectPermission, ObjectAclPolicy } from "./objectAcl";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -198,10 +198,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object storage routes - serve public files without authentication
-  app.get("/objects/:objectPath(*)", async (req, res) => {
+  app.get("/objects/:objectPath(*)", async (req: any, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      
+      // Check if user can access this object based on ACL policies
+      const userId = req.user?.id; // User might not be authenticated for public files
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        userId,
+        objectFile,
+        requestedPermission: ObjectPermission.READ,
+      });
+      
+      if (!canAccess) {
+        return res.status(403).json({ error: "Access denied - insufficient permissions" });
+      }
+      
+      // Additional check for community files: verify user is member of the community
+      // Community files are stored in private uploads directory
+      if (req.path.includes('/objects/uploads/') && userId) {
+        // Check if this file is associated with any community messages
+        const isAssociatedWithCommunity = await storage.isFileAssociatedWithUserCommunities(req.path, userId);
+        if (isAssociatedWithCommunity === false) {
+          return res.status(403).json({ error: "Access denied - not authorized for this community file" });
+        }
+      }
+      
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error checking object access:", error);
@@ -1791,6 +1814,197 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating chat message:", error);
       res.status(500).json({ message: "Failed to create chat message" });
+    }
+  });
+
+  // Community Chat routes
+  // Get trainer's community group
+  app.get('/api/community/group', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role === 'trainer') {
+        const trainer = await storage.getTrainerByUserId(userId);
+        if (!trainer) {
+          return res.status(404).json({ message: "Trainer not found" });
+        }
+        
+        const group = await storage.getCommunityGroupByTrainer(trainer.id);
+        res.json(group);
+      } else if (user?.role === 'client') {
+        const client = await storage.getClientByUserId(userId);
+        if (!client || !client.trainerId) {
+          return res.status(404).json({ message: "Client not found or no trainer assigned" });
+        }
+        
+        const group = await storage.getCommunityGroupByTrainer(client.trainerId);
+        res.json(group);
+      } else {
+        return res.status(403).json({ message: "Access denied" });
+      }
+    } catch (error) {
+      console.error("Error fetching community group:", error);
+      res.status(500).json({ message: "Failed to fetch community group" });
+    }
+  });
+
+  // Get community messages
+  app.get('/api/community/:groupId/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { groupId } = req.params;
+      
+      // Check if user is member of the group
+      const isMember = await storage.isCommunityMember(groupId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "Access denied - not a member of this community" });
+      }
+      
+      const messages = await storage.getCommunityMessages(groupId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching community messages:", error);
+      res.status(500).json({ message: "Failed to fetch community messages" });
+    }
+  });
+
+  // Send community message
+  app.post('/api/community/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Validate request body with zod
+      const validationResult = insertCommunityMessageSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid message data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const { groupId } = validationResult.data;
+      
+      // Check if user is member of the group
+      const isMember = await storage.isCommunityMember(groupId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "Access denied - not a member of this community" });
+      }
+      
+      // Create message data with validated input and sender ID
+      const messageData = {
+        ...validationResult.data,
+        senderId: userId,
+      };
+      
+      const communityMessage = await storage.createCommunityMessage(messageData);
+      
+      // Broadcast to WebSocket clients in the community
+      wss.clients.forEach((client: any) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'new_community_message',
+            data: {
+              ...communityMessage,
+              groupId,
+            },
+          }));
+        }
+      });
+      
+      res.status(201).json(communityMessage);
+    } catch (error) {
+      console.error("Error creating community message:", error);
+      res.status(500).json({ message: "Failed to create community message" });
+    }
+  });
+
+  // Get community upload URL for files
+  app.post('/api/community/upload', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { groupId } = req.body;
+      
+      if (!groupId) {
+        return res.status(400).json({ message: "groupId is required" });
+      }
+      
+      // Check if user is member of the group
+      const isMember = await storage.isCommunityMember(groupId, userId);
+      if (!isMember) {
+        return res.status(403).json({ message: "Access denied - not a member of this community" });
+      }
+      
+      const objectStorageService = new ObjectStorageService();
+      const signedUrl = await objectStorageService.getObjectEntityUploadURL();
+      
+      // Extract the object path from the signed URL to create normalized path
+      // The upload URL contains the object path that we need to convert to normalized format
+      const url = new URL(signedUrl);
+      const objectPath = url.pathname.split('/').slice(2).join('/'); // Remove bucket name
+      const normalizedPath = `/objects/${objectPath}`;
+      
+      res.json({ 
+        signedUrl,
+        objectPath: normalizedPath
+      });
+    } catch (error) {
+      console.error("Error getting community upload URL:", error);
+      res.status(500).json({ message: "Failed to get upload URL" });
+    }
+  });
+
+  // Initialize community group for trainer (called when trainer is approved)
+  app.post('/api/community/initialize', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Only trainers can initialize community groups" });
+      }
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      
+      // Check if community already exists
+      const existingGroup = await storage.getCommunityGroupByTrainer(trainer.id);
+      if (existingGroup) {
+        return res.json(existingGroup);
+      }
+      
+      // Create community group
+      const groupData = {
+        trainerId: trainer.id,
+        name: `${user.firstName} ${user.lastName}'s Training Community`,
+        description: 'A community space for trainer and clients to share progress, motivation, and support.',
+      };
+      
+      const group = await storage.createCommunityGroup(groupData);
+      
+      // Add trainer as admin member
+      await storage.addCommunityMember({
+        groupId: group.id,
+        userId: userId,
+        role: 'admin',
+      });
+      
+      // Add all trainer's clients as members
+      const clients = await storage.getClientsByTrainer(trainer.id);
+      for (const client of clients) {
+        await storage.addCommunityMember({
+          groupId: group.id,
+          userId: client.userId,
+          role: 'member',
+        });
+      }
+      
+      res.status(201).json(group);
+    } catch (error) {
+      console.error("Error initializing community group:", error);
+      res.status(500).json({ message: "Failed to initialize community group" });
     }
   });
 

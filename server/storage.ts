@@ -10,6 +10,9 @@ import {
   monthlyEvaluations,
   posts,
   chatMessages,
+  communityGroups,
+  communityMembers,
+  communityMessages,
   paymentPlans,
   clientPaymentPlans,
   type User,
@@ -34,6 +37,12 @@ import {
   type InsertPost,
   type ChatMessage,
   type InsertChatMessage,
+  type CommunityGroup,
+  type InsertCommunityGroup,
+  type CommunityMember,
+  type InsertCommunityMember,
+  type CommunityMessage,
+  type InsertCommunityMessage,
   type PaymentPlan,
   type InsertPaymentPlan,
   type ClientPaymentPlan,
@@ -123,6 +132,14 @@ export interface IStorage {
   getChatMessages(userId1: string, userId2: string): Promise<ChatMessage[]>;
   markMessagesAsRead(receiverId: string, senderId: string): Promise<void>;
   canTrainerChatWithUser(trainerId: string, targetUserId: string): Promise<boolean>;
+  
+  // Community operations
+  createCommunityGroup(group: InsertCommunityGroup): Promise<CommunityGroup>;
+  getCommunityGroupByTrainer(trainerId: string): Promise<CommunityGroup | undefined>;
+  addCommunityMember(member: InsertCommunityMember): Promise<CommunityMember>;
+  isCommunityMember(groupId: string, userId: string): Promise<boolean>;
+  createCommunityMessage(message: InsertCommunityMessage): Promise<CommunityMessage>;
+  getCommunityMessages(groupId: string): Promise<CommunityMessage[]>;
 
   // Payment plan operations (SuperAdmin manages trainer payment plans)
   getAllPaymentPlans(): Promise<PaymentPlan[]>;
@@ -1163,6 +1180,132 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(clients.id, clientId));
+  }
+
+  // Community operations
+  async createCommunityGroup(group: InsertCommunityGroup): Promise<CommunityGroup> {
+    const [created] = await db
+      .insert(communityGroups)
+      .values(group)
+      .returning();
+    return created;
+  }
+
+  async getCommunityGroupByTrainer(trainerId: string): Promise<CommunityGroup | undefined> {
+    const [group] = await db
+      .select()
+      .from(communityGroups)
+      .where(and(
+        eq(communityGroups.trainerId, trainerId),
+        eq(communityGroups.isActive, true)
+      ));
+    return group;
+  }
+
+  async addCommunityMember(member: InsertCommunityMember): Promise<CommunityMember> {
+    const [created] = await db
+      .insert(communityMembers)
+      .values(member)
+      .returning();
+    return created;
+  }
+
+  async isCommunityMember(groupId: string, userId: string): Promise<boolean> {
+    const [member] = await db
+      .select()
+      .from(communityMembers)
+      .where(and(
+        eq(communityMembers.groupId, groupId),
+        eq(communityMembers.userId, userId)
+      ));
+    return !!member;
+  }
+
+  async createCommunityMessage(message: InsertCommunityMessage): Promise<CommunityMessage> {
+    const [created] = await db
+      .insert(communityMessages)
+      .values(message)
+      .returning();
+    
+    // Get the message with sender information
+    const [messageWithSender] = await db
+      .select({
+        id: communityMessages.id,
+        groupId: communityMessages.groupId,
+        senderId: communityMessages.senderId,
+        message: communityMessages.message,
+        messageType: communityMessages.messageType,
+        attachmentUrl: communityMessages.attachmentUrl,
+        attachmentName: communityMessages.attachmentName,
+        attachmentType: communityMessages.attachmentType,
+        attachmentSize: communityMessages.attachmentSize,
+        urlPreviewTitle: communityMessages.urlPreviewTitle,
+        urlPreviewDescription: communityMessages.urlPreviewDescription,
+        urlPreviewImage: communityMessages.urlPreviewImage,
+        createdAt: communityMessages.createdAt,
+        senderFirstName: users.firstName,
+        senderLastName: users.lastName,
+        senderRole: users.role,
+      })
+      .from(communityMessages)
+      .innerJoin(users, eq(communityMessages.senderId, users.id))
+      .where(eq(communityMessages.id, created.id));
+    
+    return messageWithSender as any;
+  }
+
+  async getCommunityMessages(groupId: string): Promise<CommunityMessage[]> {
+    const messages = await db
+      .select({
+        id: communityMessages.id,
+        groupId: communityMessages.groupId,
+        senderId: communityMessages.senderId,
+        message: communityMessages.message,
+        messageType: communityMessages.messageType,
+        attachmentUrl: communityMessages.attachmentUrl,
+        attachmentName: communityMessages.attachmentName,
+        attachmentType: communityMessages.attachmentType,
+        attachmentSize: communityMessages.attachmentSize,
+        urlPreviewTitle: communityMessages.urlPreviewTitle,
+        urlPreviewDescription: communityMessages.urlPreviewDescription,
+        urlPreviewImage: communityMessages.urlPreviewImage,
+        createdAt: communityMessages.createdAt,
+        senderFirstName: users.firstName,
+        senderLastName: users.lastName,
+        senderRole: users.role,
+      })
+      .from(communityMessages)
+      .innerJoin(users, eq(communityMessages.senderId, users.id))
+      .where(eq(communityMessages.groupId, groupId))
+      .orderBy(desc(communityMessages.createdAt));
+    
+    return messages as any;
+  }
+
+  async isFileAssociatedWithUserCommunities(filePath: string, userId: string): Promise<boolean | undefined> {
+    // Find all community messages that use this file as attachment
+    const messagesWithFile = await db
+      .select({
+        groupId: communityMessages.groupId,
+      })
+      .from(communityMessages)
+      .where(eq(communityMessages.attachmentUrl, filePath));
+
+    if (messagesWithFile.length === 0) {
+      // File is not associated with any community messages
+      return undefined;
+    }
+
+    // Check if user is a member of any of the groups that use this file
+    for (const messageGroup of messagesWithFile) {
+      const isMember = await this.isCommunityMember(messageGroup.groupId, userId);
+      if (isMember) {
+        return true;
+      }
+    }
+
+    // User is not a member of any group that uses this file
+    return false;
   }
 }
 
