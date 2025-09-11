@@ -2355,26 +2355,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DEV ONLY: Account switcher for testing
-  app.post('/api/dev/switch-account', async (req, res) => {
-    try {
-      const { accountId } = req.body;
-      if (!accountId) {
-        return res.status(400).json({ message: "Account ID required" });
-      }
-
-      // Mock session switch by updating session user
-      if (req.session && req.user) {
-        req.user.claims = { ...req.user.claims, sub: accountId };
-        req.session.passport = { user: req.user };
-      }
-
-      res.json({ success: true, message: "Account switched successfully" });
-    } catch (error) {
-      console.error("Error switching account:", error);
-      res.status(500).json({ message: "Failed to switch account" });
-    }
-  });
 
   return httpServer;
 }
