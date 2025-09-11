@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -72,28 +73,57 @@ export default function TrainerProfile() {
   const trainerForm = useForm<TrainerProfileData>({
     resolver: zodResolver(trainerProfileSchema),
     defaultValues: {
-      expertise: (trainerProfile as any)?.expertise || "",
-      experience: (trainerProfile as any)?.experience || "",
-      bio: (trainerProfile as any)?.bio || "",
-      phone: (trainerProfile as any)?.phone || "",
-      location: (trainerProfile as any)?.location || "",
-      address: (trainerProfile as any)?.address || "",
-      website: (trainerProfile as any)?.website || "",
-      certifications: (trainerProfile as any)?.certifications || [],
-      specializations: (trainerProfile as any)?.specializations || [],
-      socialMedia: (trainerProfile as any)?.socialMedia || {},
+      expertise: "",
+      experience: "",
+      bio: "",
+      phone: "",
+      location: "",
+      address: "",
+      website: "",
+      certifications: [],
+      specializations: [],
+      socialMedia: {},
     },
   });
+
+  // Reset form values when data loads or when entering edit mode
+  React.useEffect(() => {
+    if (clientsData && isEditing) {
+      trainerForm.reset({
+        expertise: (clientsData as any)?.expertise || "",
+        experience: (clientsData as any)?.experience || "",
+        bio: (clientsData as any)?.bio || "",
+        phone: (clientsData as any)?.phone || "",
+        location: (clientsData as any)?.location || "",
+        address: (clientsData as any)?.address || "",
+        website: (clientsData as any)?.website || "",
+        certifications: (clientsData as any)?.certifications || [],
+        specializations: (clientsData as any)?.specializations || [],
+        socialMedia: (clientsData as any)?.socialMedia || {},
+      });
+    }
+  }, [clientsData, isEditing, trainerForm]);
 
   // Form for user profile
   const userForm = useForm<UserProfileData>({
     resolver: zodResolver(userProfileSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      email: user?.email || "",
+      firstName: "",
+      lastName: "",
+      email: "",
     },
   });
+
+  // Reset user form when entering edit mode
+  React.useEffect(() => {
+    if (user && isEditing) {
+      userForm.reset({
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        email: user?.email || "",
+      });
+    }
+  }, [user, isEditing, userForm]);
 
   // Update trainer profile mutation
   const updateTrainerMutation = useMutation({
