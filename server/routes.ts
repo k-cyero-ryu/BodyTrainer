@@ -261,7 +261,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         clients,
         referralCode: trainer.referralCode,
-        referralUrl
+        referralUrl,
+        // Include trainer profile data for the profile page
+        ...trainer
       });
     } catch (error) {
       console.error("Error fetching trainer clients:", error);
