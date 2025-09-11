@@ -92,6 +92,12 @@ export default function Navigation() {
       roles: ['superadmin']
     },
     { 
+      href: '/profile', 
+      label: 'Profile', 
+      icon: User,
+      roles: ['trainer']
+    },
+    { 
       href: '/clients', 
       label: 'My Clients', 
       icon: Users,

@@ -42,6 +42,7 @@ import Reports from "@/pages/reports";
 import ClientEvaluationDetail from "@/pages/client-evaluation-detail";
 import ClientEvaluationsList from "@/pages/client-evaluations-list";
 import ClientEvaluationsCompare from "@/pages/client-evaluations-compare";
+import TrainerProfile from "@/pages/trainer-profile";
 import Navigation from "@/components/navigation";
 import Chat from "@/components/chat";
 import "@/lib/i18n";
@@ -194,6 +195,7 @@ function Router() {
               {user?.role === 'trainer' && (
                 <>
                   <Route path="/" component={TrainerDashboard} />
+                  <Route path="/profile" component={TrainerProfile} />
                   <Route path="/clients" component={Clients} />
                   <Route path="/clients/:clientId/edit" component={EditClient} />
                   <Route path="/clients/:clientId" component={ClientDetail} />

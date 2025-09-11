@@ -325,6 +325,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update trainer profile
+  app.put('/api/trainers/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+
+      // Validate the request body using the insertTrainerSchema (minus required fields)
+      const validatedData = insertTrainerSchema.partial().parse(req.body);
+
+      // Update trainer profile
+      const updatedTrainer = await storage.updateTrainer(trainer.id, validatedData);
+      res.json(updatedTrainer);
+    } catch (error) {
+      console.error("Error updating trainer profile:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update trainer profile" });
+    }
+  });
+
+  // Update user profile (for personal info like name, email)
+  app.put('/api/auth/user/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Only allow updating specific fields
+      const allowedFields = ['firstName', 'lastName', 'email'];
+      const updateData = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      // Update user profile
+      const updatedUser = await storage.upsertUser({
+        ...user,
+        ...updateData,
+        updatedAt: new Date(),
+      });
+
+      res.json({
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role,
+        status: updatedUser.status,
+      });
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+
   // Current trainer stats
   app.get('/api/trainers/stats', isAuthenticated, async (req: any, res) => {
     try {
