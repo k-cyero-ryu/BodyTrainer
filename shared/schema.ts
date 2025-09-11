@@ -53,6 +53,15 @@ export const trainers = pgTable("trainers", {
   referralCode: varchar("referral_code").unique().notNull(),
   expertise: text("expertise"),
   experience: varchar("experience"),
+  bio: text("bio"), // Professional bio/description
+  phone: varchar("phone"),
+  location: varchar("location"),
+  address: text("address"),
+  certifications: jsonb("certifications").default('[]'), // Array of certification objects
+  specializations: jsonb("specializations").default('[]'), // Array of specialization areas
+  socialMedia: jsonb("social_media").default('{}'), // Object with social media links
+  website: varchar("website"),
+  availabilitySchedule: jsonb("availability_schedule").default('{}'), // Weekly schedule object
   gallery: jsonb("gallery").default('[]'),
   monthlyRevenue: decimal("monthly_revenue", { precision: 10, scale: 2 }).default('0'),
   paymentPlanId: varchar("payment_plan_id").references(() => paymentPlans.id), // Assigned by SuperAdmin
