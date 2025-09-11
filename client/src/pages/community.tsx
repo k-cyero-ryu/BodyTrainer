@@ -243,7 +243,7 @@ export default function Community() {
     if (msg.messageType === 'file' && msg.attachmentUrl) {
       return (
         <div className="space-y-2">
-          <p className="text-sm">{msg.message}</p>
+          <p className="text-base font-medium">{msg.message}</p>
           <div className="bg-muted p-3 rounded-lg border">
             <div className="flex items-center space-x-2">
               {getFileIcon(msg.attachmentType || '')}
@@ -270,7 +270,7 @@ export default function Community() {
     if (msg.messageType === 'url' && msg.urlPreviewTitle) {
       return (
         <div className="space-y-2">
-          <p className="text-sm">{msg.message}</p>
+          <p className="text-base font-medium">{msg.message}</p>
           <div className="bg-muted p-3 rounded-lg border">
             <div className="flex items-start space-x-3">
               <LinkIcon className="w-5 h-5 mt-1 text-muted-foreground" />
@@ -288,7 +288,7 @@ export default function Community() {
       );
     }
 
-    return <p className="text-sm">{msg.message}</p>;
+    return <p className="text-base font-medium">{msg.message}</p>;
   };
 
   if (groupLoading) {
@@ -369,7 +369,7 @@ export default function Community() {
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium text-sm" data-testid={`text-sender-${msg.id}`}>
+                        <span className="font-normal text-xs text-muted-foreground" data-testid={`text-sender-${msg.id}`}>
                           {msg.senderFirstName} {msg.senderLastName}
                         </span>
                         <Badge variant={msg.senderRole === 'trainer' ? 'default' : 'secondary'} className="text-xs">
