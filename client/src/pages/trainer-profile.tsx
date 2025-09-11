@@ -58,15 +58,15 @@ export default function TrainerProfile() {
   const [newCertification, setNewCertification] = useState({ name: "", issuer: "", year: "" });
   const [newSpecialization, setNewSpecialization] = useState("");
 
-  // Fetch trainer profile data
-  const { data: profileData, isLoading } = useQuery({
-    queryKey: ["/api/trainers/profile"], // Use the profile endpoint directly
+  // Fetch trainer profile data using the working clients endpoint
+  const { data: clientsData, isLoading } = useQuery({
+    queryKey: ["/api/trainers/clients"],
     enabled: !!user && user.role === 'trainer',
   });
 
   // Extract profile information from the API response
-  const trainerProfile = profileData || {};
-  const referralCode = profileData?.referralCode;
+  const trainerProfile = clientsData || {};
+  const referralCode = clientsData?.referralCode;
 
   // Form for trainer profile
   const trainerForm = useForm<TrainerProfileData>({
@@ -101,7 +101,6 @@ export default function TrainerProfile() {
       return await apiRequest('PUT', '/api/trainers/profile', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trainers/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/trainers/clients"] });
       toast({
         title: "Profile Updated",
@@ -125,7 +124,7 @@ export default function TrainerProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/trainers/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trainers/clients"] });
       toast({
         title: "Personal Info Updated",
         description: "Your personal information has been updated successfully.",
