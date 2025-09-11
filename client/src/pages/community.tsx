@@ -53,15 +53,20 @@ export default function Community() {
   });
 
   // Get community messages
-  const { data: messages = [], isLoading: messagesLoading } = useQuery<CommunityMessage[]>({
+  const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<CommunityMessage[]>({
     queryKey: ['/api/community/messages', group?.id],
     queryFn: async () => {
       if (!group?.id) return [];
+      console.log('Fetching messages for group:', group.id);
       const response = await fetch(`/api/community/messages/${group.id}`);
       if (!response.ok) throw new Error('Failed to fetch messages');
-      return response.json();
+      const data = await response.json();
+      console.log('Messages received:', data);
+      return data;
     },
     enabled: !!group?.id,
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache data
   });
 
   // Create message mutation
@@ -77,6 +82,7 @@ export default function Community() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/community/messages'] });
+      refetchMessages(); // Force refetch messages
       setMessage("");
     },
     onError: (error: any) => {
