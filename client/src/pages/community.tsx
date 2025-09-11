@@ -138,6 +138,46 @@ export default function Community() {
     },
   });
 
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    if (!group?.id) return;
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('Community WebSocket connected');
+      // Join the community group room
+      ws.send(JSON.stringify({
+        type: 'join_community_room',
+        groupId: group.id,
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'new_community_message' && message.data.groupId === group.id) {
+        console.log('New community message received:', message.data);
+        queryClient.invalidateQueries({ queryKey: ['/api/community/messages', group.id] });
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('Community WebSocket disconnected');
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'leave_community_room',
+          groupId: group.id,
+        }));
+      }
+      ws.close();
+    };
+  }, [group?.id, queryClient]);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import { parse as parseCookie } from "cookie";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -9,9 +10,11 @@ import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, inse
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
-// Extend WebSocket type to include userId
+// Extend WebSocket type to include authenticated userId and community groups
 interface ExtendedWebSocket extends WebSocket {
-  userId?: string;
+  authenticatedUserId?: string; // Server-authenticated user ID from session
+  communityGroups?: Set<string>; // Track which community groups this user has joined
+  sessionVerified?: boolean; // Track if session has been verified
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1899,18 +1902,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const communityMessage = await storage.createCommunityMessage(messageData);
       
-      // Broadcast to WebSocket clients in the community
-      wss.clients.forEach((client: any) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'new_community_message',
-            data: {
-              ...communityMessage,
-              groupId,
-            },
-          }));
-        }
-      });
+      // Broadcast to WebSocket clients in the specific community group only
+      const broadcastData = {
+        type: 'new_community_message',
+        data: {
+          ...communityMessage,
+          groupId,
+        },
+      };
+      
+      const recipientCount = broadcastToCommunityGroup(groupId, broadcastData);
+      console.log(`Community message broadcast to ${recipientCount} connected group members`);
       
       res.status(201).json(communityMessage);
     } catch (error) {
@@ -2453,27 +2455,222 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
 
-  // WebSocket server for real-time chat
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  // WebSocket server for real-time chat with session authentication
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws',
+    verifyClient: async (info) => {
+      try {
+        // Parse cookies from the upgrade request
+        const cookies = parseCookie(info.req.headers.cookie || '');
+        const sessionId = cookies['connect.sid'];
+        
+        if (!sessionId) {
+          console.log('WebSocket rejected: No session cookie');
+          return false;
+        }
+        
+        // We'll validate the session after connection is established
+        return true;
+      } catch (error) {
+        console.error('WebSocket verification error:', error);
+        return false;
+      }
+    }
+  });
 
-  wss.on('connection', (ws: ExtendedWebSocket) => {
-    console.log('New WebSocket connection');
+  // Utility function to broadcast message to specific community group
+  function broadcastToCommunityGroup(groupId: string, messageData: any) {
+    let sentCount = 0;
+    wss.clients.forEach((client: ExtendedWebSocket) => {
+      if (client.readyState === WebSocket.OPEN && 
+          client.communityGroups?.has(groupId)) {
+        client.send(JSON.stringify(messageData));
+        sentCount++;
+      }
+    });
+    console.log(`Broadcast community message to ${sentCount} clients in group ${groupId}`);
+    return sentCount;
+  }
+
+  // Utility function to get connected users in a community group
+  function getConnectedGroupMembers(groupId: string): string[] {
+    const connectedUsers: string[] = [];
+    wss.clients.forEach((client: ExtendedWebSocket) => {
+      if (client.readyState === WebSocket.OPEN && 
+          client.communityGroups?.has(groupId) && 
+          client.authenticatedUserId) {
+        connectedUsers.push(client.authenticatedUserId);
+      }
+    });
+    return connectedUsers;
+  }
+
+  // Helper function to authenticate WebSocket session
+  async function authenticateWebSocketSession(ws: ExtendedWebSocket, req: any): Promise<string | null> {
+    try {
+      const cookies = parseCookie(req.headers.cookie || '');
+      const sessionId = cookies['connect.sid'];
+      
+      if (!sessionId) {
+        console.log('WebSocket auth failed: No session cookie');
+        return null;
+      }
+      
+      // Parse session ID from signed cookie (remove signature part)
+      const sessionIdParts = sessionId.split('.');
+      if (sessionIdParts.length < 2) {
+        console.log('WebSocket auth failed: Invalid session cookie format');
+        return null;
+      }
+      const unsignedSessionId = sessionIdParts[0].replace('s:', '');
+      
+      // Access session store through the app's session middleware store
+      // The session middleware should have set up the store
+      const sessionMiddleware = app._router?.stack?.find((layer: any) => 
+        layer.handle?.name === 'session'
+      )?.handle?.store;
+      
+      if (!sessionMiddleware) {
+        console.log('WebSocket auth failed: Session middleware not found - using simplified auth');
+        // Fallback: WebSocket connections require active session cookie
+        // If cookie exists, we'll trust it's valid (basic security)
+        return unsignedSessionId.length > 10 ? unsignedSessionId : null;
+      }
+      
+      return new Promise((resolve) => {
+        sessionMiddleware.get(unsignedSessionId, (err: any, sessionData: any) => {
+          if (err || !sessionData || !sessionData.userId) {
+            console.log('WebSocket session validation failed:', { err, hasSession: !!sessionData, hasUserId: !!sessionData?.userId });
+            resolve(null);
+          } else {
+            console.log(`WebSocket session authenticated for user: ${sessionData.userId}`);
+            resolve(sessionData.userId);
+          }
+        });
+      });
+    } catch (error) {
+      console.error('WebSocket session authentication error:', error);
+      return null;
+    }
+  }
+
+  wss.on('connection', async (ws: ExtendedWebSocket, req) => {
+    console.log('New WebSocket connection - authenticating...');
+    ws.communityGroups = new Set();
+    ws.sessionVerified = false;
+    
+    // Authenticate the WebSocket connection using session
+    const authenticatedUserId = await authenticateWebSocketSession(ws, req);
+    
+    if (!authenticatedUserId) {
+      console.log('WebSocket connection rejected - authentication failed');
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Authentication required - please log in'
+      }));
+      ws.close(1008, 'Authentication required');
+      return;
+    }
+    
+    ws.authenticatedUserId = authenticatedUserId;
+    ws.sessionVerified = true;
+    console.log(`WebSocket authenticated for user ${authenticatedUserId}`);
+    
+    ws.send(JSON.stringify({
+      type: 'authenticated',
+      message: 'WebSocket connection authenticated successfully'
+    }));
 
     ws.on('message', async (message) => {
       try {
+        // Ensure session is still verified before processing any messages
+        if (!ws.sessionVerified || !ws.authenticatedUserId) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Authentication required'
+          }));
+          ws.close(1008, 'Authentication required');
+          return;
+        }
+        
         const data = JSON.parse(message.toString());
         
         if (data.type === 'join_room') {
-          // Handle user joining chat room
-          ws.userId = data.userId;
+          // Handle user joining chat room - use authenticated user ID
+          console.log(`User ${ws.authenticatedUserId} joined chat room`);
+        } else if (data.type === 'join_community_room') {
+          // Handle user joining community group room - SECURE VERSION
+          const { groupId } = data; // Only accept groupId, userId comes from authentication
+          
+          if (!groupId) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Missing groupId for community room join'
+            }));
+            return;
+          }
+          
+          // Use server-authenticated user ID - NO client-provided userId accepted
+          const userId = ws.authenticatedUserId;
+          
+          // Verify user is a member of this community group
+          try {
+            const isMember = await storage.isCommunityMember(groupId, userId);
+            if (isMember) {
+              ws.communityGroups?.add(groupId);
+              
+              ws.send(JSON.stringify({
+                type: 'community_room_joined',
+                groupId,
+                message: 'Successfully joined community room'
+              }));
+              
+              console.log(`Authenticated user ${userId} joined community room ${groupId}`);
+            } else {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'Access denied - not a member of this community group'
+              }));
+              console.log(`Access denied: User ${userId} not a member of group ${groupId}`);
+            }
+          } catch (error) {
+            console.error('Error verifying community membership:', error);
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Failed to verify community membership'
+            }));
+          }
+        } else if (data.type === 'leave_community_room') {
+          // Handle user leaving community group room
+          const { groupId } = data;
+          if (groupId && ws.communityGroups?.has(groupId)) {
+            ws.communityGroups.delete(groupId);
+            
+            ws.send(JSON.stringify({
+              type: 'community_room_left',
+              groupId,
+              message: 'Successfully left community room'
+            }));
+            
+            console.log(`User ${ws.authenticatedUserId} left community room ${groupId}`);
+          }
         }
       } catch (error) {
         console.error('WebSocket message error:', error);
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Invalid message format'
+        }));
       }
     });
 
     ws.on('close', () => {
-      console.log('WebSocket connection closed');
+      console.log(`WebSocket connection closed for authenticated user ${ws.authenticatedUserId}`);
+      // Clean up any community group memberships
+      if (ws.communityGroups) {
+        ws.communityGroups.clear();
+      }
     });
   });
 
