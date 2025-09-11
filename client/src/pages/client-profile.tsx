@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   User, 
   Mail, 
@@ -24,7 +25,16 @@ import {
   Save,
   Edit2,
   X,
-  Camera
+  Camera,
+  MapPin,
+  Globe,
+  Instagram,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Award,
+  Star,
+  Info
 } from "lucide-react";
 
 export default function ClientProfile() {
@@ -32,6 +42,7 @@ export default function ClientProfile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [trainerDialogOpen, setTrainerDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -397,18 +408,210 @@ export default function ClientProfile() {
           </CardHeader>
           <CardContent>
             {clientProfile.trainer ? (
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">
-                    {clientProfile.trainer.firstName} {clientProfile.trainer.lastName}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{clientProfile.trainer.email}</p>
-                  <Badge variant="outline" className="mt-1">Personal Trainer</Badge>
-                </div>
-              </div>
+              <Dialog open={trainerDialogOpen} onOpenChange={setTrainerDialogOpen}>
+                <DialogTrigger asChild>
+                  <div 
+                    className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors group"
+                    data-testid="trainer-info-trigger"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium group-hover:text-primary transition-colors">
+                        {clientProfile.trainer.firstName} {clientProfile.trainer.lastName}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{clientProfile.trainer.email}</p>
+                      <Badge variant="outline" className="mt-1">Personal Trainer</Badge>
+                    </div>
+                    <Info className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="trainer-details-dialog">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Trainer Details
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6">
+                    {/* Trainer Header */}
+                    <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-8 w-8 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold" data-testid="trainer-name">
+                          {clientProfile.trainer.firstName} {clientProfile.trainer.lastName}
+                        </h2>
+                        <p className="text-muted-foreground flex items-center gap-1" data-testid="trainer-email">
+                          <Mail className="h-4 w-4" />
+                          {clientProfile.trainer.email}
+                        </p>
+                        <Badge variant="default" className="mt-2">Certified Personal Trainer</Badge>
+                      </div>
+                    </div>
+
+                    {/* Professional Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Professional Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {clientProfile.trainer.expertise && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Expertise</p>
+                            <p className="font-medium" data-testid="trainer-expertise">{clientProfile.trainer.expertise}</p>
+                          </div>
+                        )}
+                        {clientProfile.trainer.experience && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Experience</p>
+                            <p className="font-medium" data-testid="trainer-experience">{clientProfile.trainer.experience}</p>
+                          </div>
+                        )}
+                      </div>
+                      {clientProfile.trainer.bio && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Bio</p>
+                          <p className="text-gray-900" data-testid="trainer-bio">{clientProfile.trainer.bio}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contact Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Contact Information</h3>
+                      <div className="space-y-3">
+                        {clientProfile.trainer.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <span data-testid="trainer-phone">{clientProfile.trainer.phone}</span>
+                          </div>
+                        )}
+                        {clientProfile.trainer.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span data-testid="trainer-location">{clientProfile.trainer.location}</span>
+                          </div>
+                        )}
+                        {clientProfile.trainer.address && (
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Address</p>
+                            <p data-testid="trainer-address">{clientProfile.trainer.address}</p>
+                          </div>
+                        )}
+                        {clientProfile.trainer.website && (
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <a 
+                              href={clientProfile.trainer.website} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                              data-testid="trainer-website"
+                            >
+                              {clientProfile.trainer.website}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Certifications */}
+                    {clientProfile.trainer.certifications && clientProfile.trainer.certifications.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <Award className="h-5 w-5" />
+                          Certifications
+                        </h3>
+                        <div className="space-y-2">
+                          {clientProfile.trainer.certifications.map((cert: any, index: number) => (
+                            <div key={index} className="p-3 bg-muted/30 rounded-lg" data-testid={`certification-${index}`}>
+                              <p className="font-medium">{cert.name}</p>
+                              {cert.issuer && <p className="text-sm text-muted-foreground">{cert.issuer}</p>}
+                              {cert.year && <p className="text-xs text-muted-foreground">{cert.year}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Specializations */}
+                    {clientProfile.trainer.specializations && clientProfile.trainer.specializations.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <Star className="h-5 w-5" />
+                          Specializations
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {clientProfile.trainer.specializations.map((spec: string, index: number) => (
+                            <Badge key={index} variant="secondary" data-testid={`specialization-${index}`}>
+                              {spec}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Social Media */}
+                    {clientProfile.trainer.socialMedia && Object.keys(clientProfile.trainer.socialMedia).length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold">Social Media</h3>
+                        <div className="space-y-2">
+                          {clientProfile.trainer.socialMedia.instagram && (
+                            <a 
+                              href={`https://instagram.com/${clientProfile.trainer.socialMedia.instagram}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-pink-500 hover:underline"
+                              data-testid="trainer-instagram"
+                            >
+                              <Instagram className="h-4 w-4" />
+                              @{clientProfile.trainer.socialMedia.instagram}
+                            </a>
+                          )}
+                          {clientProfile.trainer.socialMedia.facebook && (
+                            <a 
+                              href={clientProfile.trainer.socialMedia.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-blue-600 hover:underline"
+                              data-testid="trainer-facebook"
+                            >
+                              <Facebook className="h-4 w-4" />
+                              Facebook
+                            </a>
+                          )}
+                          {clientProfile.trainer.socialMedia.twitter && (
+                            <a 
+                              href={`https://twitter.com/${clientProfile.trainer.socialMedia.twitter}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-blue-400 hover:underline"
+                              data-testid="trainer-twitter"
+                            >
+                              <Twitter className="h-4 w-4" />
+                              @{clientProfile.trainer.socialMedia.twitter}
+                            </a>
+                          )}
+                          {clientProfile.trainer.socialMedia.linkedin && (
+                            <a 
+                              href={clientProfile.trainer.socialMedia.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-blue-700 hover:underline"
+                              data-testid="trainer-linkedin"
+                            >
+                              <Linkedin className="h-4 w-4" />
+                              LinkedIn
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
             ) : (
               <p className="text-muted-foreground">No trainer assigned yet.</p>
             )}
