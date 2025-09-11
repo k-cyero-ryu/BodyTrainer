@@ -60,11 +60,11 @@ export default function TrainerProfile() {
 
   // Fetch trainer profile data
   const { data: profileData, isLoading } = useQuery({
-    queryKey: ["/api/trainers/clients"], // Use the working endpoint
+    queryKey: ["/api/trainers/profile"], // Use the profile endpoint directly
     enabled: !!user && user.role === 'trainer',
   });
 
-  // Extract profile information from the working API response
+  // Extract profile information from the API response
   const trainerProfile = profileData || {};
   const referralCode = profileData?.referralCode;
 
@@ -101,8 +101,8 @@ export default function TrainerProfile() {
       return await apiRequest('PUT', '/api/trainers/profile', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trainers/clients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/trainers/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trainers/clients"] });
       toast({
         title: "Profile Updated",
         description: "Your trainer profile has been updated successfully.",
@@ -125,6 +125,7 @@ export default function TrainerProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trainers/profile"] });
       toast({
         title: "Personal Info Updated",
         description: "Your personal information has been updated successfully.",
