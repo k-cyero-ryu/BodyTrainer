@@ -302,12 +302,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       console.log('[DEBUG] Found user:', user);
       
-      // Get assigned payment plan
+      // Get assigned payment plan via storage to avoid direct db access
       let paymentPlan = null;
       if (trainer.paymentPlanId) {
-        const [plan] = await db.select().from(paymentPlans).where(eq(paymentPlans.id, trainer.paymentPlanId));
-        paymentPlan = plan;
-        console.log('[DEBUG] Found payment plan:', paymentPlan);
+        try {
+          const plans = await storage.getPaymentPlans();
+          paymentPlan = plans.find(plan => plan.id === trainer.paymentPlanId);
+          console.log('[DEBUG] Found payment plan:', paymentPlan);
+        } catch (error) {
+          console.log('[DEBUG] Error fetching payment plan:', error);
+        }
       }
       
       res.json({
