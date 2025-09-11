@@ -1833,7 +1833,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Trainer not found" });
         }
         
-        const group = await storage.getCommunityGroupByTrainer(trainer.id);
+        let group = await storage.getCommunityGroupByTrainer(trainer.id);
+        
+        // Auto-create community group if it doesn't exist
+        if (!group) {
+          group = await storage.createCommunityGroup({
+            trainerId: trainer.id,
+            name: `${trainer.firstName || user.username}'s Community`,
+            description: `Community group for ${trainer.firstName || user.username} and their clients`,
+            isActive: true,
+          });
+          
+          // Add trainer as a community member
+          await storage.addCommunityMember({
+            groupId: group.id,
+            userId: userId,
+          });
+          
+          // Add all trainer's clients as community members
+          const clients = await storage.getClientsByTrainer(trainer.id);
+          for (const client of clients) {
+            await storage.addCommunityMember({
+              groupId: group.id,
+              userId: client.userId,
+            });
+          }
+        }
+        
         res.json(group);
       } else if (user?.role === 'client') {
         const client = await storage.getClientByUserId(userId);
@@ -1841,7 +1867,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Client not found or no trainer assigned" });
         }
         
-        const group = await storage.getCommunityGroupByTrainer(client.trainerId);
+        let group = await storage.getCommunityGroupByTrainer(client.trainerId);
+        
+        // Auto-create community group if it doesn't exist
+        if (!group) {
+          const trainer = await storage.getTrainer(client.trainerId);
+          if (!trainer) {
+            return res.status(404).json({ message: "Trainer not found" });
+          }
+          
+          group = await storage.createCommunityGroup({
+            trainerId: trainer.id,
+            name: `${trainer.firstName || 'Trainer'}'s Community`,
+            description: `Community group for ${trainer.firstName || 'Trainer'} and their clients`,
+            isActive: true,
+          });
+          
+          // Add trainer as a community member
+          await storage.addCommunityMember({
+            groupId: group.id,
+            userId: trainer.userId,
+          });
+          
+          // Add all trainer's clients as community members
+          const clients = await storage.getClientsByTrainer(trainer.id);
+          for (const clientMember of clients) {
+            await storage.addCommunityMember({
+              groupId: group.id,
+              userId: clientMember.userId,
+            });
+          }
+        }
+        
         res.json(group);
       } else {
         return res.status(403).json({ message: "Access denied" });

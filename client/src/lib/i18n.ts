@@ -97,6 +97,14 @@ const resources = {
       'chat.online': 'Online',
       'chat.noConversations': 'No conversations available',
       
+      // Community
+      'no_community_group': 'No Community Group',
+      'community_group_info': 'You will have access to a community group once you have clients or are assigned to a trainer.',
+      'no_messages_yet': 'No messages yet',
+      'start_conversation': 'Start the conversation by sending a message!',
+      'failed_to_send_message': 'Failed to send message',
+      'error': 'Error',
+      
       // Client Dashboard
       'client.dashboard': 'My Dashboard',
       'client.workoutsThisWeek': 'Workouts This Week',
@@ -160,6 +168,14 @@ const resources = {
       'dashboard.clientProgress': 'Progreso de Clientes',
       'dashboard.referralCode': 'Tu Código de Referencia',
       'dashboard.upcomingEvaluations': 'Evaluaciones Próximas',
+      
+      // Community
+      'no_community_group': 'Sin Grupo Comunitario',
+      'community_group_info': 'Tendrás acceso a un grupo comunitario una vez que tengas clientes o seas asignado a un entrenador.',
+      'no_messages_yet': 'Aún no hay mensajes',
+      'start_conversation': '¡Inicia la conversación enviando un mensaje!',
+      'failed_to_send_message': 'Error al enviar mensaje',
+      'error': 'Error',
     }
   },
   fr: {
@@ -203,6 +219,14 @@ const resources = {
       'dashboard.clientProgress': 'Progrès des Clients',
       'dashboard.referralCode': 'Votre Code de Parrainage',
       'dashboard.upcomingEvaluations': 'Évaluations Prochaines',
+      
+      // Community
+      'no_community_group': 'Aucun Groupe Communautaire',
+      'community_group_info': 'Vous aurez accès à un groupe communautaire une fois que vous aurez des clients ou serez assigné à un entraîneur.',
+      'no_messages_yet': 'Aucun message pour le moment',
+      'start_conversation': 'Commencez la conversation en envoyant un message !',
+      'failed_to_send_message': 'Échec de l\'envoi du message',
+      'error': 'Erreur',
     }
   },
   pt: {
@@ -246,6 +270,14 @@ const resources = {
       'dashboard.clientProgress': 'Progresso dos Clientes',
       'dashboard.referralCode': 'Seu Código de Indicação',
       'dashboard.upcomingEvaluations': 'Avaliações Próximas',
+      
+      // Community
+      'no_community_group': 'Nenhum Grupo Comunitário',
+      'community_group_info': 'Você terá acesso a um grupo comunitário assim que tiver clientes ou for atribuído a um treinador.',
+      'no_messages_yet': 'Ainda não há mensagens',
+      'start_conversation': 'Inicie a conversa enviando uma mensagem!',
+      'failed_to_send_message': 'Falha ao enviar mensagem',
+      'error': 'Erro',
     }
   }
 };
