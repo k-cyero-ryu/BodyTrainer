@@ -57,36 +57,11 @@ export default function Community() {
     queryKey: ['/api/community/messages', group?.id],
     queryFn: async () => {
       if (!group?.id) return [];
-      console.log('Fetching messages for group:', group.id);
-      try {
-        const response = await fetch(`/api/community/${group.id}/messages`, {
-          credentials: 'include', // Ensure cookies are sent
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
-        console.log('Response status:', response.status);
-        console.log('Response headers:', [...response.headers.entries()]);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error:', response.status, errorText);
-          throw new Error(`Failed to fetch messages: ${response.status} ${errorText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Messages received:', data);
-        console.log('Messages array length:', data?.length);
-        return data;
-      } catch (error) {
-        console.error('Fetch error:', error);
-        throw error;
-      }
+      const response = await fetch(`/api/community/${group.id}/messages`);
+      if (!response.ok) throw new Error('Failed to fetch messages');
+      return response.json();
     },
-    enabled: !!group?.id,
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache data
+    enabled: !!group?.id
   });
 
   // Create message mutation
@@ -385,7 +360,7 @@ export default function Community() {
                   <p className="text-sm text-muted-foreground mt-1">{t('start_conversation')}</p>
                 </div>
               ) : (
-                messages.map((msg: CommunityMessage) => (
+                messages.slice().reverse().map((msg: CommunityMessage) => (
                   <div key={msg.id} className="flex space-x-3" data-testid={`message-${msg.id}`}>
                     <Avatar className="w-8 h-8">
                       <AvatarFallback className="text-xs">
