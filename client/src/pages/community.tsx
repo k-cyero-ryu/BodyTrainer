@@ -256,7 +256,7 @@ export default function Community() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => window.open(`/objects/${msg.attachmentUrl}`, '_blank')}
+                onClick={() => window.open(msg.attachmentUrl, '_blank')}
                 data-testid={`button-download-${msg.id}`}
               >
                 {t('community.download')}
