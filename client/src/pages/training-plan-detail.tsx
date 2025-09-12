@@ -356,7 +356,7 @@ export default function TrainingPlanDetail() {
 
                         {(exercise?.mediaUrl || exercise?.mediaURL) && (
                           <div className="mt-3 pt-3 border-t">
-                            <h4 className="text-sm font-medium mb-2">Exercise Media:</h4>
+                            <h4 className="text-sm font-medium mb-2">{t('plans.exerciseMedia')}</h4>
                             {exercise.mediaType === 'video' ? (
                               <video 
                                 src={exercise.mediaUrl || exercise.mediaURL} 
