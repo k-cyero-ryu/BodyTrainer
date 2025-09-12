@@ -34,6 +34,7 @@ const resources = {
       'auth.getStarted': 'Get Started',
       'auth.unauthorized': 'Unauthorized',
       'auth.accessDenied': 'Access Denied',
+      'auth.loggedOutRetry': 'You are logged out. Logging in again...',
       
       // Dashboard
       'dashboard.welcome': 'Welcome back!',
@@ -204,13 +205,31 @@ const resources = {
       
       // Reports
       'reports.analytics': 'Reports & Analytics',
+      'reports.export': 'Export',
+      'reports.last7Days': 'Last 7 days',
+      'reports.last30Days': 'Last 30 days',
+      'reports.last3Months': 'Last 3 months',
+      'reports.lastYear': 'Last year',
       'reports.clientGrowth': 'Client Growth',
       'reports.revenueGrowth': 'Revenue Growth',
       'reports.avgProgress': 'Avg. Progress',
       'reports.retentionRate': 'Retention Rate',
+      'reports.vsLastMonth': 'vs last month',
+      'reports.acrossAllClients': 'across all clients',
+      'reports.last6Months': 'last 6 months',
       'reports.businessGrowth': 'Business Growth',
+      'reports.clientPerformanceOverview': 'Client Performance Overview',
+      'reports.excellent': 'Excellent (80-100%)',
+      'reports.good': 'Good (60-79%)',
+      'reports.needsImprovement': 'Needs Improvement (0-59%)',
+      'reports.clients': 'clients',
+      'reports.clientsLabel': 'Clients',
+      'reports.revenue': 'Revenue:',
       'reports.topPerforming': 'Top Performing Clients',
       'reports.needsAttention': 'Needs Attention',
+      'reports.lastActive': 'Last active:',
+      'reports.accessDenied': 'Access Denied',
+      'reports.trainersOnly': 'Only trainers can access this page.',
       
       // Chat
       'chat.messages': 'Messages',
@@ -487,6 +506,7 @@ const resources = {
       'auth.getStarted': 'Comenzar',
       'auth.unauthorized': 'No Autorizado',
       'auth.accessDenied': 'Acceso Denegado',
+      'auth.loggedOutRetry': 'Has cerrado sesión. Iniciando sesión de nuevo...',
       
       // Dashboard
       'dashboard.welcome': '¡Bienvenido de vuelta!',
@@ -657,13 +677,31 @@ const resources = {
       
       // Reports
       'reports.analytics': 'Reportes y Análisis',
+      'reports.export': 'Exportar',
+      'reports.last7Days': 'Últimos 7 días',
+      'reports.last30Days': 'Últimos 30 días',
+      'reports.last3Months': 'Últimos 3 meses',
+      'reports.lastYear': 'Último año',
       'reports.clientGrowth': 'Crecimiento de Clientes',
       'reports.revenueGrowth': 'Crecimiento de Ingresos',
       'reports.avgProgress': 'Progreso Promedio',
       'reports.retentionRate': 'Tasa de Retención',
+      'reports.vsLastMonth': 'vs el mes pasado',
+      'reports.acrossAllClients': 'en todos los clientes',
+      'reports.last6Months': 'últimos 6 meses',
       'reports.businessGrowth': 'Crecimiento del Negocio',
-      'reports.topPerforming': 'Clientes con Mejor Rendimiento',
+      'reports.clientPerformanceOverview': 'Resumen de Rendimiento de Clientes',
+      'reports.excellent': 'Excelente (80-100%)',
+      'reports.good': 'Bueno (60-79%)',
+      'reports.needsImprovement': 'Necesita Mejora (0-59%)',
+      'reports.clients': 'clientes',
+      'reports.clientsLabel': 'Clientes',
+      'reports.revenue': 'Ingresos:',
+      'reports.topPerforming': 'Clientes de Mayor Rendimiento',
       'reports.needsAttention': 'Necesita Atención',
+      'reports.lastActive': 'Última actividad:',
+      'reports.accessDenied': 'Acceso Denegado',
+      'reports.trainersOnly': 'Solo los entrenadores pueden acceder a esta página.',
       
       // Chat
       'chat.messages': 'Mensajes',
