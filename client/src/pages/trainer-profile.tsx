@@ -515,11 +515,11 @@ export default function TrainerProfile() {
           {/* Referral Code */}
           <Card>
             <CardHeader>
-              <CardTitle>Your Referral Code</CardTitle>
+              <CardTitle>{t('profile.yourReferralCode')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <p className="text-sm text-gray-600 mb-2">Share this code with new clients:</p>
+                <p className="text-sm text-gray-600 mb-2">{t('profile.shareThisCode')}</p>
                 <p className="text-2xl font-bold text-primary" data-testid="text-referral-code">{referralCode || 'Loading...'}</p>
               </div>
             </CardContent>

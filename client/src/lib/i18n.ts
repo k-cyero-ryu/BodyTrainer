@@ -197,6 +197,8 @@ const resources = {
       'profile.phone': 'Phone',
       'profile.address': 'Address',
       'profile.notProvided': 'Not provided',
+      'profile.yourReferralCode': 'Your Referral Code',
+      'profile.shareThisCode': 'Share this code with new clients:',
       
       // Admin
       'admin.dashboard': 'SuperAdmin Dashboard',
@@ -400,6 +402,8 @@ const resources = {
       'profile.phone': 'Teléfono',
       'profile.address': 'Dirección',
       'profile.notProvided': 'No proporcionado',
+      'profile.yourReferralCode': 'Tu Código de Referencia',
+      'profile.shareThisCode': 'Comparte este código con nuevos clientes:',
 
       // Admin
       'admin.dashboard': 'Panel de SuperAdmin',
