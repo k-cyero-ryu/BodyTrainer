@@ -296,7 +296,7 @@ export default function ClientDetail() {
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Assign Plan
+            {t('clientDetail.assignPlan')}
           </Button>
           <Button 
             variant="outline" 
@@ -304,12 +304,12 @@ export default function ClientDetail() {
             onClick={() => setShowChat(true)}
           >
             <MessageCircle className="h-4 w-4 mr-2" />
-            Message
+            {t('clientDetail.message')}
           </Button>
           <Link href={`/clients/${clientId}/edit`}>
             <Button variant="outline" size="sm">
               <Edit className="h-4 w-4 mr-2" />
-              Edit
+              {t('clientDetail.edit')}
             </Button>
           </Link>
         </div>
@@ -323,7 +323,7 @@ export default function ClientDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Client Information
+                {t('clientDetail.clientInformation')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -343,7 +343,7 @@ export default function ClientDetail() {
                 <div className="flex items-center gap-3">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">
-                    {client.age ? `${client.age} years old` : 
+                    {client.age ? `${client.age} ${t('clientDetail.yearsOld')}` : 
                      client.dateOfBirth ? `Born ${new Date(client.dateOfBirth).toLocaleDateString()}` : ''}
                   </span>
                 </div>
@@ -359,28 +359,28 @@ export default function ClientDetail() {
               {(client.currentWeight || client.weight) && (
                 <div className="flex items-center gap-3">
                   <Weight className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Current: {client.currentWeight || client.weight} kg</span>
+                  <span className="text-sm">{t('clientDetail.current')} {client.currentWeight || client.weight} kg</span>
                 </div>
               )}
               
               {client.targetWeight && (
                 <div className="flex items-center gap-3">
                   <Target className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Target: {client.targetWeight} kg</span>
+                  <span className="text-sm">{t('clientDetail.target')} {client.targetWeight} kg</span>
                 </div>
               )}
               
               {client.activityLevel && (
                 <div className="flex items-center gap-3">
                   <Activity className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Activity: {client.activityLevel}</span>
+                  <span className="text-sm">{t('clientDetail.activity')} {client.activityLevel}</span>
                 </div>
               )}
               
               {client.referralSource && (
                 <div className="flex items-center gap-3">
                   <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Referral: {client.referralSource}</span>
+                  <span className="text-sm">{t('clientDetail.referral')} {client.referralSource}</span>
                 </div>
               )}
               
@@ -388,7 +388,7 @@ export default function ClientDetail() {
                 <div className="flex items-start gap-3">
                   <Target className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Goals</p>
+                    <p className="text-sm font-medium">{t('clientDetail.goals')}</p>
                     <p className="text-sm text-muted-foreground">{client.goals || client.bodyGoal}</p>
                   </div>
                 </div>
@@ -398,7 +398,7 @@ export default function ClientDetail() {
                 <div className="flex items-start gap-3">
                   <Heart className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Medical Conditions</p>
+                    <p className="text-sm font-medium">{t('clientDetail.medicalConditions')}</p>
                     <p className="text-sm text-muted-foreground">{client.medicalConditions}</p>
                   </div>
                 </div>
@@ -408,7 +408,7 @@ export default function ClientDetail() {
                 <div className="flex items-start gap-3">
                   <Apple className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Dietary Restrictions</p>
+                    <p className="text-sm font-medium">{t('clientDetail.dietaryRestrictions')}</p>
                     <p className="text-sm text-muted-foreground">{client.dietaryRestrictions}</p>
                   </div>
                 </div>
@@ -423,13 +423,13 @@ export default function ClientDetail() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Status</span>
+                <span className="text-sm font-medium">{t('clientDetail.status')}</span>
                 <Badge className={getPaymentStatusColor(client.paymentStatus || 'inactive')}>
                   {client.paymentStatus || 'inactive'}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Plan</span>
+                <span className="text-sm font-medium">{t('clientDetail.plan')}</span>
                 {clientPaymentPlan ? (
                   <div className="text-right">
                     <div className="text-sm font-medium">{clientPaymentPlan.name}</div>
@@ -438,7 +438,7 @@ export default function ClientDetail() {
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm">None</span>
+                  <span className="text-sm">{t('clientDetail.none')}</span>
                 )}
               </div>
 
@@ -493,7 +493,7 @@ export default function ClientDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-8">No training plans assigned yet.</p>
+                <p className="text-muted-foreground text-center py-8">{t('clientDetail.noTrainingPlans')}</p>
               )}
             </CardContent>
           </Card>
@@ -509,12 +509,12 @@ export default function ClientDetail() {
                 <div className="flex items-center gap-2">
                   <Link href={`/clients/${clientId}/evaluations`}>
                     <Button variant="outline" size="sm">
-                      View All
+                      {t('clientDetail.viewAll')}
                     </Button>
                   </Link>
                   <Link href={`/clients/${clientId}/evaluations/compare`}>
                     <Button variant="secondary" size="sm">
-                      Compare
+                      {t('clientDetail.compare')}
                     </Button>
                   </Link>
                 </div>
@@ -573,7 +573,7 @@ export default function ClientDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-8">No evaluations recorded yet.</p>
+                <p className="text-muted-foreground text-center py-8">{t('clientDetail.noEvaluations')}</p>
               )}
             </CardContent>
           </Card>
@@ -581,7 +581,7 @@ export default function ClientDetail() {
           {/* Client Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Client Actions</CardTitle>
+              <CardTitle>{t('clientDetail.clientActions')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {client.user?.status === 'active' ? (
@@ -592,7 +592,7 @@ export default function ClientDetail() {
                   onClick={() => suspendMutation.mutate()}
                   disabled={suspendMutation.isPending}
                 >
-                  {suspendMutation.isPending ? 'Suspending...' : 'Suspend Client'}
+                  {suspendMutation.isPending ? t('clientDetail.suspending') : t('clientDetail.suspendClient')}
                 </Button>
               ) : (
                 <Button 
@@ -617,7 +617,7 @@ export default function ClientDetail() {
             <DialogTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" />
-                Chat with {getUserDisplayName()}
+                {t('clientDetail.chatWith', { name: getUserDisplayName() })}
               </span>
               <Button
                 variant="ghost"
@@ -732,7 +732,7 @@ export default function ClientDetail() {
                 type="submit"
                 disabled={assignPlanMutation.isPending}
               >
-                {assignPlanMutation.isPending ? "Assigning..." : "Assign Plan"}
+                {assignPlanMutation.isPending ? t('clientDetail.assigning') : t('clientDetail.assignPlan')}
               </Button>
             </div>
           </form>
