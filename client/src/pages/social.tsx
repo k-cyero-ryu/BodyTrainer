@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { formatDistanceToNow } from "date-fns";
-import { Heart, MessageCircle, Share2, MoreHorizontal, Send, Image as ImageIcon, User } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Send, Image as ImageIcon, User, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 const createPostSchema = z.object({
   content: z.string().min(1, "Post content is required").max(2000, "Post too long"),
+  imageUrl: z.string().optional(),
+  imageName: z.string().optional(),
+  imageSize: z.number().optional(),
 });
 
 type CreatePostForm = z.infer<typeof createPostSchema>;
@@ -59,6 +64,10 @@ export default function Social() {
   const { toast } = useToast();
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [newComments, setNewComments] = useState<Record<string, string>>({});
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Fetch social posts
   const { data: posts, isLoading } = useQuery<SocialPost[]>({
@@ -70,6 +79,9 @@ export default function Social() {
     resolver: zodResolver(createPostSchema),
     defaultValues: {
       content: "",
+      imageUrl: "",
+      imageName: "",
+      imageSize: 0,
     },
   });
 
@@ -79,6 +91,9 @@ export default function Social() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
       form.reset();
+      setShowCreateForm(false);
+      setSelectedImage(null);
+      setImagePreview(null);
       toast({
         title: t("social.postCreated", "Post created successfully"),
         description: t("social.postCreatedDesc", "Your post has been shared with the community"),
@@ -118,6 +133,41 @@ export default function Social() {
       queryKey: ["/api/social/posts", postId, "comments"],
       enabled: expandedComments.has(postId),
     });
+  };
+
+  // Handle photo upload
+  const handleGetUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload");
+    const data = await response.json() as { uploadURL: string };
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handlePhotoUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const imageUrl = uploadedFile.uploadURL || "";
+      const imageName = uploadedFile.name || "";
+      const imageSize = uploadedFile.size || 0;
+      
+      // Update form with image data
+      form.setValue("imageUrl", imageUrl);
+      form.setValue("imageName", imageName);
+      form.setValue("imageSize", imageSize);
+      
+      setSelectedImage(uploadedFile.data as File);
+      setImagePreview(imageUrl);
+    }
+  };
+
+  const removeSelectedImage = () => {
+    form.setValue("imageUrl", "");
+    form.setValue("imageName", "");
+    form.setValue("imageSize", 0);
+    setSelectedImage(null);
+    setImagePreview(null);
   };
 
   const onSubmit = (data: CreatePostForm) => {
@@ -198,59 +248,128 @@ export default function Social() {
           {t("social.title", "Social Feed")}
         </h1>
 
-        {/* Create Post Card */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold">{t("social.createPost", "Share something with the community")}</h2>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          placeholder={t("social.postPlaceholder", "What's on your mind? Share your fitness journey, tips, or achievements...")}
-                          className="min-h-[100px] resize-none"
-                          {...field}
-                          data-testid="input-post-content"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-between items-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      toast({
-                        title: t("common.comingSoon", "Coming Soon"),
-                        description: t("social.photoUploadSoon", "Photo upload will be available soon"),
-                      });
-                    }}
-                    data-testid="button-add-photo"
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    {t("social.addPhoto", "Add Photo")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createPostMutation.isPending}
-                    data-testid="button-create-post"
-                  >
-                    {createPostMutation.isPending ? t("common.posting", "Posting...") : t("common.post", "Post")}
-                  </Button>
+        {/* Create Post Button */}
+        {!showCreateForm && (
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowCreateForm(true)}>
+            <CardContent className="py-4">
+              <div className="flex items-center space-x-3">
+                <Avatar className="w-10 h-10">
+                  <AvatarFallback>
+                    <User className="w-5 h-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full py-2 px-4 text-gray-500 dark:text-gray-400">
+                  {t("social.createPostPrompt", "Share something with the community...")}
                 </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                <Button size="sm" data-testid="button-create-new-post">
+                  {t("social.createPost", "Post")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Create Post Form */}
+        {showCreateForm && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <h2 className="text-lg font-semibold">{t("social.createPost", "Create New Post")}</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setShowCreateForm(false);
+                  form.reset();
+                  removeSelectedImage();
+                }}
+                data-testid="button-cancel-create-post"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            placeholder={t("social.postPlaceholder", "What's on your mind? Share your fitness journey, tips, or achievements...")}
+                            className="min-h-[100px] resize-none"
+                            {...field}
+                            data-testid="input-post-content"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="max-w-full max-h-64 rounded-lg object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={removeSelectedImage}
+                        data-testid="button-remove-image"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center">
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={10485760} // 10MB
+                      onGetUploadParameters={handleGetUploadParameters}
+                      onComplete={handlePhotoUploadComplete}
+                      buttonClassName="variant-outline"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4" />
+                        {t("social.addPhoto", "Add Photo")}
+                      </div>
+                    </ObjectUploader>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowCreateForm(false);
+                          form.reset();
+                          removeSelectedImage();
+                        }}
+                        data-testid="button-cancel-post"
+                      >
+                        {t("common.cancel", "Cancel")}
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createPostMutation.isPending}
+                        data-testid="button-create-post"
+                      >
+                        {createPostMutation.isPending ? t("common.posting", "Posting...") : t("common.post", "Post")}
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Posts Feed */}
         <div className="space-y-6">
@@ -364,7 +483,7 @@ function PostCard({
           {post.imageUrl && (
             <div className="rounded-lg overflow-hidden">
               <img
-                src={post.imageUrl}
+                src={post.imageUrl.startsWith('/objects/') ? post.imageUrl : post.imageUrl}
                 alt={post.imageName || "Post image"}
                 className="w-full max-h-96 object-cover"
                 data-testid={`img-post-${post.id}`}

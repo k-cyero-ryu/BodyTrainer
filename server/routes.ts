@@ -2988,6 +2988,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const postData = { ...req.body, userId };
 
+      // If there's an image URL, normalize it and set ACL policy
+      if (postData.imageUrl) {
+        try {
+          const objectStorageService = new ObjectStorageService();
+          const normalizedPath = await objectStorageService.trySetObjectEntityAclPolicy(
+            postData.imageUrl,
+            {
+              owner: userId,
+              visibility: "public", // Social post images are public
+            }
+          );
+          postData.imageUrl = normalizedPath;
+        } catch (error) {
+          console.error("Error setting image ACL:", error);
+          // Continue without failing - image might be a regular URL
+        }
+      }
+
       // Validate the post data
       const validatedData = insertSocialPostSchema.parse(postData);
       
