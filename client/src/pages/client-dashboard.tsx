@@ -334,7 +334,7 @@ export default function ClientDashboard() {
       {/* Dashboard Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">{t('client.dashboard')}</h1>
-        <p className="text-gray-600 mt-2">Track your fitness journey and progress</p>
+        <p className="text-gray-600 mt-2">{t('client.fitnessJourney')}</p>
       </div>
 
 
@@ -392,7 +392,7 @@ export default function ClientDashboard() {
                 <Flame className="h-6 w-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Streak</p>
+                <p className="text-sm font-medium text-gray-600">{t('client.streak')}</p>
                 <p className="text-2xl font-bold text-gray-900">{clientStats.streak} days</p>
               </div>
             </div>
@@ -408,7 +408,7 @@ export default function ClientDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Today's Workout
+                {t('client.todaysWorkout')}
               </CardTitle>
               {todayWorkout?.workout && (
                 <p className="text-sm text-gray-500">
@@ -535,7 +535,7 @@ export default function ClientDashboard() {
                 <div className="text-center py-8">
                   <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground">
-                    {todayWorkout?.message || "No workout scheduled for today"}
+                    {todayWorkout?.message || t('client.noWorkoutScheduled')}
                   </p>
                   {todayWorkout?.message === "No active training plan assigned" && (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -552,7 +552,7 @@ export default function ClientDashboard() {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Progress Overview</CardTitle>
+              <CardTitle>{t('client.progressOverview')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -679,7 +679,7 @@ export default function ClientDashboard() {
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Latest Monthly Evaluation
+              {t('client.monthlyEvaluation')}
             </span>
             <Link href="/monthly-evaluation">
               <Button variant="outline" size="sm">

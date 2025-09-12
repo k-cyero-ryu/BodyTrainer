@@ -129,14 +129,20 @@ const resources = {
       
       // Client Dashboard
       'client.dashboard': 'My Dashboard',
+      'client.fitnessJourney': 'Track your fitness journey and progress',
       'client.workoutsThisWeek': 'Workouts This Week',
       'client.currentWeight': 'Current Weight',
       'client.goalProgress': 'Goal Progress',
       'client.streak': 'Streak',
       'client.todaysWorkout': 'Today\'s Workout',
+      'client.noWorkoutScheduled': 'No workout scheduled for today',
       'client.progressOverview': 'Progress Overview',
       'client.monthlyEvaluation': 'Monthly Evaluation',
       'client.completeWorkout': 'Complete Workout',
+      'client.noEvaluations': 'No evaluations submitted yet',
+      'client.viewAll': 'View All',
+      'client.loading': 'Loading...',
+      'client.weightGoalProgress': 'Weight Goal Progress',
       
       // Admin
       'admin.dashboard': 'SuperAdmin Dashboard',
