@@ -17,6 +17,7 @@ const resources = {
       'nav.userManagement': 'User Management',
       'nav.dailyWorkout': 'Daily Workout',
       'nav.communityChat': 'Community Chat',
+      'nav.social': 'Social',
       'nav.settings': 'Settings',
       'nav.logout': 'Log out',
 
@@ -512,6 +513,7 @@ const resources = {
       'nav.userManagement': 'Gestión de Usuarios',
       'nav.dailyWorkout': 'Entrenamiento Diario',
       'nav.communityChat': 'Chat Comunitario',
+      'nav.social': 'Red Social',
       'nav.settings': 'Configuración',
       'nav.logout': 'Cerrar Sesión',
 
@@ -545,6 +547,10 @@ const resources = {
       'common.search': 'Buscar',
       'common.filter': 'Filtrar',
       'common.export': 'Exportar',
+      'common.post': 'Publicar',
+      'common.posting': 'Publicando...',
+      'common.share': 'Compartir',
+      'common.saving': 'Guardando...',
       
       // Auth
       'auth.signIn': 'Iniciar Sesión',
@@ -982,6 +988,39 @@ const resources = {
       
       // Payment Plan Validation Errors
       'paymentPlans.errors.planNameRequired': 'El nombre del plan es requerido',
+
+      // Social Feed
+      'social.title': 'Red Social',
+      'social.createPost': 'Crear Publicación',
+      'social.createPostPrompt': 'Comparte algo con la comunidad...',
+      'social.postPlaceholder': '¿Qué tienes en mente? Comparte tu viaje fitness, consejos o logros...',
+      'social.addPhoto': 'Agregar Foto',
+      'social.noPostsTitle': 'Aún no hay publicaciones',
+      'social.noPostsDesc': '¡Sé el primero en compartir algo con la comunidad!',
+      'social.postCreated': 'Publicación creada exitosamente',
+      'social.postCreatedDesc': 'Tu publicación ha sido compartida con la comunidad',
+      'social.createPostError': 'Error al crear la publicación',
+      'social.editPostPlaceholder': 'Edita tu publicación...',
+      'social.postUpdated': 'Publicación actualizada exitosamente',
+      'social.postUpdatedDesc': 'Tu publicación ha sido actualizada',
+      'social.editPostError': 'Error al actualizar la publicación',
+      'social.postDeleted': 'Publicación eliminada exitosamente',
+      'social.postDeletedDesc': 'Tu publicación ha sido eliminada',
+      'social.deletePostError': 'Error al eliminar la publicación',
+      'social.deletePostTitle': 'Eliminar Publicación',
+      'social.deletePostConfirm': '¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.',
+      'social.commentPlaceholder': 'Escribe un comentario...',
+      'social.commentCreated': 'Comentario creado exitosamente',
+      'social.createCommentError': 'Error al crear el comentario',
+      'social.editCommentPlaceholder': 'Edita tu comentario...',
+      'social.commentUpdated': 'Comentario actualizado exitosamente',
+      'social.commentUpdatedDesc': 'Tu comentario ha sido actualizado',
+      'social.editCommentError': 'Error al actualizar el comentario',
+      'social.commentDeleted': 'Comentario eliminado exitosamente',
+      'social.commentDeletedDesc': 'Tu comentario ha sido eliminado',
+      'social.deleteCommentError': 'Error al eliminar el comentario',
+      'social.deleteCommentTitle': 'Eliminar Comentario',
+      'social.deleteCommentConfirm': '¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer.',
     }
   },
   fr: {
