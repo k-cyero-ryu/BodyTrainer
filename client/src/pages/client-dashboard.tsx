@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function ClientDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   // Remove showEvaluationForm state - no longer needed
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
 
@@ -331,7 +333,7 @@ export default function ClientDashboard() {
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       {/* Dashboard Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('client.dashboard')}</h1>
         <p className="text-gray-600 mt-2">Track your fitness journey and progress</p>
       </div>
 
@@ -346,7 +348,7 @@ export default function ClientDashboard() {
                 <CalendarCheck className="h-6 w-6 text-primary" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Workouts This Week</p>
+                <p className="text-sm font-medium text-gray-600">{t('client.workoutsThisWeek')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {clientStats.workoutsThisWeek}/{clientStats.totalWorkouts}
                 </p>
@@ -362,7 +364,7 @@ export default function ClientDashboard() {
                 <Weight className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Current Weight</p>
+                <p className="text-sm font-medium text-gray-600">{t('client.currentWeight')}</p>
                 <p className="text-2xl font-bold text-gray-900">{clientStats.currentWeight} kg</p>
               </div>
             </div>
@@ -376,7 +378,7 @@ export default function ClientDashboard() {
                 <Target className="h-6 w-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Goal Progress</p>
+                <p className="text-sm font-medium text-gray-600">{t('client.goalProgress')}</p>
                 <p className="text-2xl font-bold text-gray-900">{clientStats.goalProgress}%</p>
               </div>
             </div>

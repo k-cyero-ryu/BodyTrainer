@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ export default function TrainerDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const { t } = useTranslation();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -70,8 +72,8 @@ export default function TrainerDashboard() {
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       {/* Dashboard Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Trainer Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with your clients today.</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t('nav.dashboard')}</h1>
+        <p className="text-gray-600 mt-2">{t('dashboard.welcome')}</p>
       </div>
 
       {/* Payment Plan Status */}
@@ -117,7 +119,7 @@ export default function TrainerDashboard() {
                 <Users className="h-6 w-6 text-primary" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Clients</p>
+                <p className="text-sm font-medium text-gray-600">{t('dashboard.totalClients')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats?.totalClients || 0}</p>
               </div>
             </div>
@@ -131,7 +133,7 @@ export default function TrainerDashboard() {
                 <UserCheck className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Clients</p>
+                <p className="text-sm font-medium text-gray-600">{t('dashboard.activeClients')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats?.activeClients || 0}</p>
               </div>
             </div>
@@ -145,7 +147,7 @@ export default function TrainerDashboard() {
                 <DollarSign className="h-6 w-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
+                <p className="text-sm font-medium text-gray-600">{t('dashboard.monthlyRevenue')}</p>
                 <p className="text-2xl font-bold text-gray-900">${stats?.monthlyRevenue || 0}</p>
               </div>
             </div>
@@ -159,7 +161,7 @@ export default function TrainerDashboard() {
                 <Dumbbell className="h-6 w-6 text-primary" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Training Plans</p>
+                <p className="text-sm font-medium text-gray-600">{t('dashboard.trainingPlans')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats?.totalPlans || 0}</p>
               </div>
             </div>
@@ -173,7 +175,7 @@ export default function TrainerDashboard() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Client Activity</CardTitle>
+              <CardTitle>{t('dashboard.recentActivity')}</CardTitle>
             </CardHeader>
             <CardContent>
               {clients && clients.length > 0 ? (
@@ -192,7 +194,7 @@ export default function TrainerDashboard() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">No recent activity</p>
+                <p className="text-gray-500 text-center py-8">{t('clients.noClients')}</p>
               )}
             </CardContent>
           </Card>
