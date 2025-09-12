@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from 'react-i18next';
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -52,6 +53,7 @@ function ClientPaymentPlanForm({
   onOpenChange: (open: boolean) => void; 
 }) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [featuresInput, setFeaturesInput] = useState(plan?.features?.join(", ") || "");
 
@@ -75,11 +77,11 @@ function ClientPaymentPlanForm({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/client-payment-plans"] });
-      toast({ title: "Success", description: "Client payment plan created successfully" });
+      toast({ title: t('common.success'), description: t('paymentPlans.createSuccess') });
       onSuccess();
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to create client payment plan", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('paymentPlans.createError'), variant: "destructive" });
     },
   });
 
@@ -90,11 +92,11 @@ function ClientPaymentPlanForm({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/client-payment-plans"] });
-      toast({ title: "Success", description: "Client payment plan updated successfully" });
+      toast({ title: t('common.success'), description: t('paymentPlans.updateSuccess') });
       onSuccess();
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to update client payment plan", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('paymentPlans.updateError'), variant: "destructive" });
     },
   });
 
@@ -110,9 +112,9 @@ function ClientPaymentPlanForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{plan ? "Edit Client Payment Plan" : "Create Client Payment Plan"}</DialogTitle>
+          <DialogTitle>{plan ? t('paymentPlans.editTitle') : t('paymentPlans.createTitle')}</DialogTitle>
           <DialogDescription>
-            {plan ? "Update the client payment plan details" : "Create a new payment plan for your clients"}
+            {plan ? t('paymentPlans.editDescription') : t('paymentPlans.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -124,9 +126,9 @@ function ClientPaymentPlanForm({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Plan Name</FormLabel>
+                    <FormLabel>{t('paymentPlans.planName')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Basic Training" {...field} />
+                      <Input placeholder={t('paymentPlans.planNamePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -138,15 +140,15 @@ function ClientPaymentPlanForm({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing Cycle</FormLabel>
+                    <FormLabel>{t('paymentPlans.billingCycle')}</FormLabel>
                     <FormControl>
                       <select
                         {...field}
                         className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="monthly">Monthly</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="per_session">Per Session</option>
+                        <option value="monthly">{t('paymentPlans.monthly')}</option>
+                        <option value="weekly">{t('paymentPlans.weekly')}</option>
+                        <option value="per_session">{t('paymentPlans.perSession')}</option>
                       </select>
                     </FormControl>
                     <FormMessage />
@@ -161,12 +163,12 @@ function ClientPaymentPlanForm({
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
+                    <FormLabel>{t('paymentPlans.amount')}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="99.00"
+                        placeholder={t('paymentPlans.amountPlaceholder')}
                         {...field}
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
@@ -181,9 +183,9 @@ function ClientPaymentPlanForm({
                 name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
+                    <FormLabel>{t('paymentPlans.currency')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="USD" {...field} />
+                      <Input placeholder={t('paymentPlans.currencyPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -196,10 +198,10 @@ function ClientPaymentPlanForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t('paymentPlans.description')}</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe what's included in this plan..."
+                      placeholder={t('paymentPlans.descriptionPlaceholder')}
                       className="min-h-[80px]"
                       {...field}
                     />
@@ -210,11 +212,11 @@ function ClientPaymentPlanForm({
             />
 
             <div>
-              <label className="block text-sm font-medium mb-2">Features (comma-separated)</label>
+              <label className="block text-sm font-medium mb-2">{t('paymentPlans.features')}</label>
               <Input
                 value={featuresInput}
                 onChange={(e) => setFeaturesInput(e.target.value)}
-                placeholder="e.g., 3 sessions per week, nutrition plan, progress tracking"
+                placeholder={t('paymentPlans.featuresPlaceholder')}
               />
             </div>
 
@@ -232,7 +234,7 @@ function ClientPaymentPlanForm({
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                     </FormControl>
-                    <FormLabel className="text-sm">Active Plan</FormLabel>
+                    <FormLabel className="text-sm">{t('paymentPlans.activePlan')}</FormLabel>
                   </FormItem>
                 )}
               />
@@ -243,14 +245,16 @@ function ClientPaymentPlanForm({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                data-testid="button-cancel"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
+                data-testid="button-save-plan"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Saving..." : plan ? "Update Plan" : "Create Plan"}
+                {createMutation.isPending || updateMutation.isPending ? t('paymentPlans.saving') : plan ? t('paymentPlans.updatePlan') : t('paymentPlans.createPlan')}
               </Button>
             </div>
           </form>
@@ -262,6 +266,7 @@ function ClientPaymentPlanForm({
 
 export default function ClientPaymentPlansPage() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<ClientPaymentPlan | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -276,10 +281,10 @@ export default function ClientPaymentPlansPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/client-payment-plans"] });
-      toast({ title: "Success", description: "Client payment plan deleted successfully" });
+      toast({ title: t('common.success'), description: t('paymentPlans.deleteSuccess') });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to delete client payment plan", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('paymentPlans.deleteError'), variant: "destructive" });
     },
   });
 
@@ -299,7 +304,7 @@ export default function ClientPaymentPlansPage() {
   };
 
   const handleDelete = (planId: string) => {
-    if (confirm("Are you sure you want to delete this payment plan? This will remove it from any assigned clients.")) {
+    if (confirm(t('paymentPlans.deleteConfirm'))) {
       deleteMutation.mutate(planId);
     }
   };
@@ -313,9 +318,9 @@ export default function ClientPaymentPlansPage() {
 
   const formatBillingCycle = (cycle: string) => {
     switch (cycle) {
-      case 'monthly': return 'Monthly';
-      case 'weekly': return 'Weekly';
-      case 'per_session': return 'Per Session';
+      case 'monthly': return t('paymentPlans.monthly');
+      case 'weekly': return t('paymentPlans.weekly');
+      case 'per_session': return t('paymentPlans.perSession');
       default: return cycle;
     }
   };
@@ -336,14 +341,14 @@ export default function ClientPaymentPlansPage() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Client Payment Plans</h1>
+          <h1 className="text-3xl font-bold">{t('paymentPlans.title')}</h1>
           <p className="text-gray-600 mt-2">
-            Create and manage payment plans for your clients
+            {t('paymentPlans.subtitle')}
           </p>
         </div>
-        <Button onClick={handleCreate} className="flex items-center gap-2">
+        <Button onClick={handleCreate} className="flex items-center gap-2" data-testid="button-create-plan">
           <Plus className="w-4 h-4" />
-          Create Plan
+          {t('paymentPlans.createPlan')}
         </Button>
       </div>
 
@@ -351,13 +356,13 @@ export default function ClientPaymentPlansPage() {
         <Card>
           <CardContent className="p-12 text-center">
             <DollarSign className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Payment Plans Yet</h3>
+            <h3 className="text-xl font-semibold mb-2">{t('paymentPlans.noPlansTitle')}</h3>
             <p className="text-gray-600 mb-4">
-              Create your first client payment plan to start managing client billing
+              {t('paymentPlans.noPlansDescription')}
             </p>
-            <Button onClick={handleCreate} className="flex items-center gap-2">
+            <Button onClick={handleCreate} className="flex items-center gap-2" data-testid="button-create-first-plan">
               <Plus className="w-4 h-4" />
-              Create Your First Plan
+              {t('paymentPlans.createFirstPlan')}
             </Button>
           </CardContent>
         </Card>
@@ -384,6 +389,7 @@ export default function ClientPaymentPlansPage() {
                       variant="ghost"
                       onClick={() => handleEdit(plan)}
                       className="p-1 h-8 w-8"
+                      data-testid="button-edit-payment-plan"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -392,6 +398,7 @@ export default function ClientPaymentPlansPage() {
                       variant="ghost"
                       onClick={() => handleDelete(plan.id)}
                       className="p-1 h-8 w-8 text-red-600 hover:text-red-700"
+                      data-testid="button-delete-payment-plan"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -399,7 +406,7 @@ export default function ClientPaymentPlansPage() {
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant={plan.isActive ? "default" : "secondary"}>
-                    {plan.isActive ? "Active" : "Inactive"}
+                    {plan.isActive ? t('paymentPlans.active') : t('paymentPlans.inactive')}
                   </Badge>
                 </div>
               </CardHeader>
@@ -411,7 +418,7 @@ export default function ClientPaymentPlansPage() {
                 
                 {plan.features && plan.features.length > 0 && (
                   <div>
-                    <h4 className="font-medium text-sm mb-2">Features:</h4>
+                    <h4 className="font-medium text-sm mb-2">{t('paymentPlans.featuresLabel')}</h4>
                     <ul className="text-sm text-gray-600 space-y-1">
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-start gap-2">
