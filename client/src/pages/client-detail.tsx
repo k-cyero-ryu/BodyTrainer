@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { apiRequest } from "@/lib/queryClient";
 import { useRoute, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,14 +45,14 @@ const formatCurrency = (amount: number, currency: string = "USD") => {
   }).format(amount);
 };
 
-const formatBillingCycle = (type: string) => {
+const formatBillingCycle = (type: string, t: any) => {
   switch (type) {
     case "monthly":
-      return "Monthly";
+      return t('editClient.monthly');
     case "weekly":
-      return "Weekly";
+      return t('editClient.weekly');
     case "per_session":
-      return "Per Session";
+      return t('editClient.perSession');
     default:
       return type;
   }
@@ -60,6 +61,7 @@ const formatBillingCycle = (type: string) => {
 export default function ClientDetail() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [match, params] = useRoute("/clients/:clientId");
   const clientId = params?.clientId;
@@ -223,7 +225,7 @@ export default function ClientDetail() {
             <Link href="/clients">
               <Button className="mt-4">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Clients
+                {t('editClient.backToClients')}
               </Button>
             </Link>
           </CardContent>
@@ -270,7 +272,7 @@ export default function ClientDetail() {
           <Link href="/clients">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Clients
+              {t('editClient.backToClients')}
             </Button>
           </Link>
           <div className="flex items-center gap-3">
@@ -417,7 +419,7 @@ export default function ClientDetail() {
           {/* Payment Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Payment Status</CardTitle>
+              <CardTitle>{t('clientDetail.paymentInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between items-center">
@@ -432,7 +434,7 @@ export default function ClientDetail() {
                   <div className="text-right">
                     <div className="text-sm font-medium">{clientPaymentPlan.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {formatCurrency(clientPaymentPlan.amount, clientPaymentPlan.currency)} ({formatBillingCycle(clientPaymentPlan.type)})
+                      {formatCurrency(clientPaymentPlan.amount, clientPaymentPlan.currency)} ({formatBillingCycle(clientPaymentPlan.type, t)})
                     </div>
                   </div>
                 ) : (
@@ -453,7 +455,7 @@ export default function ClientDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Training Plans
+                {t('clientDetail.trainingPlans')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -502,7 +504,7 @@ export default function ClientDetail() {
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Recent Evaluations
+                  {t('clientDetail.recentEvaluations')}
                 </div>
                 <div className="flex items-center gap-2">
                   <Link href={`/clients/${clientId}/evaluations`}>
