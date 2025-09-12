@@ -2067,7 +2067,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // The upload URL contains the object path that we need to convert to normalized format
       const url = new URL(signedUrl);
       const objectPath = url.pathname.split('/').slice(2).join('/'); // Remove bucket name
-      const normalizedPath = `/objects/${objectPath}`;
+      // For community uploads, the path should be just the uploads/objectId part
+      const uploadsPath = objectPath.replace(/^\.private\//, ''); // Remove .private prefix if present
+      const normalizedPath = `/objects/${uploadsPath}`;
       
       res.json({ 
         signedUrl,
