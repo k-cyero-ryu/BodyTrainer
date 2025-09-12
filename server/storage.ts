@@ -783,12 +783,13 @@ export class DatabaseStorage implements IStorage {
       .select({
         totalClients: count(clients.id),
         activeClients: count(sql`CASE WHEN ${users.status} = 'active' THEN 1 END`),
-        monthlyRevenue: sum(trainers.monthlyRevenue),
+        monthlyRevenue: sum(sql`CASE WHEN ${clientPaymentPlans.price} IS NOT NULL THEN ${clientPaymentPlans.price} ELSE 0 END`),
         totalPlans: count(trainingPlans.id),
       })
       .from(trainers)
       .leftJoin(clients, eq(trainers.id, clients.trainerId))
       .leftJoin(users, eq(clients.userId, users.id))
+      .leftJoin(clientPaymentPlans, eq(clients.clientPaymentPlanId, clientPaymentPlans.id))
       .leftJoin(trainingPlans, eq(trainers.id, trainingPlans.trainerId))
       .where(eq(trainers.id, trainerId))
       .groupBy(trainers.id);
