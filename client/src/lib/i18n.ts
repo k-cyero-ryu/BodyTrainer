@@ -126,9 +126,6 @@ const resources = {
       'plans.failedToLoad': 'Failed to load training plan details.',
       'plans.planNotFound': 'Training Plan Not Found',
       'plans.couldNotBeFound': 'The requested training plan could not be found.',
-      'plans.dailyCalories': 'Daily Calories',
-      'plans.protein': 'Protein',
-      'plans.carbs': 'Carbs',
       'plans.noPlanYet': 'No training plans yet',
 
       // Create Plan Form
@@ -295,14 +292,12 @@ const resources = {
       'profile.professionalInformation': 'Professional Information',
       'profile.personalInformation': 'Personal Information',
       'profile.phone': 'Phone',
-      'profile.address': 'Address',
       'profile.notProvided': 'Not provided',
       'profile.yourReferralCode': 'Your Referral Code',
       'profile.shareThisCode': 'Share this code with new clients:',
 
       // Client Management
       'clients.clientManagement': 'Client Management',
-      'clients.inviteClient': 'Invite Client',
       'clients.shareReferralInfo': 'Share Your Referral Information',
       'clients.registrationUrl': 'Registration URL',
       'clients.shareLink': 'Share this link directly with clients to register',
@@ -310,8 +305,6 @@ const resources = {
       'clients.manualCode': 'Clients can enter this code manually during registration',
       'clients.testLink': 'Test Link',
       'clients.done': 'Done',
-      'clients.searchClients': 'Search clients...',
-      'clients.allStatus': 'All Status',
       'clients.allPlans': 'All Plans',
       'clients.weightLoss': 'Weight Loss',
       'clients.muscleGain': 'Muscle Gain',
@@ -457,6 +450,9 @@ const resources = {
       'paymentPlans.updateError': 'Failed to update client payment plan',
       'paymentPlans.deleteSuccess': 'Client payment plan deleted successfully',
       'paymentPlans.deleteError': 'Failed to delete client payment plan',
+      
+      // Payment Plan Validation Errors
+      'paymentPlans.errors.planNameRequired': 'Plan name is required',
     }
   },
   es: {
@@ -582,9 +578,6 @@ const resources = {
       'plans.failedToLoad': 'Error al cargar los detalles del plan de entrenamiento.',
       'plans.planNotFound': 'Plan de Entrenamiento No Encontrado',
       'plans.couldNotBeFound': 'El plan de entrenamiento solicitado no se pudo encontrar.',
-      'plans.dailyCalories': 'Calorías Diarias',
-      'plans.protein': 'Proteína',
-      'plans.carbs': 'Carbohidratos',
       'plans.noPlanYet': 'Aún no hay planes de entrenamiento',
 
       // Create Plan Form
@@ -745,14 +738,12 @@ const resources = {
       'profile.professionalInformation': 'Información Profesional',
       'profile.personalInformation': 'Información Personal',
       'profile.phone': 'Teléfono',
-      'profile.address': 'Dirección',
       'profile.notProvided': 'No proporcionado',
       'profile.yourReferralCode': 'Tu Código de Referencia',
       'profile.shareThisCode': 'Comparte este código con nuevos clientes:',
 
       // Client Management
       'clients.clientManagement': 'Gestión de Clientes',
-      'clients.inviteClient': 'Invitar Cliente',
       'clients.shareReferralInfo': 'Comparte tu Información de Referencia',
       'clients.registrationUrl': 'URL de Registro',
       'clients.shareLink': 'Comparte este enlace directamente con los clientes para registrarse',
@@ -760,8 +751,6 @@ const resources = {
       'clients.manualCode': 'Los clientes pueden ingresar este código manualmente durante el registro',
       'clients.testLink': 'Probar Enlace',
       'clients.done': 'Hecho',
-      'clients.searchClients': 'Buscar clientes...',
-      'clients.allStatus': 'Todos los Estados',
       'clients.allPlans': 'Todos los Planes',
       'clients.weightLoss': 'Pérdida de Peso',
       'clients.muscleGain': 'Ganar Músculo',
@@ -904,6 +893,9 @@ const resources = {
       'paymentPlans.updateError': 'Error al actualizar el plan de pago de cliente',
       'paymentPlans.deleteSuccess': 'Plan de pago de cliente eliminado exitosamente',
       'paymentPlans.deleteError': 'Error al eliminar el plan de pago de cliente',
+      
+      // Payment Plan Validation Errors
+      'paymentPlans.errors.planNameRequired': 'El nombre del plan es requerido',
     }
   },
   fr: {

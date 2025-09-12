@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Trash2, Edit, Plus, DollarSign } from "lucide-react";
 
 const clientPaymentPlanSchema = z.object({
-  name: z.string().min(1, "Plan name is required"),
+  name: z.string().min(1),
   description: z.string().optional(),
   amount: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
   currency: z.string().default("USD"),
@@ -58,7 +59,9 @@ function ClientPaymentPlanForm({
   const [featuresInput, setFeaturesInput] = useState(plan?.features?.join(", ") || "");
 
   const form = useForm<ClientPaymentPlanForm>({
-    resolver: zodResolver(clientPaymentPlanSchema),
+    resolver: zodResolver(clientPaymentPlanSchema.extend({
+      name: z.string().min(1, t('paymentPlans.errors.planNameRequired'))
+    })),
     defaultValues: {
       name: plan?.name || "",
       description: plan?.description || "",
@@ -310,7 +313,7 @@ export default function ClientPaymentPlansPage() {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: currency || 'USD',
     }).format(amount);
