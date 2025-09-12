@@ -211,7 +211,14 @@ export default function TrainingPlans() {
   };
 
   const getDayName = (dayNumber: number) => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      t('days.monday'),
+      t('days.tuesday'),
+      t('days.wednesday'),
+      t('days.thursday'),
+      t('days.friday'),
+      t('days.saturday')
+    ];
     return days[dayNumber - 1];
   };
 
@@ -259,74 +266,74 @@ export default function TrainingPlans() {
       {showCreateForm && (
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Create New Training Plan</CardTitle>
+            <CardTitle>{t('plans.createNewPlan')}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreatePlan} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="name">Plan Name</Label>
-                  <Input id="name" name="name" placeholder="e.g., Weight Loss Program" required />
+                  <Label htmlFor="name">{t('plans.planName')}</Label>
+                  <Input id="name" name="name" placeholder={t('plans.planNamePlaceholder')} required />
                 </div>
                 <div>
-                  <Label htmlFor="duration">Plan Duration</Label>
+                  <Label htmlFor="duration">{t('plans.planDuration')}</Label>
                   <Select name="duration" required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select duration" />
+                      <SelectValue placeholder={t('plans.selectDuration')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="till-goal">Till Goal is Met</SelectItem>
-                      <SelectItem value="4">4 weeks</SelectItem>
-                      <SelectItem value="6">6 weeks</SelectItem>
-                      <SelectItem value="8">8 weeks</SelectItem>
-                      <SelectItem value="12">12 weeks</SelectItem>
-                      <SelectItem value="16">16 weeks</SelectItem>
-                      <SelectItem value="24">24 weeks</SelectItem>
+                      <SelectItem value="till-goal">{t('plans.tillGoal')}</SelectItem>
+                      <SelectItem value="4">{t('plans.weeksOption', { count: 4 })}</SelectItem>
+                      <SelectItem value="6">{t('plans.weeksOption', { count: 6 })}</SelectItem>
+                      <SelectItem value="8">{t('plans.weeksOption', { count: 8 })}</SelectItem>
+                      <SelectItem value="12">{t('plans.weeksOption', { count: 12 })}</SelectItem>
+                      <SelectItem value="16">{t('plans.weeksOption', { count: 16 })}</SelectItem>
+                      <SelectItem value="24">{t('plans.weeksOption', { count: 24 })}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="weeksCycle">Week Cycle Pattern</Label>
+                  <Label htmlFor="weeksCycle">{t('plans.weekCyclePattern')}</Label>
                   <Select value={weeksCycle.toString()} onValueChange={handleWeeksCycleChange} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select pattern cycle" />
+                      <SelectValue placeholder={t('plans.selectPatternCycle')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 week (repeat every week)</SelectItem>
-                      <SelectItem value="2">2 weeks (repeat every 2 weeks)</SelectItem>
-                      <SelectItem value="3">3 weeks (repeat every 3 weeks)</SelectItem>
-                      <SelectItem value="4">4 weeks (repeat every 4 weeks)</SelectItem>
+                      <SelectItem value="1">{t('plans.weekOption')}</SelectItem>
+                      <SelectItem value="2">{t('plans.weeksRepeatOption', { count: 2 })}</SelectItem>
+                      <SelectItem value="3">{t('plans.weeksRepeatOption', { count: 3 })}</SelectItem>
+                      <SelectItem value="4">{t('plans.weeksRepeatOption', { count: 4 })}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('plans.description')}</Label>
                 <Textarea 
                   id="description" 
                   name="description" 
-                  placeholder="Describe the plan goals and approach..." 
+                  placeholder={t('plans.descriptionPlaceholder')} 
                   rows={3}
                 />
               </div>
 
               <div>
-                <Label htmlFor="goal">Primary Goal</Label>
-                <Input id="goal" name="goal" placeholder="e.g., Lose weight, build muscle" />
+                <Label htmlFor="goal">{t('plans.primaryGoal')}</Label>
+                <Input id="goal" name="goal" placeholder={t('plans.primaryGoalPlaceholder')} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="dailyCalories">Daily Calories</Label>
+                  <Label htmlFor="dailyCalories">{t('plans.dailyCalories')}</Label>
                   <Input id="dailyCalories" name="dailyCalories" type="number" placeholder="2000" />
                 </div>
                 <div>
-                  <Label htmlFor="protein">Protein (g)</Label>
+                  <Label htmlFor="protein">{t('plans.proteinG')}</Label>
                   <Input id="protein" name="protein" type="number" placeholder="120" />
                 </div>
                 <div>
-                  <Label htmlFor="carbs">Carbs (g)</Label>
+                  <Label htmlFor="carbs">{t('plans.carbsG')}</Label>
                   <Input id="carbs" name="carbs" type="number" placeholder="200" />
                 </div>
               </div>
@@ -334,19 +341,19 @@ export default function TrainingPlans() {
               {/* Weekly Workout Days Tabs */}
               {weeksCycle > 0 && (
                 <div className="space-y-4">
-                  <Label className="text-base font-semibold">Weekly Workout Schedule</Label>
+                  <Label className="text-base font-semibold">{t('plans.weeklyWorkoutSchedule')}</Label>
                   <Tabs defaultValue="1" className="w-full">
                     <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${weeksCycle}, 1fr)` }}>
                       {Array.from({ length: weeksCycle }, (_, i) => i + 1).map((week) => (
                         <TabsTrigger key={week} value={week.toString()}>
-                          Week {week}
+                          {t('plans.weekLabel', { count: week })}
                         </TabsTrigger>
                       ))}
                     </TabsList>
                     
                     {Array.from({ length: weeksCycle }, (_, i) => i + 1).map((week) => (
                       <TabsContent key={week} value={week.toString()} className="space-y-4">
-                        <h3 className="text-lg font-medium">Week {week} Workouts</h3>
+                        <h3 className="text-lg font-medium">{t('plans.weekWorkouts', { count: week })}</h3>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                           {Array.from({ length: 6 }, (_, i) => i + 1).map((day) => (
                             <div key={day} className="space-y-3">
@@ -356,7 +363,7 @@ export default function TrainingPlans() {
                               
                               {/* Available Exercises */}
                               <div className="border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
-                                <Label className="text-sm text-gray-600">Available Exercises:</Label>
+                                <Label className="text-sm text-gray-600">{t('plans.availableExercises')}</Label>
                                 {Array.isArray(exercises) && exercises.length > 0 ? (
                                   exercises.map((exercise: any) => {
                                     const isSelected = workoutDays[week]?.[day]?.some(ex => ex.exerciseId === exercise.id);
@@ -379,14 +386,14 @@ export default function TrainingPlans() {
                                     );
                                   })
                                 ) : (
-                                  <p className="text-sm text-gray-500">No exercises available. Create exercises first.</p>
+                                  <p className="text-sm text-gray-500">{t('plans.noExercisesAvailable')}</p>
                                 )}
                               </div>
 
                               {/* Selected Exercises Details */}
                               {workoutDays[week]?.[day] && workoutDays[week][day].length > 0 && (
                                 <div className="space-y-3">
-                                  <Label className="text-sm text-gray-600">Selected Exercises:</Label>
+                                  <Label className="text-sm text-gray-600">{t('plans.selectedExercises')}</Label>
                                   {workoutDays[week][day].map((selectedExercise, index) => {
                                     const exercise = Array.isArray(exercises) ? exercises.find((ex: any) => ex.id === selectedExercise.exerciseId) : undefined;
                                     return (
@@ -406,7 +413,7 @@ export default function TrainingPlans() {
                                         
                                         <div className="grid grid-cols-2 gap-2">
                                           <div>
-                                            <Label className="text-xs">Sets</Label>
+                                            <Label className="text-xs">{t('plans.sets').replace(':', '')}</Label>
                                             <Input
                                               type="number"
                                               value={selectedExercise.sets || ''}
@@ -417,7 +424,7 @@ export default function TrainingPlans() {
                                             />
                                           </div>
                                           <div>
-                                            <Label className="text-xs">Reps</Label>
+                                            <Label className="text-xs">{t('plans.reps').replace(':', '')}</Label>
                                             <Input
                                               type="number"
                                               value={selectedExercise.reps || ''}
@@ -431,7 +438,7 @@ export default function TrainingPlans() {
                                         
                                         <div className="grid grid-cols-2 gap-2">
                                           <div>
-                                            <Label className="text-xs">Weight (kg)</Label>
+                                            <Label className="text-xs">{t('plans.weight').replace(':', '')} ({t('plans.kg')})</Label>
                                             <Input
                                               type="number"
                                               step="0.5"
@@ -443,7 +450,7 @@ export default function TrainingPlans() {
                                             />
                                           </div>
                                           <div>
-                                            <Label className="text-xs">Rest (sec)</Label>
+                                            <Label className="text-xs">{t('plans.rest').replace(':', '')} ({t('plans.sec')})</Label>
                                             <Input
                                               type="number"
                                               value={selectedExercise.restTime || ''}
@@ -456,7 +463,7 @@ export default function TrainingPlans() {
                                         </div>
                                         
                                         <div>
-                                          <Label className="text-xs">Notes</Label>
+                                          <Label className="text-xs">{t('plans.notes').replace(':', '')}</Label>
                                           <Textarea
                                             value={selectedExercise.notes || ''}
                                             onChange={(e) => handleExerciseDetailChange(week, day, selectedExercise.exerciseId, 'notes', e.target.value)}
@@ -484,13 +491,13 @@ export default function TrainingPlans() {
                   variant="outline" 
                   onClick={resetForm}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={createPlanMutation.isPending}
                 >
-                  {createPlanMutation.isPending ? "Creating..." : "Create Plan"}
+                  {createPlanMutation.isPending ? t('plans.creating') : t('plans.createPlan')}
                 </Button>
               </div>
             </form>
