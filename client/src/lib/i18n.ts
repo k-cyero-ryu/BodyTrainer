@@ -191,6 +191,12 @@ const resources = {
       'profile.facebookPlaceholder': 'Facebook profile',
       'profile.twitterPlaceholder': 'Twitter handle',
       'profile.linkedinPlaceholder': 'LinkedIn profile',
+      'profile.contactInformation': 'Contact Information',
+      'profile.professionalInformation': 'Professional Information',
+      'profile.personalInformation': 'Personal Information',
+      'profile.phone': 'Phone',
+      'profile.address': 'Address',
+      'profile.notProvided': 'Not provided',
       
       // Admin
       'admin.dashboard': 'SuperAdmin Dashboard',
@@ -388,6 +394,12 @@ const resources = {
       'profile.facebookPlaceholder': 'Perfil de Facebook',
       'profile.twitterPlaceholder': 'Usuario de Twitter',
       'profile.linkedinPlaceholder': 'Perfil de LinkedIn',
+      'profile.contactInformation': 'Información de Contacto',
+      'profile.professionalInformation': 'Información Profesional',
+      'profile.personalInformation': 'Información Personal',
+      'profile.phone': 'Teléfono',
+      'profile.address': 'Dirección',
+      'profile.notProvided': 'No proporcionado',
 
       // Admin
       'admin.dashboard': 'Panel de SuperAdmin',

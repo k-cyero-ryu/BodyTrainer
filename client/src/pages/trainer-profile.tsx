@@ -260,7 +260,7 @@ export default function TrainerProfile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Personal Information
+                {t('profile.personalInformation')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -298,7 +298,7 @@ export default function TrainerProfile() {
                       name="email"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>{t('profile.email')}</FormLabel>
                           <FormControl>
                             <Input {...field} type="email" data-testid="input-email" />
                           </FormControl>
@@ -319,7 +319,7 @@ export default function TrainerProfile() {
                     <p className="font-medium" data-testid="text-last-name">{user?.lastName || t('profile.notSet')}</p>
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="text-sm text-gray-600">{t('profile.email')}</p>
                     <p className="font-medium flex items-center gap-2" data-testid="text-email">
                       <Mail className="h-4 w-4" />
                       {user?.email}
@@ -333,7 +333,7 @@ export default function TrainerProfile() {
           {/* Professional Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Professional Information</CardTitle>
+              <CardTitle>{t('profile.professionalInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {isEditing ? (
@@ -407,7 +407,7 @@ export default function TrainerProfile() {
           {/* Contact Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
+              <CardTitle>{t('profile.contactInformation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {isEditing ? (
@@ -444,7 +444,7 @@ export default function TrainerProfile() {
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Address</FormLabel>
+                          <FormLabel>{t('profile.address')}</FormLabel>
                           <FormControl>
                             <Textarea {...field} placeholder="Studio address or gym location" rows={2} data-testid="input-address" />
                           </FormControl>
@@ -470,10 +470,10 @@ export default function TrainerProfile() {
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Phone</p>
+                    <p className="text-sm text-gray-600">{t('profile.phone')}</p>
                     <p className="font-medium flex items-center gap-2" data-testid="text-phone">
                       <Phone className="h-4 w-4" />
-                      {(trainerProfile as any)?.phone || "Not provided"}
+                      {(trainerProfile as any)?.phone || t('profile.notProvided')}
                     </p>
                   </div>
                   <div>
@@ -485,7 +485,7 @@ export default function TrainerProfile() {
                   </div>
                   {(trainerProfile as any)?.address && (
                     <div>
-                      <p className="text-sm text-gray-600">Address</p>
+                      <p className="text-sm text-gray-600">{t('profile.address')}</p>
                       <p className="font-medium" data-testid="text-address">{(trainerProfile as any)?.address}</p>
                     </div>
                   )}
