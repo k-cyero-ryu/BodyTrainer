@@ -499,6 +499,38 @@ export const communityMessages = pgTable("community_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Social posts schema - platform-wide posts visible to all users
+export const socialPosts = pgTable("social_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  imageUrl: varchar("image_url"), // Optional photo/image attachment
+  imageName: varchar("image_name"),
+  imageSize: integer("image_size"),
+  likesCount: integer("likes_count").default(0),
+  commentsCount: integer("comments_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Social likes schema (many-to-many between users and posts)
+export const socialLikes = pgTable("social_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  postId: varchar("post_id").notNull().references(() => socialPosts.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Social comments schema
+export const socialComments = pgTable("social_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  postId: varchar("post_id").notNull().references(() => socialPosts.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Community Groups Relations
 export const communityGroupsRelations = relations(communityGroups, ({ one, many }) => ({
   trainer: one(trainers, {
@@ -533,6 +565,40 @@ export const communityMessagesRelations = relations(communityMessages, ({ one })
   }),
 }));
 
+// Social Posts Relations
+export const socialPostsRelations = relations(socialPosts, ({ one, many }) => ({
+  author: one(users, {
+    fields: [socialPosts.userId],
+    references: [users.id],
+  }),
+  likes: many(socialLikes),
+  comments: many(socialComments),
+}));
+
+// Social Likes Relations
+export const socialLikesRelations = relations(socialLikes, ({ one }) => ({
+  user: one(users, {
+    fields: [socialLikes.userId],
+    references: [users.id],
+  }),
+  post: one(socialPosts, {
+    fields: [socialLikes.postId],
+    references: [socialPosts.id],
+  }),
+}));
+
+// Social Comments Relations
+export const socialCommentsRelations = relations(socialComments, ({ one }) => ({
+  author: one(users, {
+    fields: [socialComments.userId],
+    references: [users.id],
+  }),
+  post: one(socialPosts, {
+    fields: [socialComments.postId],
+    references: [socialPosts.id],
+  }),
+}));
+
 // Community insert schemas and types (defined after tables)
 export const insertCommunityGroupSchema = createInsertSchema(communityGroups).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCommunityMemberSchema = createInsertSchema(communityMembers).omit({ id: true, joinedAt: true });
@@ -544,3 +610,15 @@ export type InsertCommunityMember = z.infer<typeof insertCommunityMemberSchema>;
 export type CommunityMember = typeof communityMembers.$inferSelect;
 export type InsertCommunityMessage = z.infer<typeof insertCommunityMessageSchema>;
 export type CommunityMessage = typeof communityMessages.$inferSelect;
+
+// Social insert schemas and types
+export const insertSocialPostSchema = createInsertSchema(socialPosts).omit({ id: true, createdAt: true, updatedAt: true, likesCount: true, commentsCount: true });
+export const insertSocialLikeSchema = createInsertSchema(socialLikes).omit({ id: true, createdAt: true });
+export const insertSocialCommentSchema = createInsertSchema(socialComments).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type InsertSocialPost = z.infer<typeof insertSocialPostSchema>;
+export type SocialPost = typeof socialPosts.$inferSelect;
+export type InsertSocialLike = z.infer<typeof insertSocialLikeSchema>;
+export type SocialLike = typeof socialLikes.$inferSelect;
+export type InsertSocialComment = z.infer<typeof insertSocialCommentSchema>;
+export type SocialComment = typeof socialComments.$inferSelect;

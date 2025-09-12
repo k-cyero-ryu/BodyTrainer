@@ -13,6 +13,9 @@ import {
   communityGroups,
   communityMembers,
   communityMessages,
+  socialPosts,
+  socialLikes,
+  socialComments,
   paymentPlans,
   clientPaymentPlans,
   type User,
@@ -47,6 +50,12 @@ import {
   type InsertPaymentPlan,
   type ClientPaymentPlan,
   type InsertClientPaymentPlan,
+  type SocialPost,
+  type SocialLike,
+  type SocialComment,
+  type InsertSocialPost,
+  type InsertSocialLike,
+  type InsertSocialComment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql, gte, lte } from "drizzle-orm";
@@ -185,6 +194,23 @@ export interface IStorage {
   getTrainersWithDetails(): Promise<any[]>;
   updateTrainerPaymentPlan(trainerId: string, paymentPlanId: string | null): Promise<void>;
   updateTrainerStatus(trainerId: string, status: string): Promise<void>;
+
+  // Social operations
+  createSocialPost(post: InsertSocialPost): Promise<SocialPost>;
+  getSocialPosts(limit?: number, offset?: number): Promise<any[]>; // Returns posts with author info
+  getSocialPost(id: string): Promise<SocialPost | undefined>;
+  updateSocialPost(id: string, post: Partial<InsertSocialPost>): Promise<SocialPost>;
+  deleteSocialPost(id: string): Promise<void>;
+  
+  // Social likes operations
+  toggleSocialLike(userId: string, postId: string): Promise<{ liked: boolean; likesCount: number }>;
+  getSocialPostLikes(postId: string): Promise<SocialLike[]>;
+  
+  // Social comments operations
+  createSocialComment(comment: InsertSocialComment): Promise<SocialComment>;
+  getSocialPostComments(postId: string): Promise<any[]>; // Returns comments with author info
+  updateSocialComment(id: string, comment: Partial<InsertSocialComment>): Promise<SocialComment>;
+  deleteSocialComment(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1307,6 +1333,180 @@ export class DatabaseStorage implements IStorage {
 
     // User is not a member of any group that uses this file
     return false;
+  }
+
+  // Social Posts operations
+  async createSocialPost(post: InsertSocialPost): Promise<SocialPost> {
+    const [created] = await db.insert(socialPosts).values(post).returning();
+    return created;
+  }
+
+  async getSocialPosts(limit: number = 20, offset: number = 0): Promise<any[]> {
+    const posts = await db
+      .select({
+        id: socialPosts.id,
+        content: socialPosts.content,
+        imageUrl: socialPosts.imageUrl,
+        imageName: socialPosts.imageName,
+        imageSize: socialPosts.imageSize,
+        likesCount: socialPosts.likesCount,
+        commentsCount: socialPosts.commentsCount,
+        createdAt: socialPosts.createdAt,
+        updatedAt: socialPosts.updatedAt,
+        authorId: socialPosts.userId,
+        authorFirstName: users.firstName,
+        authorLastName: users.lastName,
+        authorUsername: users.username,
+        authorRole: users.role,
+        authorProfileImageUrl: users.profileImageUrl,
+      })
+      .from(socialPosts)
+      .innerJoin(users, eq(socialPosts.userId, users.id))
+      .orderBy(desc(socialPosts.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return posts;
+  }
+
+  async getSocialPost(id: string): Promise<SocialPost | undefined> {
+    const [post] = await db.select().from(socialPosts).where(eq(socialPosts.id, id));
+    return post;
+  }
+
+  async updateSocialPost(id: string, post: Partial<InsertSocialPost>): Promise<SocialPost> {
+    const [updated] = await db
+      .update(socialPosts)
+      .set({ ...post, updatedAt: new Date() })
+      .where(eq(socialPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSocialPost(id: string): Promise<void> {
+    // Delete all likes and comments first
+    await db.delete(socialLikes).where(eq(socialLikes.postId, id));
+    await db.delete(socialComments).where(eq(socialComments.postId, id));
+    
+    // Delete the post
+    await db.delete(socialPosts).where(eq(socialPosts.id, id));
+  }
+
+  // Social Likes operations
+  async toggleSocialLike(userId: string, postId: string): Promise<{ liked: boolean; likesCount: number }> {
+    // Check if user already liked this post
+    const [existingLike] = await db
+      .select()
+      .from(socialLikes)
+      .where(and(eq(socialLikes.userId, userId), eq(socialLikes.postId, postId)));
+
+    let liked: boolean;
+
+    if (existingLike) {
+      // Unlike the post
+      await db
+        .delete(socialLikes)
+        .where(and(eq(socialLikes.userId, userId), eq(socialLikes.postId, postId)));
+      liked = false;
+    } else {
+      // Like the post
+      await db.insert(socialLikes).values({ userId, postId });
+      liked = true;
+    }
+
+    // Update likes count on the post
+    const [countResult] = await db
+      .select({ count: count() })
+      .from(socialLikes)
+      .where(eq(socialLikes.postId, postId));
+
+    const likesCount = countResult?.count || 0;
+
+    await db
+      .update(socialPosts)
+      .set({ likesCount })
+      .where(eq(socialPosts.id, postId));
+
+    return { liked, likesCount };
+  }
+
+  async getSocialPostLikes(postId: string): Promise<SocialLike[]> {
+    return await db.select().from(socialLikes).where(eq(socialLikes.postId, postId));
+  }
+
+  // Social Comments operations
+  async createSocialComment(comment: InsertSocialComment): Promise<SocialComment> {
+    const [created] = await db.insert(socialComments).values(comment).returning();
+
+    // Update comments count on the post
+    const [countResult] = await db
+      .select({ count: count() })
+      .from(socialComments)
+      .where(eq(socialComments.postId, comment.postId));
+
+    const commentsCount = countResult?.count || 0;
+
+    await db
+      .update(socialPosts)
+      .set({ commentsCount })
+      .where(eq(socialPosts.id, comment.postId));
+
+    return created;
+  }
+
+  async getSocialPostComments(postId: string): Promise<any[]> {
+    const comments = await db
+      .select({
+        id: socialComments.id,
+        content: socialComments.content,
+        createdAt: socialComments.createdAt,
+        updatedAt: socialComments.updatedAt,
+        postId: socialComments.postId,
+        authorId: socialComments.userId,
+        authorFirstName: users.firstName,
+        authorLastName: users.lastName,
+        authorUsername: users.username,
+        authorRole: users.role,
+        authorProfileImageUrl: users.profileImageUrl,
+      })
+      .from(socialComments)
+      .innerJoin(users, eq(socialComments.userId, users.id))
+      .where(eq(socialComments.postId, postId))
+      .orderBy(socialComments.createdAt);
+    
+    return comments;
+  }
+
+  async updateSocialComment(id: string, comment: Partial<InsertSocialComment>): Promise<SocialComment> {
+    const [updated] = await db
+      .update(socialComments)
+      .set({ ...comment, updatedAt: new Date() })
+      .where(eq(socialComments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSocialComment(id: string): Promise<void> {
+    // Get the comment to find the postId
+    const [comment] = await db.select().from(socialComments).where(eq(socialComments.id, id));
+    
+    if (comment) {
+      // Delete the comment
+      await db.delete(socialComments).where(eq(socialComments.id, id));
+
+      // Update comments count on the post
+      const [countResult] = await db
+        .select({ count: count() })
+        .from(socialComments)
+        .where(eq(socialComments.postId, comment.postId));
+
+      const commentsCount = countResult?.count || 0;
+
+      await db
+        .update(socialPosts)
+        .set({ commentsCount })
+        .where(eq(socialPosts.id, comment.postId));
+    }
   }
 }
 
