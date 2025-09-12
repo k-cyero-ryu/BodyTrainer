@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -42,6 +43,7 @@ export default function Navigation() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
 
   if (!isAuthenticated) return null;
@@ -51,31 +53,31 @@ export default function Navigation() {
   const navigationItems = [
     { 
       href: '/', 
-      label: 'Dashboard', 
+      label: t('nav.dashboard'), 
       icon: Home,
       roles: ['superadmin', 'trainer', 'client']
     },
     { 
       href: '/manage-trainers', 
-      label: 'Manage Trainers', 
+      label: t('admin.totalTrainers'), 
       icon: Users,
       roles: ['superadmin']
     },
     { 
       href: '/admin-clients', 
-      label: 'All Clients', 
+      label: t('admin.totalClients'), 
       icon: UserCheck,
       roles: ['superadmin']
     },
     { 
       href: '/admin-plans', 
-      label: 'All Training Plans', 
+      label: t('plans.trainingPlans'), 
       icon: Dumbbell,
       roles: ['superadmin']
     },
     { 
       href: '/admin-exercises', 
-      label: 'All Exercises', 
+      label: t('exercises.library'), 
       icon: Activity,
       roles: ['superadmin']
     },
@@ -99,13 +101,13 @@ export default function Navigation() {
     },
     { 
       href: '/clients', 
-      label: 'My Clients', 
+      label: t('nav.clients'), 
       icon: Users,
       roles: ['trainer']
     },
     { 
       href: '/training-plans', 
-      label: 'Training Plans', 
+      label: t('nav.plans'), 
       icon: Dumbbell,
       roles: ['trainer']
     },
@@ -117,13 +119,13 @@ export default function Navigation() {
     },
     { 
       href: '/my-training-plans', 
-      label: 'My Training Plans', 
+      label: t('nav.plans'), 
       icon: Dumbbell,
       roles: ['client']
     },
     { 
       href: '/monthly-evaluation', 
-      label: 'Monthly Evaluation', 
+      label: t('client.monthlyEvaluation'), 
       icon: Calendar,
       roles: ['client']
     },
@@ -135,7 +137,7 @@ export default function Navigation() {
     },
     { 
       href: '/exercises', 
-      label: 'Exercises', 
+      label: t('nav.exercises'), 
       icon: Dumbbell,
       roles: ['trainer']
     },
@@ -147,7 +149,7 @@ export default function Navigation() {
     },
     { 
       href: '/reports', 
-      label: 'Reports', 
+      label: t('nav.reports'), 
       icon: BarChart3,
       roles: ['trainer']
     },
@@ -342,7 +344,7 @@ export default function Navigation() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
               <LogOut className="mr-2 h-4 w-4" />
-              Log out
+              {t('auth.signOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

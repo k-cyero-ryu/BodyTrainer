@@ -169,6 +169,58 @@ const resources = {
       'dashboard.referralCode': 'Tu Código de Referencia',
       'dashboard.upcomingEvaluations': 'Evaluaciones Próximas',
       
+      // Clients
+      'clients.management': 'Gestión de Clientes',
+      'clients.inviteClient': 'Invitar Cliente',
+      'clients.searchClients': 'Buscar clientes...',
+      'clients.allStatus': 'Todos los Estados',
+      'clients.active': 'Activo',
+      'clients.inactive': 'Inactivo',
+      'clients.noClients': 'No se encontraron clientes',
+      'clients.progress': 'Progreso',
+      
+      // Training Plans
+      'plans.trainingPlans': 'Planes de Entrenamiento',
+      'plans.createPlan': 'Crear Plan',
+      'plans.planName': 'Nombre del Plan',
+      'plans.duration': 'Duración',
+      'plans.description': 'Descripción',
+      'plans.goal': 'Objetivo',
+      'plans.dailyCalories': 'Calorías Diarias',
+      'plans.protein': 'Proteína',
+      'plans.carbs': 'Carbohidratos',
+      'plans.noPlanYet': 'Aún no hay planes de entrenamiento',
+      
+      // Exercises
+      'exercises.library': 'Biblioteca de Ejercicios',
+      'exercises.addExercise': 'Agregar Ejercicio',
+      'exercises.exerciseName': 'Nombre del Ejercicio',
+      'exercises.category': 'Categoría',
+      'exercises.uploadMedia': 'Subir Multimedia',
+      'exercises.noExercises': 'Aún no hay ejercicios',
+      'exercises.categories': {
+        'strength': 'Fuerza',
+        'cardio': 'Cardio',
+        'flexibility': 'Flexibilidad',
+        'sports': 'Deportes'
+      },
+      
+      // Reports
+      'reports.analytics': 'Reportes y Análisis',
+      'reports.clientGrowth': 'Crecimiento de Clientes',
+      'reports.revenueGrowth': 'Crecimiento de Ingresos',
+      'reports.avgProgress': 'Progreso Promedio',
+      'reports.retentionRate': 'Tasa de Retención',
+      'reports.businessGrowth': 'Crecimiento del Negocio',
+      'reports.topPerforming': 'Clientes con Mejor Rendimiento',
+      'reports.needsAttention': 'Necesita Atención',
+      
+      // Chat
+      'chat.messages': 'Mensajes',
+      'chat.typeMessage': 'Escribe tu mensaje...',
+      'chat.online': 'En línea',
+      'chat.noConversations': 'No hay conversaciones disponibles',
+      
       // Community
       'no_community_group': 'Sin Grupo Comunitario',
       'community_group_info': 'Tendrás acceso a un grupo comunitario una vez que tengas clientes o seas asignado a un entrenador.',
@@ -176,6 +228,27 @@ const resources = {
       'start_conversation': '¡Inicia la conversación enviando un mensaje!',
       'failed_to_send_message': 'Error al enviar mensaje',
       'error': 'Error',
+      
+      // Client Dashboard
+      'client.dashboard': 'Mi Panel',
+      'client.workoutsThisWeek': 'Entrenamientos Esta Semana',
+      'client.currentWeight': 'Peso Actual',
+      'client.goalProgress': 'Progreso del Objetivo',
+      'client.streak': 'Racha',
+      'client.todaysWorkout': 'Entrenamiento de Hoy',
+      'client.progressOverview': 'Resumen de Progreso',
+      'client.monthlyEvaluation': 'Evaluación Mensual',
+      'client.completeWorkout': 'Completar Entrenamiento',
+      
+      // Admin
+      'admin.dashboard': 'Panel de SuperAdmin',
+      'admin.totalTrainers': 'Total de Entrenadores',
+      'admin.activeTrainers': 'Entrenadores Activos',
+      'admin.totalClients': 'Total de Clientes',
+      'admin.pendingApprovals': 'Aprobaciones Pendientes de Entrenadores',
+      'admin.systemAnalytics': 'Análisis del Sistema',
+      'admin.approve': 'Aprobar',
+      'admin.reject': 'Rechazar',
     }
   },
   fr: {
