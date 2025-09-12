@@ -140,6 +140,9 @@ const resources = {
       
       // Admin
       'admin.dashboard': 'SuperAdmin Dashboard',
+      'admin.systemOverview': 'System overview and trainer management',
+      'admin.accessDenied': 'Access Denied',
+      'admin.noPermission': 'You don\'t have permission to access this page.',
       'admin.totalTrainers': 'Total Trainers',
       'admin.activeTrainers': 'Active Trainers',
       'admin.totalClients': 'Total Clients',
