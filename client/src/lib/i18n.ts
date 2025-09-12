@@ -12,6 +12,7 @@ const resources = {
       'nav.plans': 'Plans',
       'nav.exercises': 'Exercises',
       'nav.reports': 'Reports',
+      'nav.clientPaymentPlans': 'Client Payment Plans',
       
       // Common
       'common.loading': 'Loading...',
@@ -464,6 +465,7 @@ const resources = {
       'nav.plans': 'Planes',
       'nav.exercises': 'Ejercicios',
       'nav.reports': 'Reportes',
+      'nav.clientPaymentPlans': 'Planes de Pago de Clientes',
       
       // Common
       'common.loading': 'Cargando...',

@@ -143,7 +143,7 @@ export default function Navigation() {
     },
     { 
       href: '/client-payment-plans', 
-      label: 'Client Payment Plans', 
+      label: t('nav.clientPaymentPlans'), 
       icon: CreditCard,
       roles: ['trainer'] 
     },
