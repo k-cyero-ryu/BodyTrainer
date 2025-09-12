@@ -158,6 +158,12 @@ export default function Navigation() {
       label: t('nav.communityChat'), 
       icon: MessageCircle,
       roles: ['trainer', 'client']
+    },
+    { 
+      href: '/social', 
+      label: t('nav.social', 'Social'), 
+      icon: MessageCircle,
+      roles: ['superadmin', 'trainer', 'client']
     }
   ].filter(item => item.roles.includes(userRole));
 
