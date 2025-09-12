@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { formatDistanceToNow } from "date-fns";
-import { Heart, MessageCircle, Share2, MoreHorizontal, Send, Image as ImageIcon, User, X } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Send, Image as ImageIcon, User, X, Edit2, Trash2, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from "@uppy/core";
+import { useAuth } from "@/hooks/useAuth";
 
 const createPostSchema = z.object({
   content: z.string().min(1, "Post content is required").max(2000, "Post too long"),
@@ -62,12 +65,17 @@ interface SocialComment {
 export default function Social() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [newComments, setNewComments] = useState<Record<string, string>>({});
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editPostContent, setEditPostContent] = useState("");
+  const [editCommentContent, setEditCommentContent] = useState("");
 
   // Fetch social posts
   const { data: posts, isLoading } = useQuery<SocialPost[]>({
@@ -124,6 +132,102 @@ export default function Social() {
       queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/social/posts", postId, "comments"] });
       setNewComments(prev => ({ ...prev, [postId]: "" }));
+    },
+  });
+
+  // Edit post mutation
+  const editPostMutation = useMutation({
+    mutationFn: ({ postId, content }: { postId: string; content: string }) =>
+      apiRequest("PUT", `/api/social/posts/${postId}`, { content }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
+      setEditingPostId(null);
+      setEditPostContent("");
+      toast({
+        title: t("social.postUpdated", "Post updated successfully"),
+        description: t("social.postUpdatedDesc", "Your post has been updated"),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t("common.error", "Error"),
+        description: t("social.editPostError", "Failed to update post"),
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: (postId: string) => apiRequest("DELETE", `/api/social/posts/${postId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
+      toast({
+        title: t("social.postDeleted", "Post deleted successfully"),
+        description: t("social.postDeletedDesc", "Your post has been removed"),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t("common.error", "Error"),
+        description: t("social.deletePostError", "Failed to delete post"),
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Edit comment mutation
+  const editCommentMutation = useMutation({
+    mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
+      apiRequest("PUT", `/api/social/comments/${commentId}`, { content }),
+    onSuccess: (_, { commentId }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
+      // Find the post ID for this comment to refresh comments
+      const postWithComment = posts?.find(post => 
+        expandedComments.has(post.id)
+      );
+      if (postWithComment) {
+        queryClient.invalidateQueries({ queryKey: ["/api/social/posts", postWithComment.id, "comments"] });
+      }
+      setEditingCommentId(null);
+      setEditCommentContent("");
+      toast({
+        title: t("social.commentUpdated", "Comment updated successfully"),
+        description: t("social.commentUpdatedDesc", "Your comment has been updated"),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t("common.error", "Error"),
+        description: t("social.editCommentError", "Failed to update comment"),
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: string) => apiRequest("DELETE", `/api/social/comments/${commentId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
+      // Find the post ID for this comment to refresh comments
+      const postWithComment = posts?.find(post => 
+        expandedComments.has(post.id)
+      );
+      if (postWithComment) {
+        queryClient.invalidateQueries({ queryKey: ["/api/social/posts", postWithComment.id, "comments"] });
+      }
+      toast({
+        title: t("social.commentDeleted", "Comment deleted successfully"),
+        description: t("social.commentDeletedDesc", "Your comment has been removed"),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t("common.error", "Error"),
+        description: t("social.deleteCommentError", "Failed to delete comment"),
+        variant: "destructive",
+      });
     },
   });
 
@@ -195,6 +299,45 @@ export default function Social() {
     if (!content?.trim()) return;
 
     createCommentMutation.mutate({ postId, content });
+  };
+
+  // Helper functions for edit/delete actions
+  const handleEditPost = (post: SocialPost) => {
+    setEditingPostId(post.id);
+    setEditPostContent(post.content);
+  };
+
+  const handleSavePostEdit = (postId: string) => {
+    if (!editPostContent.trim()) return;
+    editPostMutation.mutate({ postId, content: editPostContent });
+  };
+
+  const handleCancelPostEdit = () => {
+    setEditingPostId(null);
+    setEditPostContent("");
+  };
+
+  const handleDeletePost = (postId: string) => {
+    deletePostMutation.mutate(postId);
+  };
+
+  const handleEditComment = (comment: SocialComment) => {
+    setEditingCommentId(comment.id);
+    setEditCommentContent(comment.content);
+  };
+
+  const handleSaveCommentEdit = (commentId: string) => {
+    if (!editCommentContent.trim()) return;
+    editCommentMutation.mutate({ commentId, content: editCommentContent });
+  };
+
+  const handleCancelCommentEdit = () => {
+    setEditingCommentId(null);
+    setEditCommentContent("");
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    deleteCommentMutation.mutate(commentId);
   };
 
   const getRoleBadgeColor = (role: string): "default" | "destructive" | "outline" | "secondary" => {
@@ -392,6 +535,7 @@ export default function Social() {
               <PostCard
                 key={post.id}
                 post={post}
+                currentUser={user}
                 onToggleLike={handleToggleLike}
                 onToggleComments={handleToggleComments}
                 isCommentsExpanded={expandedComments.has(post.id)}
@@ -400,10 +544,26 @@ export default function Social() {
                   setNewComments(prev => ({ ...prev, [post.id]: value }))
                 }
                 onCreateComment={handleCreateComment}
+                onEditPost={handleEditPost}
+                onSavePostEdit={handleSavePostEdit}
+                onCancelPostEdit={handleCancelPostEdit}
+                onDeletePost={handleDeletePost}
+                onEditComment={handleEditComment}
+                onSaveCommentEdit={handleSaveCommentEdit}
+                onCancelCommentEdit={handleCancelCommentEdit}
+                onDeleteComment={handleDeleteComment}
                 fetchComments={fetchComments}
                 getRoleBadgeColor={getRoleBadgeColor}
                 getRoleLabel={getRoleLabel}
                 createCommentMutation={createCommentMutation}
+                editingPostId={editingPostId}
+                editingCommentId={editingCommentId}
+                editPostContent={editPostContent}
+                editCommentContent={editCommentContent}
+                setEditPostContent={setEditPostContent}
+                setEditCommentContent={setEditCommentContent}
+                editPostMutation={editPostMutation}
+                editCommentMutation={editCommentMutation}
               />
             ))
           )}
@@ -415,33 +575,70 @@ export default function Social() {
 
 interface PostCardProps {
   post: SocialPost;
+  currentUser: any;
   onToggleLike: (postId: string) => void;
   onToggleComments: (postId: string) => void;
   isCommentsExpanded: boolean;
   newComment: string;
   onNewCommentChange: (value: string) => void;
   onCreateComment: (postId: string) => void;
+  onEditPost: (post: SocialPost) => void;
+  onSavePostEdit: (postId: string) => void;
+  onCancelPostEdit: () => void;
+  onDeletePost: (postId: string) => void;
+  onEditComment: (comment: SocialComment) => void;
+  onSaveCommentEdit: (commentId: string) => void;
+  onCancelCommentEdit: () => void;
+  onDeleteComment: (commentId: string) => void;
   fetchComments: (postId: string) => any;
   getRoleBadgeColor: (role: string) => string;
   getRoleLabel: (role: string) => string;
   createCommentMutation: any;
+  editingPostId: string | null;
+  editingCommentId: string | null;
+  editPostContent: string;
+  editCommentContent: string;
+  setEditPostContent: (content: string) => void;
+  setEditCommentContent: (content: string) => void;
+  editPostMutation: any;
+  editCommentMutation: any;
 }
 
 function PostCard({
   post,
+  currentUser,
   onToggleLike,
   onToggleComments,
   isCommentsExpanded,
   newComment,
   onNewCommentChange,
   onCreateComment,
+  onEditPost,
+  onSavePostEdit,
+  onCancelPostEdit,
+  onDeletePost,
+  onEditComment,
+  onSaveCommentEdit,
+  onCancelCommentEdit,
+  onDeleteComment,
   fetchComments,
   getRoleBadgeColor,
   getRoleLabel,
-  createCommentMutation
+  createCommentMutation,
+  editingPostId,
+  editingCommentId,
+  editPostContent,
+  editCommentContent,
+  setEditPostContent,
+  setEditCommentContent,
+  editPostMutation,
+  editCommentMutation
 }: PostCardProps) {
   const { t } = useTranslation();
   const { data: comments }: { data: SocialComment[] | undefined } = fetchComments(post.id);
+  
+  const isAuthor = currentUser?.id === post.authorId;
+  const isEditing = editingPostId === post.id;
 
   return (
     <Card data-testid={`card-social-post-${post.id}`}>
@@ -469,16 +666,94 @@ function PostCard({
               {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
             </p>
           </div>
-          <Button variant="ghost" size="sm">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
+          {isAuthor && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" data-testid={`dropdown-post-${post.id}`}>
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => onEditPost(post)}
+                  data-testid={`menu-edit-post-${post.id}`}
+                >
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  {t("common.edit", "Edit")}
+                </DropdownMenuItem>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem 
+                      onSelect={(e) => e.preventDefault()}
+                      data-testid={`menu-delete-post-${post.id}`}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {t("common.delete", "Delete")}
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t("social.deletePostTitle", "Delete Post")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("social.deletePostConfirm", "Are you sure you want to delete this post? This action cannot be undone.")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{t("common.cancel", "Cancel")}</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDeletePost(post.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        data-testid={`confirm-delete-post-${post.id}`}
+                      >
+                        {t("common.delete", "Delete")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-4">
-          <p className="text-sm whitespace-pre-wrap" data-testid={`text-content-${post.id}`}>
-            {post.content}
-          </p>
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea
+                value={editPostContent}
+                onChange={(e) => setEditPostContent(e.target.value)}
+                className="min-h-[80px] resize-none"
+                placeholder={t("social.editPostPlaceholder", "Edit your post...")}
+                data-testid={`textarea-edit-post-${post.id}`}
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onCancelPostEdit}
+                  data-testid={`button-cancel-edit-post-${post.id}`}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  {t("common.cancel", "Cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => onSavePostEdit(post.id)}
+                  disabled={editPostMutation.isPending || !editPostContent.trim()}
+                  data-testid={`button-save-edit-post-${post.id}`}
+                >
+                  <Check className="w-4 h-4 mr-1" />
+                  {editPostMutation.isPending ? t("common.saving", "Saving...") : t("common.save", "Save")}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm whitespace-pre-wrap" data-testid={`text-content-${post.id}`}>
+              {post.content}
+            </p>
+          )}
           
           {post.imageUrl && (
             <div className="rounded-lg overflow-hidden">
@@ -562,34 +837,124 @@ function PostCard({
 
               {/* Comments List */}
               <div className="space-y-3">
-                {comments?.map((comment) => (
-                  <div key={comment.id} className="flex space-x-3" data-testid={`comment-${comment.id}`}>
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={comment.authorProfileImageUrl} />
-                      <AvatarFallback>
-                        <User className="w-4 h-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-semibold text-sm" data-testid={`text-comment-author-${comment.id}`}>
-                            {comment.authorFirstName} {comment.authorLastName}
-                          </span>
-                          <Badge variant={getRoleBadgeColor(comment.authorRole) as any} className="text-xs">
-                            {getRoleLabel(comment.authorRole)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm" data-testid={`text-comment-content-${comment.id}`}>
-                          {comment.content}
-                        </p>
+                {comments?.map((comment) => {
+                  const isCommentAuthor = currentUser?.id === comment.authorId;
+                  const isEditingComment = editingCommentId === comment.id;
+                  
+                  return (
+                    <div key={comment.id} className="flex space-x-3" data-testid={`comment-${comment.id}`}>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={comment.authorProfileImageUrl} />
+                        <AvatarFallback>
+                          <User className="w-4 h-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        {isEditingComment ? (
+                          <div className="space-y-2">
+                            <Textarea
+                              value={editCommentContent}
+                              onChange={(e) => setEditCommentContent(e.target.value)}
+                              className="min-h-[60px] resize-none"
+                              placeholder={t("social.editCommentPlaceholder", "Edit your comment...")}
+                              data-testid={`textarea-edit-comment-${comment.id}`}
+                            />
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={onCancelCommentEdit}
+                                data-testid={`button-cancel-edit-comment-${comment.id}`}
+                              >
+                                <X className="w-4 h-4 mr-1" />
+                                {t("common.cancel", "Cancel")}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => onSaveCommentEdit(comment.id)}
+                                disabled={editCommentMutation.isPending || !editCommentContent.trim()}
+                                data-testid={`button-save-edit-comment-${comment.id}`}
+                              >
+                                <Check className="w-4 h-4 mr-1" />
+                                {editCommentMutation.isPending ? t("common.saving", "Saving...") : t("common.save", "Save")}
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 relative group">
+                              {isCommentAuthor && (
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" data-testid={`dropdown-comment-${comment.id}`}>
+                                        <MoreHorizontal className="w-3 h-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() => onEditComment(comment)}
+                                        data-testid={`menu-edit-comment-${comment.id}`}
+                                      >
+                                        <Edit2 className="w-4 h-4 mr-2" />
+                                        {t("common.edit", "Edit")}
+                                      </DropdownMenuItem>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <DropdownMenuItem 
+                                            onSelect={(e) => e.preventDefault()}
+                                            data-testid={`menu-delete-comment-${comment.id}`}
+                                          >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            {t("common.delete", "Delete")}
+                                          </DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>{t("social.deleteCommentTitle", "Delete Comment")}</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              {t("social.deleteCommentConfirm", "Are you sure you want to delete this comment? This action cannot be undone.")}
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>{t("common.cancel", "Cancel")}</AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={() => onDeleteComment(comment.id)}
+                                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                              data-testid={`confirm-delete-comment-${comment.id}`}
+                                            >
+                                              {t("common.delete", "Delete")}
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              )}
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="font-semibold text-sm" data-testid={`text-comment-author-${comment.id}`}>
+                                  {comment.authorFirstName} {comment.authorLastName}
+                                </span>
+                                <Badge variant={getRoleBadgeColor(comment.authorRole) as any} className="text-xs">
+                                  {getRoleLabel(comment.authorRole)}
+                                </Badge>
+                              </div>
+                              <p className="text-sm pr-6" data-testid={`text-comment-content-${comment.id}`}>
+                                {comment.content}
+                              </p>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1" data-testid={`text-comment-time-${comment.id}`}>
+                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                            </p>
+                          </>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1" data-testid={`text-comment-time-${comment.id}`}>
-                        {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
