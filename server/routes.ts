@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission, ObjectAclPolicy } from "./objectAcl";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -2963,6 +2963,246 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating client:", error);
       res.status(500).json({ message: "Failed to update client" });
+    }
+  });
+
+  // Social Posts API routes
+
+  // Get social posts (feed)
+  app.get('/api/social/posts', isAuthenticated, async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const posts = await storage.getSocialPosts(limit, offset);
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching social posts:", error);
+      res.status(500).json({ message: "Failed to fetch social posts" });
+    }
+  });
+
+  // Create new social post
+  app.post('/api/social/posts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const postData = { ...req.body, userId };
+
+      // Validate the post data
+      const validatedData = insertSocialPostSchema.parse(postData);
+      
+      const post = await storage.createSocialPost(validatedData);
+      res.status(201).json(post);
+    } catch (error) {
+      console.error("Error creating social post:", error);
+      res.status(500).json({ message: "Failed to create social post" });
+    }
+  });
+
+  // Get specific social post
+  app.get('/api/social/posts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const post = await storage.getSocialPost(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching social post:", error);
+      res.status(500).json({ message: "Failed to fetch social post" });
+    }
+  });
+
+  // Update social post (only by author)
+  app.put('/api/social/posts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+
+      // Check if post exists and user owns it
+      const existingPost = await storage.getSocialPost(id);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      if (existingPost.userId !== userId) {
+        return res.status(403).json({ message: "Access denied - you can only edit your own posts" });
+      }
+
+      const updatedPost = await storage.updateSocialPost(id, req.body);
+      res.json(updatedPost);
+    } catch (error) {
+      console.error("Error updating social post:", error);
+      res.status(500).json({ message: "Failed to update social post" });
+    }
+  });
+
+  // Delete social post (only by author)
+  app.delete('/api/social/posts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+
+      // Check if post exists and user owns it
+      const existingPost = await storage.getSocialPost(id);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      if (existingPost.userId !== userId) {
+        return res.status(403).json({ message: "Access denied - you can only delete your own posts" });
+      }
+
+      await storage.deleteSocialPost(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting social post:", error);
+      res.status(500).json({ message: "Failed to delete social post" });
+    }
+  });
+
+  // Social Likes API routes
+
+  // Toggle like on a post
+  app.post('/api/social/posts/:id/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id: postId } = req.params;
+
+      // Check if post exists
+      const post = await storage.getSocialPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const result = await storage.toggleSocialLike(userId, postId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling social like:", error);
+      res.status(500).json({ message: "Failed to toggle like" });
+    }
+  });
+
+  // Get likes for a post
+  app.get('/api/social/posts/:id/likes', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id: postId } = req.params;
+      const likes = await storage.getSocialPostLikes(postId);
+      res.json(likes);
+    } catch (error) {
+      console.error("Error fetching post likes:", error);
+      res.status(500).json({ message: "Failed to fetch likes" });
+    }
+  });
+
+  // Social Comments API routes
+
+  // Get comments for a post
+  app.get('/api/social/posts/:id/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id: postId } = req.params;
+      const comments = await storage.getSocialPostComments(postId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching post comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // Create comment on a post
+  app.post('/api/social/posts/:id/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id: postId } = req.params;
+      const { content } = req.body;
+
+      // Check if post exists
+      const post = await storage.getSocialPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Comment content is required" });
+      }
+
+      const comment = await storage.createSocialComment({
+        userId,
+        postId,
+        content: content.trim()
+      });
+
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating social comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Update comment (only by author)
+  app.put('/api/social/comments/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+      const { content } = req.body;
+
+      // Get the comment to check ownership
+      const [existingComment] = await db
+        .select()
+        .from(socialComments)
+        .where(eq(socialComments.id, id));
+
+      if (!existingComment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      if (existingComment.userId !== userId) {
+        return res.status(403).json({ message: "Access denied - you can only edit your own comments" });
+      }
+
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Comment content is required" });
+      }
+
+      const updatedComment = await storage.updateSocialComment(id, {
+        content: content.trim()
+      });
+
+      res.json(updatedComment);
+    } catch (error) {
+      console.error("Error updating social comment:", error);
+      res.status(500).json({ message: "Failed to update comment" });
+    }
+  });
+
+  // Delete comment (only by author)
+  app.delete('/api/social/comments/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+
+      // Get the comment to check ownership
+      const [existingComment] = await db
+        .select()
+        .from(socialComments)
+        .where(eq(socialComments.id, id));
+
+      if (!existingComment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      if (existingComment.userId !== userId) {
+        return res.status(403).json({ message: "Access denied - you can only delete your own comments" });
+      }
+
+      await storage.deleteSocialComment(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting social comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
     }
   });
 
