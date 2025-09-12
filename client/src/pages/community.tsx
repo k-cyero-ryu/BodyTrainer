@@ -82,8 +82,8 @@ export default function Community() {
     },
     onError: (error: any) => {
       toast({
-        title: t('error'),
-        description: error.message || t('failed_to_send_message'),
+        title: t('common.error'),
+        description: error.message || t('community.failedToSendMessage'),
         variant: "destructive",
       });
     },
@@ -128,7 +128,7 @@ export default function Community() {
       // Send message with file attachment
       createMessage.mutate({
         groupId: group?.id,
-        message: `Shared a file: ${file.name}`,
+        message: `${t('community.sharedFile')}: ${file.name}`,
         messageType: 'file',
         attachmentUrl: objectPath,
         attachmentName: file.name,
@@ -138,8 +138,8 @@ export default function Community() {
     },
     onError: (error: any) => {
       toast({
-        title: t('upload_failed'),
-        description: error.message || t('failed_to_upload_file'),
+        title: t('community.uploadFailed'),
+        description: error.message || t('community.failedToUploadFile'),
         variant: "destructive",
       });
     },
@@ -213,8 +213,8 @@ export default function Community() {
     // Check file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
       toast({
-        title: t('file_too_large'),
-        description: t('file_size_limit_10mb'),
+        title: t('community.fileTooLarge'),
+        description: t('community.fileSizeLimit'),
         variant: "destructive",
       });
       return;
@@ -259,7 +259,7 @@ export default function Community() {
                 onClick={() => window.open(msg.attachmentUrl, '_blank')}
                 data-testid={`button-download-${msg.id}`}
               >
-                Download
+                {t('community.download')}
               </Button>
             </div>
           </div>
@@ -308,9 +308,9 @@ export default function Community() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <h3 className="font-semibold text-lg mb-2">{t('no_community_group')}</h3>
+              <h3 className="font-semibold text-lg mb-2">{t('community.noCommunityGroup')}</h3>
               <p className="text-muted-foreground">
-                {t('community_group_info')}
+                {t('community.communityGroupInfo')}
               </p>
             </div>
           </CardContent>
@@ -331,7 +331,7 @@ export default function Community() {
               )}
             </div>
             <Badge variant="secondary" data-testid="badge-member-count">
-              {messages.length > 0 ? `${new Set(messages.map(m => m.senderId)).size} members` : 'Community'}
+              {messages.length > 0 ? `${new Set(messages.map(m => m.senderId)).size} ${t('community.members')}` : t('community.community')}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -356,8 +356,8 @@ export default function Community() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">{t('no_messages_yet')}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{t('start_conversation')}</p>
+                  <p className="text-muted-foreground">{t('community.noMessagesYet')}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t('community.startConversation')}</p>
                 </div>
               ) : (
                 messages.slice().reverse().map((msg: CommunityMessage) => (
@@ -395,7 +395,7 @@ export default function Community() {
                 <Input
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder={t('type_your_message')}
+                  placeholder={t('community.typeMessage')}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   data-testid="input-message"
                 />
@@ -433,7 +433,7 @@ export default function Community() {
             
             {uploading && (
               <div className="mt-2 text-sm text-muted-foreground">
-                {t('uploading_file')}...
+                {t('community.uploadingFile')}...
               </div>
             )}
           </div>

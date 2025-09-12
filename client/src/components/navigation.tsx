@@ -83,13 +83,13 @@ export default function Navigation() {
     },
     { 
       href: '/payment-plans', 
-      label: 'Payment Plans', 
+      label: t('nav.paymentPlans'), 
       icon: CreditCard,
       roles: ['superadmin']
     },
     { 
       href: '/user-management', 
-      label: 'User Management', 
+      label: t('nav.userManagement'), 
       icon: UserCog,
       roles: ['superadmin']
     },
@@ -113,7 +113,7 @@ export default function Navigation() {
     },
     { 
       href: '/daily-workout', 
-      label: 'Daily Workout', 
+      label: t('nav.dailyWorkout'), 
       icon: Activity,
       roles: ['client']
     },
@@ -155,7 +155,7 @@ export default function Navigation() {
     },
     { 
       href: '/community', 
-      label: 'Community Chat', 
+      label: t('nav.communityChat'), 
       icon: MessageCircle,
       roles: ['trainer', 'client']
     }
@@ -282,11 +282,11 @@ export default function Navigation() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    {t('nav.settings')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Log out
+                    {t('nav.logout')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -340,7 +340,7 @@ export default function Navigation() {
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
-              Settings
+              {t('nav.settings')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
               <LogOut className="mr-2 h-4 w-4" />
