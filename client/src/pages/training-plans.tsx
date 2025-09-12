@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { Link } from "wouter";
 export default function TrainingPlans() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [weeksCycle, setWeeksCycle] = useState<number>(1);
@@ -67,8 +69,8 @@ export default function TrainingPlans() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Training plan created successfully",
+        title: t('plans.success'),
+        description: t('plans.planCreated'),
       });
       resetForm();
       queryClient.invalidateQueries({ queryKey: ["/api/training-plans"] });
@@ -86,8 +88,8 @@ export default function TrainingPlans() {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to create training plan",
+        title: t('plans.error'),
+        description: t('plans.failedToCreate'),
         variant: "destructive",
       });
     },
@@ -241,7 +243,7 @@ export default function TrainingPlans() {
   return (
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8 flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Training Plans</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('plans.trainingPlans')}</h1>
         <Button onClick={() => {
           setShowCreateForm(true);
           // Initialize workout days for default 1 week
@@ -250,7 +252,7 @@ export default function TrainingPlans() {
           }
         }}>
           <Plus className="h-4 w-4 mr-2" />
-          Create Plan
+          {t('plans.createPlan')}
         </Button>
       </div>
 
@@ -559,16 +561,16 @@ export default function TrainingPlans() {
                       size="sm"
                     >
                       <Eye className="h-4 w-4 mr-1" />
-                      View Details
+                      {t('plans.viewDetails')}
                     </Button>
                   </Link>
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4 mr-1" />
-                    Edit
+                    {t('plans.edit')}
                   </Button>
                   <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
                     <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
+                    {t('plans.delete')}
                   </Button>
 
                 </div>
@@ -615,9 +617,9 @@ export default function TrainingPlans() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold mb-2">Plan Details</h3>
                 <div className="space-y-2 text-sm">
-                  <div><span className="text-gray-500">Duration:</span> <span className="font-medium">{selectedPlan.duration} weeks</span></div>
-                  <div><span className="text-gray-500">Goal:</span> <span className="font-medium">{selectedPlan.goal || "Not specified"}</span></div>
-                  <div><span className="text-gray-500">Status:</span> <Badge variant={selectedPlan.isActive ? "default" : "secondary"}>{selectedPlan.isActive ? "Active" : "Draft"}</Badge></div>
+                  <div><span className="text-gray-500">{t('plans.duration')}:</span> <span className="font-medium">{selectedPlan.duration} {t('plans.weeks')}</span></div>
+                  <div><span className="text-gray-500">{t('plans.goal')}:</span> <span className="font-medium">{selectedPlan.goal || t('plans.notSpecified')}</span></div>
+                  <div><span className="text-gray-500">Status:</span> <Badge variant={selectedPlan.isActive ? "default" : "secondary"}>{selectedPlan.isActive ? t('plans.active') : t('plans.draft')}</Badge></div>
                 </div>
               </div>
 
@@ -625,15 +627,15 @@ export default function TrainingPlans() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="font-semibold mb-2">Nutrition</h3>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-gray-500">Daily Calories:</span> <span className="font-medium">{selectedPlan.dailyCalories} kcal</span></div>
-                    {selectedPlan.protein && <div><span className="text-gray-500">Protein:</span> <span className="font-medium">{selectedPlan.protein}g</span></div>}
+                    <div><span className="text-gray-500">{t('plans.dailyCalories')}:</span> <span className="font-medium">{selectedPlan.dailyCalories} {t('plans.kcal')}</span></div>
+                    {selectedPlan.protein && <div><span className="text-gray-500">{t('plans.protein')}:</span> <span className="font-medium">{selectedPlan.protein}g</span></div>}
                     {selectedPlan.carbs && <div><span className="text-gray-500">Carbs:</span> <span className="font-medium">{selectedPlan.carbs}g</span></div>}
                   </div>
                 </div>
               )}
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Created</h3>
+                <h3 className="font-semibold mb-2">{t('plans.created')}</h3>
                 <div className="text-sm">
                   <div className="text-gray-500">
                     {selectedPlan.createdAt ? new Date(selectedPlan.createdAt).toLocaleDateString() : "Recently"}
@@ -643,7 +645,7 @@ export default function TrainingPlans() {
             </div>
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="font-semibold mb-2 text-yellow-800">Exercises</h3>
+              <h3 className="font-semibold mb-2 text-yellow-800">{t('plans.exercises')}</h3>
               <p className="text-yellow-700 text-sm">
                 Exercise details and workout schedule will be displayed here once the full exercise viewing system is implemented.
                 This plan currently stores exercises in the database and can be assigned to clients.
@@ -655,7 +657,7 @@ export default function TrainingPlans() {
                 Close
               </Button>
               <Button>
-                Edit Plan
+                {t('plans.editPlan')}
               </Button>
             </div>
           </div>
