@@ -95,7 +95,7 @@ export default function Navigation() {
     },
     { 
       href: '/profile', 
-      label: 'Profile', 
+      label: t('nav.profile'), 
       icon: User,
       roles: ['trainer']
     },
@@ -131,7 +131,7 @@ export default function Navigation() {
     },
     { 
       href: '/profile', 
-      label: 'Profile', 
+      label: t('nav.profile'), 
       icon: User,
       roles: ['client']
     },

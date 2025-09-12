@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -40,6 +41,7 @@ import {
 export default function ClientProfile() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [trainerDialogOpen, setTrainerDialogOpen] = useState(false);
@@ -177,8 +179,8 @@ export default function ClientProfile() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">My Profile</h1>
-          <p className="text-muted-foreground">Manage your personal information and fitness goals</p>
+          <h1 className="text-3xl font-bold">{t('profile.myProfile')}</h1>
+          <p className="text-muted-foreground">{t('profile.managePersonal')}</p>
         </div>
         <div className="flex gap-2">
           {!isEditing ? (
@@ -207,7 +209,7 @@ export default function ClientProfile() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">{t('profile.firstName')}</Label>
                 <Input
                   id="firstName"
                   name="firstName"
@@ -217,7 +219,7 @@ export default function ClientProfile() {
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">{t('profile.lastName')}</Label>
                 <Input
                   id="lastName"
                   name="lastName"
@@ -230,7 +232,7 @@ export default function ClientProfile() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('profile.email')}</Label>
                 <Input
                   id="email"
                   value={clientProfile.email || ''}
@@ -240,7 +242,7 @@ export default function ClientProfile() {
                 <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
               </div>
               <div>
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{t('profile.phoneNumber')}</Label>
                 <Input
                   id="phone"
                   name="phone"
@@ -287,7 +289,7 @@ export default function ClientProfile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="goals">Fitness Goals</Label>
+              <Label htmlFor="goals">{t('profile.fitnessGoals')}</Label>
               <Textarea
                 id="goals"
                 name="goals"
@@ -302,7 +304,7 @@ export default function ClientProfile() {
               <div>
                 <Label htmlFor="currentWeight" className="flex items-center gap-1">
                   <Weight className="h-4 w-4" />
-                  Current Weight (kg)
+                  {t('profile.currentWeight')} (kg)
                 </Label>
                 <Input
                   id="currentWeight"
@@ -317,7 +319,7 @@ export default function ClientProfile() {
               <div>
                 <Label htmlFor="targetWeight" className="flex items-center gap-1">
                   <Target className="h-4 w-4" />
-                  Target Weight (kg)
+                  {t('profile.targetWeight')} (kg)
                 </Label>
                 <Input
                   id="targetWeight"
@@ -332,7 +334,7 @@ export default function ClientProfile() {
               <div>
                 <Label htmlFor="height" className="flex items-center gap-1">
                   <Ruler className="h-4 w-4" />
-                  Height (cm)
+                  {t('profile.height')} (cm)
                 </Label>
                 <Input
                   id="height"
@@ -348,7 +350,7 @@ export default function ClientProfile() {
             <div>
               <Label htmlFor="activityLevel" className="flex items-center gap-1">
                 <Activity className="h-4 w-4" />
-                Activity Level
+                {t('profile.activityLevel')}
               </Label>
               <Select name="activityLevel" defaultValue={clientProfile.activityLevel || 'moderate'} disabled={!isEditing}>
                 <SelectTrigger>
@@ -376,7 +378,7 @@ export default function ClientProfile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="medicalConditions">Medical Conditions</Label>
+              <Label htmlFor="medicalConditions">{t('profile.medicalConditions')}</Label>
               <Textarea
                 id="medicalConditions"
                 name="medicalConditions"
@@ -388,7 +390,7 @@ export default function ClientProfile() {
             </div>
 
             <div>
-              <Label htmlFor="dietaryRestrictions">Dietary Restrictions</Label>
+              <Label htmlFor="dietaryRestrictions">{t('profile.dietaryRestrictions')}</Label>
               <Textarea
                 id="dietaryRestrictions"
                 name="dietaryRestrictions"
@@ -662,7 +664,7 @@ export default function ClientProfile() {
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Changes
+                  {t('profile.updateProfile')}
                 </>
               )}
             </Button>

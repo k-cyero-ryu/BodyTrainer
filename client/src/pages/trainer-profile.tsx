@@ -1,6 +1,7 @@
 import { useState } from "react";
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -53,6 +54,7 @@ type UserProfileData = z.infer<typeof userProfileSchema>;
 export default function TrainerProfile() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [certificationDialog, setCertificationDialog] = useState(false);
@@ -216,8 +218,8 @@ export default function TrainerProfile() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900" data-testid="text-profile-title">Trainer Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your professional information and credentials</p>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid="text-profile-title">{t('profile.trainerProfile')}</h1>
+          <p className="text-gray-600 mt-2">{t('profile.manageProfessional')}</p>
         </div>
         <div className="flex gap-2">
           {isEditing ? (
@@ -236,7 +238,7 @@ export default function TrainerProfile() {
                 data-testid="button-save-profile"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save Changes
+                {t('profile.updateProfile')}
               </Button>
             </>
           ) : (
@@ -270,7 +272,7 @@ export default function TrainerProfile() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>{t('profile.firstName')}</FormLabel>
                           <FormControl>
                             <Input {...field} data-testid="input-first-name" />
                           </FormControl>
@@ -283,7 +285,7 @@ export default function TrainerProfile() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name</FormLabel>
+                          <FormLabel>{t('profile.lastName')}</FormLabel>
                           <FormControl>
                             <Input {...field} data-testid="input-last-name" />
                           </FormControl>
@@ -309,11 +311,11 @@ export default function TrainerProfile() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">First Name</p>
+                    <p className="text-sm text-gray-600">{t('profile.firstName')}</p>
                     <p className="font-medium" data-testid="text-first-name">{user?.firstName || "Not set"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Last Name</p>
+                    <p className="text-sm text-gray-600">{t('profile.lastName')}</p>
                     <p className="font-medium" data-testid="text-last-name">{user?.lastName || "Not set"}</p>
                   </div>
                   <div className="md:col-span-2">
@@ -342,7 +344,7 @@ export default function TrainerProfile() {
                       name="expertise"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Expertise</FormLabel>
+                          <FormLabel>{t('profile.expertise')}</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="e.g., Weight Loss, Muscle Building" data-testid="input-expertise" />
                           </FormControl>
@@ -355,7 +357,7 @@ export default function TrainerProfile() {
                       name="experience"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Years of Experience</FormLabel>
+                          <FormLabel>{t('profile.experience')}</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="e.g., 5 years" data-testid="input-experience" />
                           </FormControl>
@@ -368,7 +370,7 @@ export default function TrainerProfile() {
                       name="bio"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Professional Bio</FormLabel>
+                          <FormLabel>{t('profile.bio')}</FormLabel>
                           <FormControl>
                             <Textarea 
                               {...field} 
@@ -386,15 +388,15 @@ export default function TrainerProfile() {
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Expertise</p>
+                    <p className="text-sm text-gray-600">{t('profile.expertise')}</p>
                     <p className="font-medium" data-testid="text-expertise">{(trainerProfile as any)?.expertise || "Not specified"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Experience</p>
+                    <p className="text-sm text-gray-600">{t('profile.experience')}</p>
                     <p className="font-medium" data-testid="text-experience">{(trainerProfile as any)?.experience || "Not specified"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Bio</p>
+                    <p className="text-sm text-gray-600">{t('profile.bio')}</p>
                     <p className="text-gray-900" data-testid="text-bio">{(trainerProfile as any)?.bio || "No bio provided"}</p>
                   </div>
                 </div>
@@ -416,7 +418,7 @@ export default function TrainerProfile() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel>{t('profile.phoneNumber')}</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="+1 (555) 123-4567" data-testid="input-phone" />
                           </FormControl>
@@ -429,7 +431,7 @@ export default function TrainerProfile() {
                       name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>City/Location</FormLabel>
+                          <FormLabel>{t('profile.location')}</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="New York, NY" data-testid="input-location" />
                           </FormControl>
@@ -455,7 +457,7 @@ export default function TrainerProfile() {
                       name="website"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Website</FormLabel>
+                          <FormLabel>{t('profile.website')}</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="https://yourwebsite.com" data-testid="input-website" />
                           </FormControl>
@@ -475,7 +477,7 @@ export default function TrainerProfile() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="text-sm text-gray-600">{t('profile.location')}</p>
                     <p className="font-medium flex items-center gap-2" data-testid="text-location">
                       <MapPin className="h-4 w-4" />
                       {(trainerProfile as any)?.location || "Not specified"}
@@ -489,7 +491,7 @@ export default function TrainerProfile() {
                   )}
                   {(trainerProfile as any)?.website && (
                     <div>
-                      <p className="text-sm text-gray-600">Website</p>
+                      <p className="text-sm text-gray-600">{t('profile.website')}</p>
                       <a 
                         href={(trainerProfile as any)?.website} 
                         target="_blank" 
@@ -527,7 +529,7 @@ export default function TrainerProfile() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Certifications
+                {t('profile.certifications')}
                 {isEditing && (
                   <Dialog open={certificationDialog} onOpenChange={setCertificationDialog}>
                     <DialogTrigger asChild>
@@ -598,7 +600,7 @@ export default function TrainerProfile() {
           {/* Specializations */}
           <Card>
             <CardHeader>
-              <CardTitle>Specializations</CardTitle>
+              <CardTitle>{t('profile.specializations')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -642,7 +644,7 @@ export default function TrainerProfile() {
           {/* Social Media */}
           <Card>
             <CardHeader>
-              <CardTitle>Social Media</CardTitle>
+              <CardTitle>{t('profile.socialMedia')}</CardTitle>
             </CardHeader>
             <CardContent>
               {isEditing ? (
