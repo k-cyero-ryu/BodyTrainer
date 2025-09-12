@@ -75,7 +75,7 @@ export default function Social() {
 
   // Create post mutation
   const createPostMutation = useMutation({
-    mutationFn: (data: CreatePostForm) => apiRequest("/api/social/posts", "POST", data),
+    mutationFn: (data: CreatePostForm) => apiRequest("POST", "/api/social/posts", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
       form.reset();
@@ -95,7 +95,7 @@ export default function Social() {
 
   // Toggle like mutation
   const toggleLikeMutation = useMutation({
-    mutationFn: (postId: string) => apiRequest(`/api/social/posts/${postId}/like`, "POST"),
+    mutationFn: (postId: string) => apiRequest("POST", `/api/social/posts/${postId}/like`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
     },
@@ -104,7 +104,7 @@ export default function Social() {
   // Create comment mutation
   const createCommentMutation = useMutation({
     mutationFn: ({ postId, content }: { postId: string; content: string }) => 
-      apiRequest(`/api/social/posts/${postId}/comments`, "POST", { content }),
+      apiRequest("POST", `/api/social/posts/${postId}/comments`, { content }),
     onSuccess: (_, { postId }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/social/posts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/social/posts", postId, "comments"] });
@@ -228,7 +228,12 @@ export default function Social() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled
+                    onClick={() => {
+                      toast({
+                        title: t("common.comingSoon", "Coming Soon"),
+                        description: t("social.photoUploadSoon", "Photo upload will be available soon"),
+                      });
+                    }}
                     data-testid="button-add-photo"
                   >
                     <ImageIcon className="w-4 h-4 mr-2" />
