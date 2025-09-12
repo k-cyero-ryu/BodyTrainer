@@ -631,6 +631,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/training-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const planId = req.params.id;
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can update training plans" });
+      }
+      
+      // Verify the plan belongs to this trainer
+      const existingPlan = await storage.getTrainingPlan(planId);
+      if (!existingPlan || existingPlan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updateData = {
+        name: req.body.name,
+        description: req.body.description,
+        goal: req.body.goal,
+        duration: req.body.duration,
+        weekCycle: req.body.weekCycle,
+        dailyCalories: req.body.dailyCalories,
+        protein: req.body.protein,
+        carbs: req.body.carbs,
+      };
+      
+      await storage.updateTrainingPlan(planId, updateData);
+      res.status(200).json({ message: "Training plan updated successfully" });
+    } catch (error) {
+      console.error("Error updating training plan:", error);
+      res.status(500).json({ message: "Failed to update training plan" });
+    }
+  });
+
   // Get single training plan by ID (accessible by both trainers and clients)
   app.get('/api/training-plans/:planId', isAuthenticated, async (req: any, res) => {
     try {
@@ -1463,6 +1498,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching exercises:", error);
       res.status(500).json({ message: "Failed to fetch exercises" });
+    }
+  });
+
+  app.put('/api/exercises/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const exerciseId = req.params.id;
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can update exercises" });
+      }
+      
+      // Verify the exercise belongs to this trainer
+      const existingExercise = await storage.getExercise(exerciseId);
+      if (!existingExercise || existingExercise.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updateData = {
+        name: req.body.name,
+        description: req.body.description,
+        category: req.body.category,
+      };
+      
+      await storage.updateExercise(exerciseId, updateData);
+      res.status(200).json({ message: "Exercise updated successfully" });
+    } catch (error) {
+      console.error("Error updating exercise:", error);
+      res.status(500).json({ message: "Failed to update exercise" });
     }
   });
 

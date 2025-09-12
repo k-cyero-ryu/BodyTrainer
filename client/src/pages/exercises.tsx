@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { Plus, Edit, Trash2, Play, Upload, Dumbbell } from "lucide-react";
+import { Plus, Edit, Trash2, Play, Upload, Dumbbell, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Exercises() {
@@ -21,6 +21,8 @@ export default function Exercises() {
   const { t } = useTranslation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [editingExercise, setEditingExercise] = useState<any>(null);
+  const [editCategory, setEditCategory] = useState<string>("");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -73,6 +75,38 @@ export default function Exercises() {
     },
   });
 
+  const updateExerciseMutation = useMutation({
+    mutationFn: async ({ id, ...data }: any) => {
+      await apiRequest("PUT", `/api/exercises/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: t('exercises.success'),
+        description: t('exercises.exerciseUpdated'),
+      });
+      setEditingExercise(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/exercises"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: t('exercises.unauthorized'),
+          description: t('exercises.loggedOutRetry'),
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: t('exercises.error'),
+        description: t('exercises.failedToUpdateExercise'),
+        variant: "destructive",
+      });
+    },
+  });
+
   const uploadMediaMutation = useMutation({
     mutationFn: async ({ exerciseId, mediaURL, mediaType }: { exerciseId: string; mediaURL: string; mediaType: string }) => {
       await apiRequest("PUT", `/api/exercises/${exerciseId}/media`, { mediaURL, mediaType });
@@ -104,6 +138,20 @@ export default function Exercises() {
     };
 
     createExerciseMutation.mutate(data);
+  };
+
+  const handleUpdateExercise = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const data = {
+      id: editingExercise.id,
+      name: formData.get('name') as string,
+      description: formData.get('description') as string,
+      category: editCategory,
+    };
+
+    updateExerciseMutation.mutate(data);
   };
 
   const handleGetUploadParameters = async () => {
@@ -234,6 +282,77 @@ export default function Exercises() {
         </Card>
       )}
 
+      {/* Edit Exercise Form */}
+      {editingExercise && (
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Edit Exercise</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setEditingExercise(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdateExercise} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-name">{t('exercises.exerciseName')}</Label>
+                <Input 
+                  id="edit-name" 
+                  name="name" 
+                  defaultValue={editingExercise.name}
+                  placeholder={t('exercises.exercisePlaceholder')} 
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-category">{t('exercises.category')}</Label>
+                <Select value={editCategory} onValueChange={setEditCategory} required>
+                  <SelectTrigger data-testid="select-edit-category">
+                    <SelectValue placeholder={t('exercises.selectCategory')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="strength">{t('exercises.categories.strength')}</SelectItem>
+                    <SelectItem value="cardio">{t('exercises.categories.cardio')}</SelectItem>
+                    <SelectItem value="flexibility">{t('exercises.categories.flexibility')}</SelectItem>
+                    <SelectItem value="sports">{t('exercises.categories.sports')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-description">{t('exercises.description')}</Label>
+                <Textarea 
+                  id="edit-description" 
+                  name="description" 
+                  defaultValue={editingExercise.description}
+                  placeholder={t('exercises.descriptionPlaceholder')} 
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setEditingExercise(null)}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateExerciseMutation.isPending}
+                >
+                  {updateExerciseMutation.isPending ? 'Updating...' : 'Update Exercise'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Exercises Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredExercises && filteredExercises.length > 0 ? (
@@ -248,7 +367,10 @@ export default function Exercises() {
                     </Badge>
                   </div>
                   <div className="flex space-x-1">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" data-testid="button-edit-exercise" onClick={() => {
+                      setEditingExercise(exercise);
+                      setEditCategory(exercise.category);
+                    }}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">

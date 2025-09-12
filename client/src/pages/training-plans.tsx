@@ -23,6 +23,9 @@ export default function TrainingPlans() {
   const { t } = useTranslation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [editGoal, setEditGoal] = useState<string>("");
+  const [editDuration, setEditDuration] = useState<string>("");
+  const [editWeekCycle, setEditWeekCycle] = useState<string>("");
   const [weeksCycle, setWeeksCycle] = useState<number>(1);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [showPlanDetails, setShowPlanDetails] = useState(false);
@@ -95,7 +98,37 @@ export default function TrainingPlans() {
     },
   });
 
-
+  const updatePlanMutation = useMutation({
+    mutationFn: async ({ id, ...data }: any) => {
+      await apiRequest("PUT", `/api/training-plans/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: t('plans.success'),
+        description: t('plans.planUpdated'),
+      });
+      setEditingPlan(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/training-plans"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: t('plans.error'),
+        description: t('plans.failedToUpdate'),
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleCreatePlan = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -134,6 +167,25 @@ export default function TrainingPlans() {
     };
 
     createPlanMutation.mutate(data);
+  };
+
+  const handleUpdatePlan = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const data = {
+      id: editingPlan.id,
+      name: formData.get('name') as string,
+      description: formData.get('description') as string,
+      goal: editGoal,
+      duration: editDuration,
+      weekCycle: parseInt(editWeekCycle),
+      dailyCalories: parseInt(formData.get('dailyCalories') as string) || null,
+      protein: parseInt(formData.get('protein') as string) || null,
+      carbs: parseInt(formData.get('carbs') as string) || null,
+    };
+
+    updatePlanMutation.mutate(data);
   };
 
   const handleWeeksCycleChange = (value: string) => {
@@ -505,6 +557,152 @@ export default function TrainingPlans() {
         </Card>
       )}
 
+      {/* Edit Training Plan Form */}
+      {editingPlan && (
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Edit Training Plan</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setEditingPlan(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdatePlan} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="edit-plan-name">{t('plans.planName')}</Label>
+                  <Input 
+                    id="edit-plan-name" 
+                    name="name" 
+                    defaultValue={editingPlan.name}
+                    placeholder={t('plans.planNamePlaceholder')} 
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-goal">{t('plans.goal')}</Label>
+                  <Select value={editGoal} onValueChange={setEditGoal} required>
+                    <SelectTrigger data-testid="select-edit-goal">
+                      <SelectValue placeholder={t('plans.selectGoal')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weight_loss">{t('plans.weightLoss')}</SelectItem>
+                      <SelectItem value="muscle_gain">{t('plans.muscleGain')}</SelectItem>
+                      <SelectItem value="endurance">{t('plans.endurance')}</SelectItem>
+                      <SelectItem value="strength">{t('plans.strength')}</SelectItem>
+                      <SelectItem value="general_fitness">{t('plans.generalFitness')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-description">{t('plans.description')}</Label>
+                <Textarea 
+                  id="edit-description" 
+                  name="description" 
+                  defaultValue={editingPlan.description || ''}
+                  placeholder={t('plans.descriptionPlaceholder')} 
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <Label htmlFor="edit-duration">{t('plans.duration')}</Label>
+                  <Select value={editDuration} onValueChange={setEditDuration} required>
+                    <SelectTrigger data-testid="select-edit-duration">
+                      <SelectValue placeholder={t('plans.selectDuration')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="4">{t('plans.fourWeeks')}</SelectItem>
+                      <SelectItem value="8">{t('plans.eightWeeks')}</SelectItem>
+                      <SelectItem value="12">{t('plans.twelveWeeks')}</SelectItem>
+                      <SelectItem value="0">{t('plans.tillGoal')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-weekCycle">{t('plans.weekCycle')}</Label>
+                  <Select value={editWeekCycle} onValueChange={setEditWeekCycle} required>
+                    <SelectTrigger data-testid="select-edit-weekCycle">
+                      <SelectValue placeholder={t('plans.selectWeekCycle')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">{t('plans.oneWeek')}</SelectItem>
+                      <SelectItem value="2">{t('plans.twoWeeks')}</SelectItem>
+                      <SelectItem value="3">{t('plans.threeWeeks')}</SelectItem>
+                      <SelectItem value="4">{t('plans.fourWeeksCycle')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-dailyCalories">{t('plans.dailyCalories')}</Label>
+                  <Input 
+                    id="edit-dailyCalories" 
+                    name="dailyCalories" 
+                    type="number"
+                    defaultValue={editingPlan.dailyCalories || ''}
+                    placeholder="2000" 
+                    min="1000"
+                    max="5000"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="edit-protein">{t('plans.protein')} (g)</Label>
+                  <Input 
+                    id="edit-protein" 
+                    name="protein" 
+                    type="number"
+                    defaultValue={editingPlan.protein || ''}
+                    placeholder="150" 
+                    min="50"
+                    max="300"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-carbs">{t('plans.carbs')} (g)</Label>
+                  <Input 
+                    id="edit-carbs" 
+                    name="carbs" 
+                    type="number"
+                    defaultValue={editingPlan.carbs || ''}
+                    placeholder="200" 
+                    min="50"
+                    max="400"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setEditingPlan(null)}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updatePlanMutation.isPending}
+                >
+                  {updatePlanMutation.isPending ? 'Updating...' : 'Update Plan'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Plans List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {Array.isArray(plans) && plans.length > 0 ? (
@@ -571,7 +769,12 @@ export default function TrainingPlans() {
                       {t('plans.viewDetails')}
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" data-testid="button-edit-plan" onClick={() => {
+                    setEditingPlan(plan);
+                    setEditGoal(plan.goal || "");
+                    setEditDuration(plan.duration?.toString() || "");
+                    setEditWeekCycle(plan.weekCycle?.toString() || "");
+                  }}>
                     <Edit className="h-4 w-4 mr-1" />
                     {t('plans.edit')}
                   </Button>
