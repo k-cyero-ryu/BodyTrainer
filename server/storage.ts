@@ -783,7 +783,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         totalClients: count(clients.id),
         activeClients: count(sql`CASE WHEN ${users.status} = 'active' THEN 1 END`),
-        monthlyRevenue: sum(sql`CASE WHEN ${clientPaymentPlans.price} IS NOT NULL THEN ${clientPaymentPlans.price} ELSE 0 END`),
+        monthlyRevenue: sum(clientPaymentPlans.amount),
         totalPlans: count(trainingPlans.id),
       })
       .from(trainers)
