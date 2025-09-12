@@ -508,7 +508,7 @@ export default function TrainingPlans() {
                   <div>
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
                     <p className="text-sm text-gray-500">
-                      {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                      {plan.duration === 0 ? t('plans.tillGoal') : `${plan.duration} ${plan.duration === 1 ? t('plans.week') : t('plans.weeks')}`}
                     </p>
                   </div>
                   <Badge variant={plan.isActive ? "default" : "secondary"}>
@@ -521,34 +521,34 @@ export default function TrainingPlans() {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-500">Goal:</span>
-                    <div className="font-medium">{plan.goal || "Not specified"}</div>
+                    <span className="text-gray-500">{t('plans.goal')}:</span>
+                    <div className="font-medium">{plan.goal || t('plans.notSpecified')}</div>
                   </div>
                   <div>
-                    <span className="text-gray-500">Duration:</span>
+                    <span className="text-gray-500">{t('plans.duration')}:</span>
                     <div className="font-medium">
-                      {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                      {plan.duration === 0 ? t('plans.tillGoal') : `${plan.duration} ${plan.duration === 1 ? t('plans.week') : t('plans.weeks')}`}
                     </div>
                   </div>
                   <div>
-                    <span className="text-gray-500">Week Cycle:</span>
-                    <div className="font-medium">{plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</div>
+                    <span className="text-gray-500">{t('plans.weekCycle')}:</span>
+                    <div className="font-medium">{plan.weekCycle || 1} {(plan.weekCycle || 1) === 1 ? t('plans.week') : t('plans.weeks')}</div>
                   </div>
                   {plan.dailyCalories && (
                     <div>
-                      <span className="text-gray-500">Daily Calories:</span>
-                      <div className="font-medium">{plan.dailyCalories} kcal</div>
+                      <span className="text-gray-500">{t('plans.dailyCalories')}:</span>
+                      <div className="font-medium">{plan.dailyCalories} {t('plans.kcal')}</div>
                     </div>
                   )}
                   {plan.protein && (
                     <div>
-                      <span className="text-gray-500">Protein:</span>
+                      <span className="text-gray-500">{t('plans.protein')}:</span>
                       <div className="font-medium">{plan.protein}g</div>
                     </div>
                   )}
                   {plan.carbs && (
                     <div>
-                      <span className="text-gray-500">Carbs:</span>
+                      <span className="text-gray-500">{t('plans.carbohydrates')}:</span>
                       <div className="font-medium">{plan.carbs}g</div>
                     </div>
                   )}
