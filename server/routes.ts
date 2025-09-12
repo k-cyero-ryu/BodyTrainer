@@ -5,7 +5,7 @@ import { parse as parseCookie } from "cookie";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { ObjectPermission, ObjectAclPolicy } from "./objectAcl";
+import { ObjectPermission, ObjectAclPolicy, getObjectAclPolicy } from "./objectAcl";
 import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -219,12 +219,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Additional check for community files: verify user is member of the community
-      // Community files are stored in private uploads directory
+      // Community files are stored in private uploads directory  
+      // Skip this check for social post images which should be publicly accessible
       if (req.path.includes('/objects/uploads/') && userId) {
         // Check if this file is associated with any community messages
-        const isAssociatedWithCommunity = await storage.isFileAssociatedWithUserCommunities(req.path, userId);
-        if (isAssociatedWithCommunity === false) {
-          return res.status(403).json({ error: "Access denied - not authorized for this community file" });
+        // But don't block social post images that are public
+        const aclPolicy = await getObjectAclPolicy(objectFile);
+        if (aclPolicy?.visibility !== "public") {
+          const isAssociatedWithCommunity = await storage.isFileAssociatedWithUserCommunities(req.path, userId);
+          if (isAssociatedWithCommunity === false) {
+            return res.status(403).json({ error: "Access denied - not authorized for this community file" });
+          }
         }
       }
       
