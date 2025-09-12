@@ -206,8 +206,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
       
+      // Get ACL policy first to check if it's public
+      const aclPolicy = await getObjectAclPolicy(objectFile);
+      
       // Check if user can access this object based on ACL policies
       const userId = req.user?.id; // User might not be authenticated for public files
+      
+      // Special handling for social post images - check if the image belongs to a social post
+      let isSocialPostImage = false;
+      if (!aclPolicy && req.path.includes('/objects/uploads/')) {
+        try {
+          const imageUrl = req.path; // e.g., "/objects/uploads/89982710-5f4f-4d68-b40f-2caffd07ffd2"
+          const socialPostExists = await storage.isSocialPostImage(imageUrl);
+          if (socialPostExists) {
+            isSocialPostImage = true;
+          }
+        } catch (error) {
+          console.error("Error checking social post image:", error);
+        }
+      }
+      
+      // Allow access if it's a social post image (even without ACL policy)
+      if (isSocialPostImage) {
+        objectStorageService.downloadObject(objectFile, res);
+        return;
+      }
+      
       const canAccess = await objectStorageService.canAccessObjectEntity({
         userId,
         objectFile,
@@ -224,7 +248,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.path.includes('/objects/uploads/') && userId) {
         // Check if this file is associated with any community messages
         // But don't block social post images that are public
-        const aclPolicy = await getObjectAclPolicy(objectFile);
         if (aclPolicy?.visibility !== "public") {
           const isAssociatedWithCommunity = await storage.isFileAssociatedWithUserCommunities(req.path, userId);
           if (isAssociatedWithCommunity === false) {

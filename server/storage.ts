@@ -211,6 +211,9 @@ export interface IStorage {
   getSocialPostComments(postId: string): Promise<any[]>; // Returns comments with author info
   updateSocialComment(id: string, comment: Partial<InsertSocialComment>): Promise<SocialComment>;
   deleteSocialComment(id: string): Promise<void>;
+  
+  // Helper method to check if image belongs to a social post
+  isSocialPostImage(imageUrl: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1333,6 +1336,16 @@ export class DatabaseStorage implements IStorage {
 
     // User is not a member of any group that uses this file
     return false;
+  }
+
+  async isSocialPostImage(imageUrl: string): Promise<boolean> {
+    const [post] = await db
+      .select({ id: socialPosts.id })
+      .from(socialPosts)
+      .where(eq(socialPosts.imageUrl, imageUrl))
+      .limit(1);
+    
+    return !!post;
   }
 
   // Social Posts operations
