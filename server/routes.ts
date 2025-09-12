@@ -297,6 +297,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Current trainer profile with payment plan (MUST come before /:id routes)
+  app.get('/api/trainers/profile', isAuthenticated, async (req: any, res) => {
+    console.log('[PROFILE ROUTE] Route handler started');
+    try {
+      const userId = req.user.id;
+      console.log('[PROFILE ROUTE] Fetching trainer profile for user ID:', userId);
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      console.log('[PROFILE ROUTE] Found trainer:', !!trainer);
+      
+      if (!trainer) {
+        console.log('[PROFILE ROUTE] No trainer found for user ID:', userId);
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      
+      // Get user details
+      const user = await storage.getUser(userId);
+      console.log('[PROFILE ROUTE] Found user:', !!user);
+      
+      // Get assigned payment plan
+      let paymentPlan = null;
+      if (trainer.paymentPlanId) {
+        try {
+          const plans = await storage.getPaymentPlans();
+          paymentPlan = plans.find(plan => plan.id === trainer.paymentPlanId);
+        } catch (error) {
+          console.log('[PROFILE ROUTE] Error fetching payment plan:', error);
+        }
+      }
+      
+      res.json({
+        ...trainer,
+        user,
+        paymentPlan
+      });
+    } catch (error) {
+      console.error("[PROFILE ROUTE] Error fetching trainer profile:", error);
+      res.status(500).json({ message: "Failed to fetch trainer profile" });
+    }
+  });
+
+  // Current trainer stats (MUST come before /:id routes)
+  app.get('/api/trainers/stats', isAuthenticated, async (req: any, res) => {
+    console.log('[STATS ROUTE] Route handler started');
+    try {
+      const userId = req.user.id;
+      console.log('[STATS ROUTE] Fetching trainer stats for user ID:', userId);
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      console.log('[STATS ROUTE] Found trainer:', !!trainer);
+      
+      if (!trainer) {
+        console.log('[STATS ROUTE] No trainer found for user ID:', userId);
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      
+      console.log('[STATS ROUTE] Getting stats for trainer ID:', trainer.id);
+      const stats = await storage.getTrainerStats(trainer.id);
+      console.log('[STATS ROUTE] Trainer stats result:', stats);
+      res.json(stats);
+    } catch (error) {
+      console.error("[STATS ROUTE] Error fetching trainer stats:", error);
+      res.status(500).json({ message: "Failed to fetch trainer stats" });
+    }
+  });
+
   app.get('/api/trainers/:id', isAuthenticated, async (req, res) => {
     try {
       const trainer = await storage.getTrainer(req.params.id);
@@ -307,49 +373,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching trainer:", error);
       res.status(500).json({ message: "Failed to fetch trainer" });
-    }
-  });
-
-  // Current trainer profile with payment plan
-  app.get('/api/trainers/profile', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      console.log('[DEBUG] Fetching trainer profile for user ID:', userId);
-      
-      const trainer = await storage.getTrainerByUserId(userId);
-      console.log('[DEBUG] Found trainer:', trainer);
-      console.log('[DEBUG] Trainer exists check:', !!trainer);
-      console.log('[DEBUG] Trainer type:', typeof trainer);
-      
-      if (!trainer) {
-        console.log('[DEBUG] No trainer found for user ID:', userId);
-        return res.status(404).json({ message: "Trainer not found" });
-      }
-      
-      // Get user details
-      const user = await storage.getUser(userId);
-      console.log('[DEBUG] Found user:', user);
-      
-      // Get assigned payment plan via storage to avoid direct db access
-      let paymentPlan = null;
-      if (trainer.paymentPlanId) {
-        try {
-          const plans = await storage.getPaymentPlans();
-          paymentPlan = plans.find(plan => plan.id === trainer.paymentPlanId);
-          console.log('[DEBUG] Found payment plan:', paymentPlan);
-        } catch (error) {
-          console.log('[DEBUG] Error fetching payment plan:', error);
-        }
-      }
-      
-      res.json({
-        ...trainer,
-        user,
-        paymentPlan
-      });
-    } catch (error) {
-      console.error("Error fetching trainer profile:", error);
-      res.status(500).json({ message: "Failed to fetch trainer profile" });
     }
   });
 
@@ -419,31 +442,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating user profile:", error);
       res.status(500).json({ message: "Failed to update user profile" });
-    }
-  });
-
-  // Current trainer stats
-  app.get('/api/trainers/stats', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      console.log('[DEBUG] Fetching trainer stats for user ID:', userId);
-      
-      const trainer = await storage.getTrainerByUserId(userId);
-      console.log('[DEBUG] Found trainer:', trainer);
-      console.log('[DEBUG] Trainer exists check:', !!trainer);
-      console.log('[DEBUG] Trainer type:', typeof trainer);
-      
-      if (!trainer) {
-        console.log('[DEBUG] No trainer found for user ID:', userId);
-        return res.status(404).json({ message: "Trainer not found" });
-      }
-      
-      const stats = await storage.getTrainerStats(trainer.id);
-      console.log('[DEBUG] Trainer stats:', stats);
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching trainer stats:", error);
-      res.status(500).json({ message: "Failed to fetch trainer stats" });
     }
   });
 
