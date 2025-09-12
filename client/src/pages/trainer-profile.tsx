@@ -312,11 +312,11 @@ export default function TrainerProfile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">{t('profile.firstName')}</p>
-                    <p className="font-medium" data-testid="text-first-name">{user?.firstName || "Not set"}</p>
+                    <p className="font-medium" data-testid="text-first-name">{user?.firstName || t('profile.notSet')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">{t('profile.lastName')}</p>
-                    <p className="font-medium" data-testid="text-last-name">{user?.lastName || "Not set"}</p>
+                    <p className="font-medium" data-testid="text-last-name">{user?.lastName || t('profile.notSet')}</p>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-sm text-gray-600">Email</p>
@@ -389,15 +389,15 @@ export default function TrainerProfile() {
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-600">{t('profile.expertise')}</p>
-                    <p className="font-medium" data-testid="text-expertise">{(trainerProfile as any)?.expertise || "Not specified"}</p>
+                    <p className="font-medium" data-testid="text-expertise">{(trainerProfile as any)?.expertise || t('profile.notSpecified')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">{t('profile.experience')}</p>
-                    <p className="font-medium" data-testid="text-experience">{(trainerProfile as any)?.experience || "Not specified"}</p>
+                    <p className="font-medium" data-testid="text-experience">{(trainerProfile as any)?.experience || t('profile.notSpecified')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">{t('profile.bio')}</p>
-                    <p className="text-gray-900" data-testid="text-bio">{(trainerProfile as any)?.bio || "No bio provided"}</p>
+                    <p className="text-gray-900" data-testid="text-bio">{(trainerProfile as any)?.bio || t('profile.noBioProvided')}</p>
                   </div>
                 </div>
               )}
@@ -480,7 +480,7 @@ export default function TrainerProfile() {
                     <p className="text-sm text-gray-600">{t('profile.location')}</p>
                     <p className="font-medium flex items-center gap-2" data-testid="text-location">
                       <MapPin className="h-4 w-4" />
-                      {(trainerProfile as any)?.location || "Not specified"}
+                      {(trainerProfile as any)?.location || t('profile.notSpecified')}
                     </p>
                   </div>
                   {(trainerProfile as any)?.address && (
@@ -539,7 +539,7 @@ export default function TrainerProfile() {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Add Certification</DialogTitle>
+                        <DialogTitle>{t('profile.addCertification')}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <Input
@@ -561,7 +561,7 @@ export default function TrainerProfile() {
                           data-testid="input-cert-year"
                         />
                         <Button onClick={addCertification} className="w-full" data-testid="button-save-certification">
-                          Add Certification
+                          {t('profile.addCertification')}
                         </Button>
                       </div>
                     </DialogContent>
@@ -591,7 +591,7 @@ export default function TrainerProfile() {
                   </div>
                 ))}
                 {(!trainerForm.watch("certifications") || trainerForm.watch("certifications")?.length === 0) && (
-                  <p className="text-gray-500 text-sm" data-testid="text-no-certifications">No certifications added</p>
+                  <p className="text-gray-500 text-sm" data-testid="text-no-certifications">{t('profile.noCertifications')}</p>
                 )}
               </div>
             </CardContent>
@@ -635,7 +635,7 @@ export default function TrainerProfile() {
                   ))}
                 </div>
                 {(!trainerForm.watch("specializations") || trainerForm.watch("specializations")?.length === 0) && (
-                  <p className="text-gray-500 text-sm" data-testid="text-no-specializations">No specializations added</p>
+                  <p className="text-gray-500 text-sm" data-testid="text-no-specializations">{t('profile.noSpecializations')}</p>
                 )}
               </div>
             </CardContent>
@@ -658,7 +658,7 @@ export default function TrainerProfile() {
                           <FormControl>
                             <div className="flex items-center gap-2">
                               <Instagram className="h-4 w-4 text-pink-500" />
-                              <Input {...field} placeholder="Instagram username" data-testid="input-instagram" />
+                              <Input {...field} placeholder={t('profile.instagramPlaceholder')} data-testid="input-instagram" />
                             </div>
                           </FormControl>
                         </FormItem>
@@ -672,7 +672,7 @@ export default function TrainerProfile() {
                           <FormControl>
                             <div className="flex items-center gap-2">
                               <Facebook className="h-4 w-4 text-blue-600" />
-                              <Input {...field} placeholder="Facebook profile" data-testid="input-facebook" />
+                              <Input {...field} placeholder={t('profile.facebookPlaceholder')} data-testid="input-facebook" />
                             </div>
                           </FormControl>
                         </FormItem>
@@ -686,7 +686,7 @@ export default function TrainerProfile() {
                           <FormControl>
                             <div className="flex items-center gap-2">
                               <Twitter className="h-4 w-4 text-blue-400" />
-                              <Input {...field} placeholder="Twitter handle" data-testid="input-twitter" />
+                              <Input {...field} placeholder={t('profile.twitterPlaceholder')} data-testid="input-twitter" />
                             </div>
                           </FormControl>
                         </FormItem>
@@ -700,7 +700,7 @@ export default function TrainerProfile() {
                           <FormControl>
                             <div className="flex items-center gap-2">
                               <Linkedin className="h-4 w-4 text-blue-700" />
-                              <Input {...field} placeholder="LinkedIn profile" data-testid="input-linkedin" />
+                              <Input {...field} placeholder={t('profile.linkedinPlaceholder')} data-testid="input-linkedin" />
                             </div>
                           </FormControl>
                         </FormItem>

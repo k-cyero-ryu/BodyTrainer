@@ -239,7 +239,7 @@ export default function ClientProfile() {
                   disabled
                   className="bg-muted"
                 />
-                <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('profile.emailCannotBeChanged')}</p>
               </div>
               <div>
                 <Label htmlFor="phone">{t('profile.phoneNumber')}</Label>
@@ -354,7 +354,7 @@ export default function ClientProfile() {
               </Label>
               <Select name="activityLevel" defaultValue={clientProfile.activityLevel || 'moderate'} disabled={!isEditing}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select activity level" />
+                  <SelectValue placeholder={t('profile.selectActivityLevel')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="sedentary">Sedentary (little or no exercise)</SelectItem>
@@ -382,7 +382,7 @@ export default function ClientProfile() {
               <Textarea
                 id="medicalConditions"
                 name="medicalConditions"
-                placeholder="Any medical conditions, injuries, or health concerns your trainer should know about..."
+                placeholder={t('profile.medicalConditionsPlaceholder')}
                 defaultValue={clientProfile.medicalConditions || ''}
                 disabled={!isEditing}
                 rows={2}
@@ -394,7 +394,7 @@ export default function ClientProfile() {
               <Textarea
                 id="dietaryRestrictions"
                 name="dietaryRestrictions"
-                placeholder="Any dietary restrictions, allergies, or preferences..."
+                placeholder={t('profile.dietaryRestrictionsPlaceholder')}
                 defaultValue={clientProfile.dietaryRestrictions || ''}
                 disabled={!isEditing}
                 rows={2}
