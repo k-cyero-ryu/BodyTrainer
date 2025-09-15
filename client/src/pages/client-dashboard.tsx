@@ -463,8 +463,8 @@ export default function ClientDashboard() {
                             <div className="text-sm text-gray-500 space-y-1">
                               {exercise.sets && <span>{t('dashboard.sets')} {exercise.sets}</span>}
                               {exercise.reps && <span> • {t('dashboard.reps')} {exercise.reps}</span>}
-                              {exercise.duration && <span> • {t('dashboard.duration')} {exercise.duration} min</span>}
-                              {exercise.weight && <span> • {t('dashboard.weight')} {exercise.weight} kg</span>}
+                              {exercise.duration && <span> • {t('dashboard.duration')} {exercise.duration} {t('plans.min')}</span>}
+                              {exercise.weight && <span> • {t('dashboard.weight')} {exercise.weight} {t('plans.kg')}</span>}
                             </div>
                             {exercise.notes && (
                               <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
