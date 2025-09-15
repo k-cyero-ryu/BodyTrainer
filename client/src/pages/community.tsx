@@ -393,7 +393,7 @@ export default function Community() {
   }
 
   return (
-    <div className="p-6 h-screen flex flex-col">
+    <div className="p-6 flex flex-col">
       {/* Fixed Header - Outside the card */}
       <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg border">
         <div className="flex items-center justify-between">
@@ -504,7 +504,7 @@ export default function Community() {
       </div>
 
       {/* Messages Card - Only this will scroll */}
-      <Card className="flex-1 flex flex-col">
+      <Card className="flex flex-col h-96">
 
         <CardContent className="flex-1 flex flex-col p-0 min-h-0">
           {/* Messages Area */}
