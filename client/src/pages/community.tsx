@@ -394,26 +394,74 @@ export default function Community() {
 
   return (
     <div className="p-6 h-screen flex flex-col">
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="pb-3 flex-shrink-0">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex-1">
-              {/* Group Name */}
-              <div className="flex items-center gap-2 mb-2">
-                {isEditingName ? (
-                  <div className="flex items-center gap-2 flex-1">
-                    <Input
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      className="text-xl font-bold"
-                      data-testid="input-group-name"
-                      autoFocus
-                    />
+      {/* Fixed Header - Outside the card */}
+      <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg border">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {/* Group Name */}
+            <div className="flex items-center gap-2 mb-2">
+              {isEditingName ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="text-xl font-bold"
+                    data-testid="input-group-name"
+                    autoFocus
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveEdit}
+                    disabled={updateGroup.isPending}
+                    data-testid="button-save-name"
+                  >
+                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    disabled={updateGroup.isPending}
+                    data-testid="button-cancel-name"
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold" data-testid="text-community-title">{group.name}</h2>
+                  {user?.role === 'trainer' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleStartEditName}
+                      data-testid="button-edit-name"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Group Description */}
+            <div className="flex items-start gap-2">
+              {isEditingDescription ? (
+                <div className="flex items-start gap-2 flex-1">
+                  <Textarea
+                    value={editedDescription}
+                    onChange={(e) => setEditedDescription(e.target.value)}
+                    placeholder={t('community.descriptionPlaceholder')}
+                    className="text-sm resize-none"
+                    rows={2}
+                    data-testid="textarea-group-description"
+                  />
+                  <div className="flex flex-col gap-1">
                     <Button
                       size="sm"
                       onClick={handleSaveEdit}
                       disabled={updateGroup.isPending}
-                      data-testid="button-save-name"
+                      data-testid="button-save-description"
                     >
                       <Check className="w-4 h-4" />
                     </Button>
@@ -422,86 +470,41 @@ export default function Community() {
                       variant="outline"
                       onClick={handleCancelEdit}
                       disabled={updateGroup.isPending}
-                      data-testid="button-cancel-name"
+                      data-testid="button-cancel-description"
                     >
                       <XIcon className="w-4 h-4" />
                     </Button>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold" data-testid="text-community-title">{group.name}</h2>
-                    {user?.role === 'trainer' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleStartEditName}
-                        data-testid="button-edit-name"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              {/* Group Description */}
-              <div className="flex items-start gap-2">
-                {isEditingDescription ? (
-                  <div className="flex items-start gap-2 flex-1">
-                    <Textarea
-                      value={editedDescription}
-                      onChange={(e) => setEditedDescription(e.target.value)}
-                      placeholder={t('community.descriptionPlaceholder')}
-                      className="text-sm resize-none"
-                      rows={2}
-                      data-testid="textarea-group-description"
-                    />
-                    <div className="flex flex-col gap-1">
-                      <Button
-                        size="sm"
-                        onClick={handleSaveEdit}
-                        disabled={updateGroup.isPending}
-                        data-testid="button-save-description"
-                      >
-                        <Check className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCancelEdit}
-                        disabled={updateGroup.isPending}
-                        data-testid="button-cancel-description"
-                      >
-                        <XIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-2 flex-1">
-                    {group.description ? (
-                      <p className="text-sm text-muted-foreground mt-1">{group.description}</p>
-                    ) : user?.role === 'trainer' ? (
-                      <p className="text-sm text-muted-foreground mt-1 italic">{t('community.noDescription')}</p>
-                    ) : null}
-                    {user?.role === 'trainer' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleStartEditDescription}
-                        data-testid="button-edit-description"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 flex-1">
+                  {group.description ? (
+                    <p className="text-sm text-muted-foreground mt-1">{group.description}</p>
+                  ) : user?.role === 'trainer' ? (
+                    <p className="text-sm text-muted-foreground mt-1 italic">{t('community.noDescription')}</p>
+                  ) : null}
+                  {user?.role === 'trainer' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleStartEditDescription}
+                      data-testid="button-edit-description"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
-            <Badge variant="secondary" data-testid="badge-member-count">
-              {messages.length > 0 ? `${new Set(messages.map(m => m.senderId)).size} ${t('community.members')}` : t('community.community')}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
+          </div>
+          <Badge variant="secondary" data-testid="badge-member-count">
+            {messages.length > 0 ? `${new Set(messages.map(m => m.senderId)).size} ${t('community.members')}` : t('community.community')}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Messages Card - Only this will scroll */}
+      <Card className="flex-1 flex flex-col">
 
         <CardContent className="flex-1 flex flex-col p-0 min-h-0">
           {/* Messages Area */}
@@ -555,57 +558,58 @@ export default function Community() {
             </div>
           </ScrollArea>
 
-          {/* Message Input */}
-          <div className="border-t p-4 flex-shrink-0">
-            <div className="flex space-x-2">
-              <div className="flex-1 relative">
-                <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder={t('community.typeMessage')}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  data-testid="input-message"
-                />
-              </div>
-              
-              {/* File Upload */}
-              <div className="relative">
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                  disabled={uploading}
-                  data-testid="button-file-upload"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <Button 
-                onClick={handleSendMessage}
-                disabled={!message.trim() || createMessage.isPending}
-                data-testid="button-send-message"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            {uploading && (
-              <div className="mt-2 text-sm text-muted-foreground">
-                {t('community.uploadingFile')}...
-              </div>
-            )}
-          </div>
         </CardContent>
       </Card>
+
+      {/* Fixed Input Area - Outside the card */}
+      <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border">
+        <div className="flex space-x-2">
+          <div className="flex-1 relative">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={t('community.typeMessage')}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              data-testid="input-message"
+            />
+          </div>
+          
+          {/* File Upload */}
+          <div className="relative">
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              onChange={handleFileUpload}
+              accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => document.getElementById('file-upload')?.click()}
+              disabled={uploading}
+              data-testid="button-file-upload"
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <Button 
+            onClick={handleSendMessage}
+            disabled={!message.trim() || createMessage.isPending}
+            data-testid="button-send-message"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        {uploading && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            {t('community.uploadingFile')}...
+          </div>
+        )}
+      </div>
     </div>
   );
 }
