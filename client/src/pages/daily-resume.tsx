@@ -53,7 +53,10 @@ export default function DailyResume() {
   const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const now = new Date();
-    return now.toISOString().split('T')[0];
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   });
   const [isFoodDialogOpen, setIsFoodDialogOpen] = useState(false);
   const [isCardioDialogOpen, setIsCardioDialogOpen] = useState(false);
@@ -205,12 +208,18 @@ export default function DailyResume() {
     const currentDate = new Date(selectedDate);
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
-    setSelectedDate(newDate.toISOString().split('T')[0]);
+    const year = newDate.getFullYear();
+    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+    const day = String(newDate.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
   };
 
   const goToToday = () => {
     const today = new Date();
-    setSelectedDate(today.toISOString().split('T')[0]);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
   };
 
   const onSubmitFood = (data: FoodEntryFormData) => {
@@ -231,7 +240,8 @@ export default function DailyResume() {
 
   if (!isAuthenticated) return null;
 
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const isToday = selectedDate === today;
 
   return (
