@@ -123,6 +123,31 @@ export default function ClientDetail() {
     enabled: !!user && user.role === 'trainer' && showAssignPlanModal,
   });
 
+  // Load client's recent daily resume data
+  const { data: foodEntries = [] } = useQuery({
+    queryKey: ["/api/clients", clientId, "food-entries"],
+    queryFn: async () => {
+      const response = await fetch(`/api/clients/${clientId}/food-entries?limit=5`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch food entries');
+      return response.json();
+    },
+    enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
+  const { data: cardioActivities = [] } = useQuery({
+    queryKey: ["/api/clients", clientId, "cardio-activities"],
+    queryFn: async () => {
+      const response = await fetch(`/api/clients/${clientId}/cardio-activities?limit=5`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch cardio activities');
+      return response.json();
+    },
+    enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
   const suspendMutation = useMutation({
     mutationFn: async () => {
       return await apiRequest('POST', `/api/clients/${clientId}/suspend`);
@@ -582,6 +607,110 @@ export default function ClientDetail() {
               ) : (
                 <p className="text-muted-foreground text-center py-8">{t('clientDetail.noEvaluations')}</p>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Daily Resume */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Apple className="h-5 w-5" />
+                  Daily Resume
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link href={`/clients/${clientId}/daily-resume`}>
+                    <Button variant="outline" size="sm">
+                      View Full Resume
+                    </Button>
+                  </Link>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Recent Food Entries */}
+                <div>
+                  <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                    <Apple className="h-4 w-4" />
+                    Recent Meals
+                  </h4>
+                  {foodEntries.length > 0 ? (
+                    <div className="space-y-2">
+                      {foodEntries.slice(0, 3).map((entry: any) => (
+                        <div key={entry.id} className="p-3 border rounded-lg text-sm">
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs capitalize">
+                                {entry.mealType}
+                              </Badge>
+                              <span className="font-medium">{entry.description}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(entry.date).toLocaleDateString('en-US', { 
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          {entry.quantity && (
+                            <p className="text-xs text-muted-foreground">
+                              Quantity: {entry.quantity}g
+                            </p>
+                          )}
+                          {entry.notes && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {entry.notes}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No recent meals recorded</p>
+                  )}
+                </div>
+
+                {/* Recent Cardio Activities */}
+                <div>
+                  <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Recent Cardio
+                  </h4>
+                  {cardioActivities.length > 0 ? (
+                    <div className="space-y-2">
+                      {cardioActivities.slice(0, 3).map((activity: any) => (
+                        <div key={activity.id} className="p-3 border rounded-lg text-sm">
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {activity.activityType}
+                              </Badge>
+                              <span className="font-medium">
+                                {activity.duration} min
+                                {activity.distance && ` • ${activity.distance} km`}
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(activity.date).toLocaleDateString('en-US', { 
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          {activity.notes && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {activity.notes}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No recent cardio activities recorded</p>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
 

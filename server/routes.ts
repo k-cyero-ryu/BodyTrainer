@@ -1719,6 +1719,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trainer routes for accessing client daily resume data
+  app.get('/api/clients/:clientId/food-entries', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const { date, startDate, endDate, limit = 7 } = req.query;
+      
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.id);
+      if (!trainer) {
+        return res.status(403).json({ message: "Trainer not found" });
+      }
+      
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      let foodEntries;
+      if (date) {
+        // Get entries for specific date
+        const targetDate = new Date(date as string);
+        foodEntries = await storage.getFoodEntriesByDate(clientId, targetDate);
+      } else if (startDate && endDate) {
+        // Get entries for date range
+        const start = new Date(startDate as string);
+        const end = new Date(endDate as string);
+        foodEntries = await storage.getFoodEntriesByDateRange(clientId, start, end);
+      } else {
+        // Get recent entries (last 7 days by default)
+        const endDate = new Date();
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - parseInt(limit as string));
+        foodEntries = await storage.getFoodEntriesByDateRange(clientId, startDate, endDate);
+      }
+
+      res.json(foodEntries);
+    } catch (error) {
+      console.error("Error fetching client food entries:", error);
+      res.status(500).json({ message: "Failed to fetch food entries" });
+    }
+  });
+
+  app.get('/api/clients/:clientId/cardio-activities', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const { date, startDate, endDate, limit = 7 } = req.query;
+      
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.id);
+      if (!trainer) {
+        return res.status(403).json({ message: "Trainer not found" });
+      }
+      
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      let cardioActivities;
+      if (date) {
+        // Get activities for specific date
+        const targetDate = new Date(date as string);
+        cardioActivities = await storage.getCardioActivitiesByDate(clientId, targetDate);
+      } else if (startDate && endDate) {
+        // Get activities for date range
+        const start = new Date(startDate as string);
+        const end = new Date(endDate as string);
+        cardioActivities = await storage.getCardioActivitiesByDateRange(clientId, start, end);
+      } else {
+        // Get recent activities (last 7 days by default)
+        const endDate = new Date();
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - parseInt(limit as string));
+        cardioActivities = await storage.getCardioActivitiesByDateRange(clientId, startDate, endDate);
+      }
+
+      res.json(cardioActivities);
+    } catch (error) {
+      console.error("Error fetching client cardio activities:", error);
+      res.status(500).json({ message: "Failed to fetch cardio activities" });
+    }
+  });
+
   // Exercise routes
   app.post('/api/exercises', isAuthenticated, async (req: any, res) => {
     try {
