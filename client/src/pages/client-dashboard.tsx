@@ -27,8 +27,8 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('toast.unauthorized'),
+        description: t('toast.loggedOut'),
         variant: "destructive",
       });
       setTimeout(() => {
@@ -104,8 +104,8 @@ export default function ClientDashboard() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Monthly evaluation submitted successfully",
+        title: t('toast.success'),
+        description: t('toast.evaluationSubmitted'),
       });
 
       queryClient.invalidateQueries({ queryKey: ["/api/evaluations"] });
@@ -113,8 +113,8 @@ export default function ClientDashboard() {
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('toast.unauthorized'),
+          description: t('toast.loggedOut'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -123,8 +123,8 @@ export default function ClientDashboard() {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to submit evaluation",
+        title: t('toast.error'),
+        description: t('toast.evaluationFailed'),
         variant: "destructive",
       });
     },
@@ -155,8 +155,8 @@ export default function ClientDashboard() {
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('toast.unauthorized'),
+          description: t('toast.loggedOut'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -165,8 +165,8 @@ export default function ClientDashboard() {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to log exercise completion. Please try again.",
+        title: t('toast.error'),
+        description: t('toast.exerciseFailed'),
         variant: "destructive",
       });
     },
@@ -189,8 +189,8 @@ export default function ClientDashboard() {
   const handleCompleteWorkout = async () => {
     if (!todayWorkout?.workout?.exercises || completedExercises.size === 0) {
       toast({
-        title: "No Exercises Selected",
-        description: "Please complete at least one exercise before finishing the workout.",
+        title: t('toast.noExercisesSelected'),
+        description: t('toast.selectExercise'),
         variant: "destructive",
       });
       return;
@@ -226,8 +226,8 @@ export default function ClientDashboard() {
 
     if (completedExercisesList.length === 0) {
       toast({
-        title: "No New Exercises to Complete",
-        description: "All selected exercises have already been completed today.",
+        title: t('toast.noNewExercises'),
+        description: t('toast.exercisesCompleted'),
         variant: "destructive",
       });
       return;
@@ -248,8 +248,8 @@ export default function ClientDashboard() {
       );
 
       toast({
-        title: "Workout Completed!",
-        description: `Great job! You completed ${completedExercisesList.length} new exercises today.`,
+        title: t('toast.workoutCompleted'),
+        description: t('toast.workoutCompletedMessage', { count: completedExercisesList.length }),
       });
 
       // Reset completed exercises
@@ -262,8 +262,8 @@ export default function ClientDashboard() {
 
   const startExercise = (exerciseId: string) => {
     toast({
-      title: "Exercise Started",
-      description: "Timer functionality coming soon!",
+      title: t('toast.exerciseStarted'),
+      description: t('toast.timerSoon'),
     });
   };
 
@@ -458,13 +458,13 @@ export default function ClientDashboard() {
                           <div>
                             <h4 className={`font-medium ${isAlreadyCompleted ? 'text-green-700' : 'text-gray-900'}`}>
                               {exercise.exercise?.name || exercise.exerciseName}
-                              {isAlreadyCompleted && <span className="ml-2 text-sm text-green-600">(Completed)</span>}
+                              {isAlreadyCompleted && <span className="ml-2 text-sm text-green-600">{t('dashboard.completed')}</span>}
                             </h4>
                             <div className="text-sm text-gray-500 space-y-1">
-                              {exercise.sets && <span>Sets: {exercise.sets}</span>}
-                              {exercise.reps && <span> • Reps: {exercise.reps}</span>}
-                              {exercise.duration && <span> • Duration: {exercise.duration} min</span>}
-                              {exercise.weight && <span> • Weight: {exercise.weight} kg</span>}
+                              {exercise.sets && <span>{t('dashboard.sets')} {exercise.sets}</span>}
+                              {exercise.reps && <span> • {t('dashboard.reps')} {exercise.reps}</span>}
+                              {exercise.duration && <span> • {t('dashboard.duration')} {exercise.duration} min</span>}
+                              {exercise.weight && <span> • {t('dashboard.weight')} {exercise.weight} kg</span>}
                             </div>
                             {exercise.notes && (
                               <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
@@ -474,7 +474,7 @@ export default function ClientDashboard() {
                         <div className="flex items-center space-x-2">
                           <Link href="/daily-workout">
                             <Button variant="outline" size="sm">
-                              View Details
+                              {t('dashboard.viewDetails')}
                             </Button>
                           </Link>
                           {!isAlreadyCompleted && (
@@ -514,7 +514,7 @@ export default function ClientDashboard() {
                             className="px-6 py-3 bg-green-600 hover:bg-green-700" 
                             disabled={true}
                           >
-                            All Exercises Completed Today! ✓
+                            {t('dashboard.allExercisesCompleted')}
                           </Button>
                         );
                       }
@@ -525,7 +525,7 @@ export default function ClientDashboard() {
                           onClick={handleCompleteWorkout}
                           disabled={completedExercises.size === 0}
                         >
-                          Complete Workout ({completedExercises.size} selected, {remainingExercises} remaining)
+                          {t('dashboard.completeWorkout')} ({completedExercises.size} {t('dashboard.selected')}, {remainingExercises} {t('dashboard.remaining')})
                         </Button>
                       );
                     })()}
@@ -539,7 +539,7 @@ export default function ClientDashboard() {
                   </p>
                   {todayWorkout?.message === "No active training plan assigned" && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Your trainer will assign a training plan soon
+                      {t('dashboard.trainerWillAssign')}
                     </p>
                   )}
                 </div>
@@ -583,7 +583,7 @@ export default function ClientDashboard() {
                   return (
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span>Weight Goal Progress</span>
+                        <span>{t('dashboard.weightGoalProgress')}</span>
                         <span>{weightGoalProgress.toFixed(0)}%</span>
                       </div>
                       <Progress value={weightGoalProgress} className="h-2" />
@@ -601,7 +601,7 @@ export default function ClientDashboard() {
                   return (
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span>Training Adherence</span>
+                        <span>{t('dashboard.trainingAdherence')}</span>
                         <span>{trainingAdherence}%</span>
                       </div>
                       <Progress value={trainingAdherence} className="h-2" />
@@ -619,7 +619,7 @@ export default function ClientDashboard() {
                   return (
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span>Nutrition Adherence</span>
+                        <span>{t('dashboard.nutritionAdherence')}</span>
                         <span>{nutritionAdherence}%</span>
                       </div>
                       <Progress value={nutritionAdherence} className="h-2" />
@@ -629,10 +629,10 @@ export default function ClientDashboard() {
               </div>
 
               <div className="mt-6">
-                <h4 className="font-medium text-gray-900 mb-3">This Month's Stats</h4>
+                <h4 className="font-medium text-gray-900 mb-3">{t('dashboard.thisMonthStats')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Workouts:</span>
+                    <span>{t('dashboard.workouts')}</span>
                     <span className="font-medium">
                       {weeklyStats ? `${weeklyStats.completedWorkouts}/${weeklyStats.totalWorkouts}` : "0/0"}
                     </span>
@@ -651,7 +651,7 @@ export default function ClientDashboard() {
 
                     return (
                       <div className="flex justify-between">
-                        <span>Weight Change:</span>
+                        <span>{t('dashboard.weightChange')}</span>
                         <span className={`font-medium ${weightChangeColor}`}>
                           {weightChange > 0 ? '+' : ''}{weightChange.toFixed(1)} kg
                         </span>
@@ -659,9 +659,9 @@ export default function ClientDashboard() {
                     );
                   })()}
                   <div className="flex justify-between">
-                    <span>Best Streak:</span>
+                    <span>{t('dashboard.bestStreak')}</span>
                     <span className="font-medium">
-                      {streakData ? `${streakData.streak} days` : "0 days"}
+                      {streakData ? `${streakData.streak} ${t('dashboard.days')}` : `0 ${t('dashboard.days')}`}
                     </span>
                   </div>
                 </div>
@@ -683,11 +683,11 @@ export default function ClientDashboard() {
             </span>
             <Link href="/monthly-evaluation">
               <Button variant="outline" size="sm">
-                View All / Add New
+                {t('dashboard.viewAllAddNew')}
               </Button>
             </Link>
           </CardTitle>
-          <p className="text-sm text-gray-500">Your most recent progress evaluation</p>
+          <p className="text-sm text-gray-500">{t('dashboard.recentProgressEvaluation')}</p>
         </CardHeader>
         <CardContent>
           {evaluations && evaluations.length > 0 ? (
@@ -704,7 +704,7 @@ export default function ClientDashboard() {
                         </span>
                       </div>
                       <Badge variant="outline" className="text-green-600 border-green-600">
-                        Latest
+                        {t('dashboard.latest')}
                       </Badge>
                     </div>
                     
@@ -713,15 +713,15 @@ export default function ClientDashboard() {
                       <div>
                         <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-1">
                           <Weight className="h-4 w-4" />
-                          Physical Stats
+                          {t('dashboard.physicalStats')}
                         </h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span>Weight:</span>
+                            <span>{t('dashboard.bodyWeight')}</span>
                             <span className="font-medium">{latestEvaluation.weight} kg</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Body Fat:</span>
+                            <span>{t('dashboard.bodyFat')}</span>
                             <span className="font-medium">{latestEvaluation.bodyFatPercentage}%</span>
                           </div>
                         </div>
@@ -731,35 +731,35 @@ export default function ClientDashboard() {
                       <div>
                         <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-1">
                           <Ruler className="h-4 w-4" />
-                          Measurements (cm)
+                          {t('dashboard.measurements')}
                         </h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span>Waist:</span>
+                            <span>{t('dashboard.waist')}</span>
                             <span className="font-medium">{latestEvaluation.waistMeasurement}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Chest:</span>
+                            <span>{t('dashboard.chest')}</span>
                             <span className="font-medium">{latestEvaluation.chestMeasurement}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Hips:</span>
+                            <span>{t('dashboard.hips')}</span>
                             <span className="font-medium">{latestEvaluation.hipsMeasurement}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Biceps:</span>
+                            <span>{t('dashboard.biceps')}</span>
                             <span className="font-medium">{latestEvaluation.bicepsMeasurement}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Thigh:</span>
+                            <span>{t('dashboard.thigh')}</span>
                             <span className="font-medium">{latestEvaluation.thighMeasurement}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Abdomen:</span>
+                            <span>{t('dashboard.abdomen')}</span>
                             <span className="font-medium">{latestEvaluation.abdomenMeasurement}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Calf:</span>
+                            <span>{t('dashboard.calf')}</span>
                             <span className="font-medium">{latestEvaluation.calfMeasurement}</span>
                           </div>
                         </div>
@@ -767,18 +767,18 @@ export default function ClientDashboard() {
 
                       {/* Self-Assessment */}
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-3">Self-Assessment</h4>
+                        <h4 className="font-medium text-gray-900 mb-3">{t('dashboard.selfAssessment')}</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span>Training:</span>
+                            <span>{t('dashboard.training')}</span>
                             <span className="font-medium">{latestEvaluation.trainingAdherence}/10</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Nutrition:</span>
+                            <span>{t('dashboard.nutrition')}</span>
                             <span className="font-medium">{latestEvaluation.mealAdherence}/10</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Overall:</span>
+                            <span>{t('dashboard.overall')}</span>
                             <span className="font-medium">{latestEvaluation.selfEvaluation}/10</span>
                           </div>
                         </div>
@@ -790,10 +790,10 @@ export default function ClientDashboard() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No evaluations submitted yet</p>
+              <p className="text-gray-600 mb-4">{t('dashboard.noEvaluationsYet')}</p>
               <Link href="/monthly-evaluation">
                 <Button>
-                  Submit Your First Evaluation
+                  {t('dashboard.submitFirstEvaluation')}
                 </Button>
               </Link>
             </div>
@@ -808,24 +808,24 @@ export default function ClientDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              Current Payment Plan
+              {t('dashboard.currentPaymentPlan')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {paymentPlan ? (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium">Plan:</span>
+                  <span className="text-sm font-medium">{t('dashboard.plan')}</span>
                   <span className="text-sm">{paymentPlan.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium">Price:</span>
+                  <span className="text-sm font-medium">{t('dashboard.price')}</span>
                   <span className="text-sm font-bold">${paymentPlan.amount}/{paymentPlan.type}</span>
                 </div>
 
                 {paymentPlan.features && paymentPlan.features.length > 0 && (
                   <div className="pt-2 border-t">
-                    <p className="text-sm font-medium mb-2">Features:</p>
+                    <p className="text-sm font-medium mb-2">{t('dashboard.features')}</p>
                     <div className="flex flex-wrap gap-1">
                       {paymentPlan.features.map((feature: string, idx: number) => (
                         <Badge key={idx} variant="secondary" className="text-xs">
@@ -838,8 +838,8 @@ export default function ClientDashboard() {
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No payment plan assigned yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Contact your trainer to set up a plan</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.noPaymentPlan')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('dashboard.contactTrainerPlan')}</p>
               </div>
             )}
           </CardContent>
@@ -850,7 +850,7 @@ export default function ClientDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Dumbbell className="h-5 w-5" />
-              Current Training Plan
+              {t('dashboard.currentTrainingPlan')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -864,37 +864,37 @@ export default function ClientDashboard() {
                         <p className="text-sm text-muted-foreground">{plan.goal}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-muted-foreground">Status:</div>
+                        <div className="text-sm text-muted-foreground">{t('dashboard.status')}</div>
                         <Badge variant={plan.isActive ? "default" : "secondary"}>
-                          {plan.isActive ? "Active" : "Inactive"}
+                          {plan.isActive ? t('dashboard.active') : t('dashboard.inactive')}
                         </Badge>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Duration:</span>
+                        <span className="text-muted-foreground">{t('dashboard.duration')}</span>
                         <div className="font-medium">
-                          {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                          {plan.duration === 0 ? t('dashboard.tillGoalMet') : `${plan.duration} ${t('dashboard.weeks')}`}
                         </div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Week cycle:</span>
+                        <span className="text-muted-foreground">{t('dashboard.weekCycle')}</span>
                         <div className="font-medium">{plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm mt-2">
                       <div>
-                        <span className="text-muted-foreground">Sessions/week:</span>
+                        <span className="text-muted-foreground">{t('dashboard.sessionsPerWeek')}</span>
                         <div className="font-medium">{plan.sessionsPerWeek || 'N/A'}</div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Started:</span>
+                        <span className="text-muted-foreground">{t('dashboard.started')}</span>
                         <div className="font-medium">{plan.startDate ? new Date(plan.startDate).toLocaleDateString() : 'N/A'}</div>
                       </div>
                     </div>
                     <div className="flex justify-center pt-3 border-t mt-3">
                       <Link href={`/my-training-plan/${plan.planId}`}>
-                        <Button variant="ghost" size="sm">View Details</Button>
+                        <Button variant="ghost" size="sm">{t('dashboard.viewDetails')}</Button>
                       </Link>
                     </div>
                   </div>
@@ -902,8 +902,8 @@ export default function ClientDashboard() {
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No training plan assigned yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Your trainer will assign a plan soon</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.noTrainingPlan')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('dashboard.trainerWillAssign')}</p>
               </div>
             )}
           </CardContent>
