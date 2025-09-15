@@ -497,6 +497,89 @@ const resources = {
       
       // Payment Plan Validation Errors
       'paymentPlans.errors.planNameRequired': 'Plan name is required',
+
+      // Monthly Evaluation translations
+      'monthlyEvaluation.title': 'Monthly Evaluation',
+      'monthlyEvaluation.trackProgress': 'Track your progress with monthly measurements and self-evaluation',
+      'monthlyEvaluation.compareEvaluations': 'Compare Evaluations',
+      'monthlyEvaluation.backToDashboard': 'Back to Dashboard',
+      'monthlyEvaluation.monthlyEvaluations': 'Monthly Evaluations',
+      'monthlyEvaluation.previous': 'Previous',
+      'monthlyEvaluation.next': 'Next', 
+      'monthlyEvaluation.latest': 'Latest',
+      'monthlyEvaluation.week': 'Week',
+      'monthlyEvaluation.newMonthlyEvaluation': 'New Monthly Evaluation',
+      'monthlyEvaluation.submitMeasurements': 'Submit your monthly measurements and self-evaluation',
+      'monthlyEvaluation.readyToSubmit': 'Ready to submit your monthly evaluation?',
+      'monthlyEvaluation.startNewEvaluation': 'Start New Evaluation',
+      
+      // Form sections
+      'monthlyEvaluation.bodyMeasurements': 'Body Measurements (cm)',
+      'monthlyEvaluation.physicalStats': 'Physical Stats', 
+      'monthlyEvaluation.selfEvaluation': 'Self-Evaluation (1-10)',
+      'monthlyEvaluation.weight': 'Weight (kg)',
+      'monthlyEvaluation.bodyFat': 'Body Fat %',
+      'monthlyEvaluation.weekNumber': 'Week #',
+      'monthlyEvaluation.trainingAdherence': 'Training Adherence',
+      'monthlyEvaluation.mealPlanAdherence': 'Meal Plan Adherence',
+      'monthlyEvaluation.overallSatisfaction': 'Overall Satisfaction',
+      'monthlyEvaluation.selectRating': 'Select rating',
+      
+      // Body parts
+      'monthlyEvaluation.waist': 'Waist',
+      'monthlyEvaluation.chest': 'Chest', 
+      'monthlyEvaluation.biceps': 'Biceps',
+      'monthlyEvaluation.abdomen': 'Abdomen',
+      'monthlyEvaluation.hips': 'Hips',
+      'monthlyEvaluation.thigh': 'Thigh',
+      'monthlyEvaluation.calf': 'Calf',
+      
+      // T-Pose photos
+      'monthlyEvaluation.tPosePhotos': 'T-Pose Photos for Visual Intelligence',
+      'monthlyEvaluation.uploadThreePhotos': 'Upload three T-pose photos (front, back, and side view) for better progress tracking and visual analysis.',
+      'monthlyEvaluation.frontView': 'Front View',
+      'monthlyEvaluation.backView': 'Back View', 
+      'monthlyEvaluation.sideView': 'Side View',
+      'monthlyEvaluation.uploadFrontPhoto': 'Upload Front Photo',
+      'monthlyEvaluation.uploadBackPhoto': 'Upload Back Photo',
+      'monthlyEvaluation.uploadSidePhoto': 'Upload Side Photo',
+      
+      // Self-assessment ratings
+      'monthlyEvaluation.perfect': 'Perfect',
+      'monthlyEvaluation.excellent': 'Excellent', 
+      'monthlyEvaluation.good': 'Good',
+      'monthlyEvaluation.needsImprovement': 'Needs Improvement',
+      
+      // Comparison page
+      'monthlyEvaluation.monthlyEvaluationComparison': 'Monthly Evaluation Comparison',
+      'monthlyEvaluation.compareTwoEvaluations': 'Compare two monthly evaluations to track your progress',
+      'monthlyEvaluation.backToEvaluations': 'Back to Evaluations',
+      'monthlyEvaluation.selectEvaluationsToCompare': 'Select Evaluations to Compare',
+      'monthlyEvaluation.firstEvaluation': 'First Evaluation (Baseline)',
+      'monthlyEvaluation.secondEvaluation': 'Second Evaluation (Compare With)',
+      'monthlyEvaluation.selectFirstEvaluation': 'Select first evaluation',
+      'monthlyEvaluation.selectSecondEvaluation': 'Select second evaluation',
+      'monthlyEvaluation.needTwoEvaluations': 'You need at least 2 monthly evaluations to use the comparison feature. Complete more evaluations to start tracking your progress!',
+      'monthlyEvaluation.baseline': 'Baseline',
+      'monthlyEvaluation.comparison': 'Comparison',
+      'monthlyEvaluation.physicalStatsComparison': 'Physical Stats Comparison',
+      'monthlyEvaluation.bodyMeasurementsComparison': 'Body Measurements Comparison',
+      'monthlyEvaluation.selfAssessmentComparison': 'Self-Assessment Comparison',
+      'monthlyEvaluation.selectTwoEvaluations': 'Select Two Evaluations',
+      'monthlyEvaluation.chooseTwoEvaluations': 'Choose two monthly evaluations from the dropdowns above to see a detailed comparison with percentage changes and progress indicators.',
+      
+      // Display labels
+      'monthlyEvaluation.physicalStatsDisplay': 'Physical Stats',
+      'monthlyEvaluation.measurements': 'Measurements',
+      'monthlyEvaluation.selfAssessment': 'Self-Assessment',
+      'monthlyEvaluation.training': 'Training',
+      'monthlyEvaluation.nutrition': 'Nutrition',
+      'monthlyEvaluation.overall': 'Overall',
+      'monthlyEvaluation.photoGuidelines': 'Photo Guidelines:',
+      'monthlyEvaluation.photoInstructions': 'Stand in a T-pose with arms extended horizontally. Wear tight-fitting clothes for better results. These photos help with visual progress tracking and measurements.',
+      'monthlyEvaluation.cancel': 'Cancel',
+      'monthlyEvaluation.submitEvaluation': 'Submit Evaluation',
+      'monthlyEvaluation.submitting': 'Submitting...',
     }
   },
   es: {
@@ -1222,6 +1305,9 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
+    keySeparator: false,
+    supportedLngs: ['en', 'es', 'fr', 'pt'],
+    nonExplicitSupportedLngs: true,
     debug: false,
     interpolation: {
       escapeValue: false,
