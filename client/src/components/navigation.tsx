@@ -354,7 +354,7 @@ export default function Navigation() {
               <Settings className="mr-2 h-4 w-4" />
               {t('nav.settings')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+            <DropdownMenuItem onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
               {t('auth.signOut')}
             </DropdownMenuItem>

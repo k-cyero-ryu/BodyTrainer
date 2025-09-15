@@ -51,7 +51,7 @@ import Chat from "@/components/chat";
 import "@/lib/i18n";
 
 function Router() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, logout, isLoggingOut } = useAuth();
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   if (isLoading) {
@@ -106,10 +106,11 @@ function Router() {
               </div>
               <Button 
                 variant="outline"
-                onClick={() => window.location.href = "/api/logout"}
+                onClick={logout}
                 className="mt-4"
+                disabled={isLoggingOut}
               >
-                Sign Out
+                {isLoggingOut ? 'Signing Out...' : 'Sign Out'}
               </Button>
             </CardContent>
           </Card>

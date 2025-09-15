@@ -2141,21 +2141,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Get all users and filter based on role
+      // Get all users and filter based on role and status
       const allUsers = await storage.getAllUsers();
       
-      const chatUsers = allUsers
-        .filter((user: User) => user.id !== currentUserId) // Exclude current user
-        .map((user: User) => ({
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          profileImageUrl: user.profileImageUrl,
-          role: user.role,
-        }));
+      let chatUsers = allUsers.filter((user: User) => user.id !== currentUserId); // Exclude current user
       
-      res.json(chatUsers);
+      // If current user is a pending trainer, only show superadmins
+      if (currentUser.role === 'trainer' && currentUser.status === 'pending') {
+        chatUsers = chatUsers.filter((user: User) => user.role === 'superadmin');
+      }
+      
+      const mappedUsers = chatUsers.map((user: User) => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        profileImageUrl: user.profileImageUrl,
+        role: user.role,
+      }));
+      
+      res.json(mappedUsers);
     } catch (error) {
       console.error("Error fetching chat users:", error);
       res.status(500).json({ message: "Failed to fetch chat users" });
