@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,12 +21,13 @@ export default function ClientTrainingPlans() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('auth.unauthorized'),
+        description: t('auth.loggedOutRetry'),
         variant: "destructive",
       });
       setTimeout(() => {
@@ -41,8 +43,8 @@ export default function ClientTrainingPlans() {
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -78,8 +80,8 @@ export default function ClientTrainingPlans() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
-          <p className="text-muted-foreground">You don't have permission to view this page.</p>
+          <h2 className="text-2xl font-bold mb-4">{t('common.accessDenied')}</h2>
+          <p className="text-muted-foreground">{t('common.accessDeniedMessage')}</p>
         </div>
       </div>
     );
@@ -89,12 +91,12 @@ export default function ClientTrainingPlans() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Error Loading Training Plans</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('common.errorLoading')} {t('trainingPlans.myTrainingPlans')}</h2>
           <p className="text-muted-foreground mb-4">
-            {isUnauthorizedError(error) ? "You are not authorized to view training plans." : "Failed to load your training plans."}
+            {isUnauthorizedError(error) ? t('auth.notAuthorizedToView') : t('common.failedToLoad')}
           </p>
           <Link href="/">
-            <Button>Return to Dashboard</Button>
+            <Button>{t('trainingPlans.returnToDashboard')}</Button>
           </Link>
         </div>
       </div>
@@ -106,8 +108,8 @@ export default function ClientTrainingPlans() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">My Training Plans</h1>
-          <p className="text-muted-foreground">View your assigned training plans and track your progress</p>
+          <h1 className="text-3xl font-bold">{t('trainingPlans.myTrainingPlans')}</h1>
+          <p className="text-muted-foreground">{t('trainingPlans.viewProgress')}</p>
         </div>
       </div>
 
@@ -121,37 +123,37 @@ export default function ClientTrainingPlans() {
                   <div>
                     <CardTitle className="text-lg">{clientPlan.name}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {clientPlan.duration === 0 ? 'Till goal is met' : `${clientPlan.duration} weeks`}
+                      {clientPlan.duration === 0 ? t('trainingPlans.tillGoalMet') : `${clientPlan.duration} ${t('trainingPlans.weeks')}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={clientPlan.isActive ? "default" : "secondary"}>
-                      {clientPlan.isActive ? "Active" : "Inactive"}
+                      {clientPlan.isActive ? t('trainingPlans.active') : t('trainingPlans.inactive')}
                     </Badge>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm">{clientPlan.description || "No description available"}</p>
+                <p className="text-muted-foreground text-sm">{clientPlan.description || t('trainingPlans.noDescription')}</p>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Goal:</span>
-                    <div className="font-medium">{clientPlan.goal || "Not specified"}</div>
+                    <span className="text-muted-foreground">{t('trainingPlans.goal')}:</span>
+                    <div className="font-medium">{clientPlan.goal || t('trainingPlans.notSpecified')}</div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Duration:</span>
+                    <span className="text-muted-foreground">{t('trainingPlans.duration')}:</span>
                     <div className="font-medium">
-                      {clientPlan.duration === 0 ? 'Till goal is met' : `${clientPlan.duration} weeks`}
+                      {clientPlan.duration === 0 ? t('trainingPlans.tillGoalMet') : `${clientPlan.duration} ${t('trainingPlans.weeks')}`}
                     </div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Week Cycle:</span>
-                    <div className="font-medium">{clientPlan.weekCycle || 1} week{(clientPlan.weekCycle || 1) > 1 ? 's' : ''}</div>
+                    <span className="text-muted-foreground">{t('trainingPlans.weekCycle')}:</span>
+                    <div className="font-medium">{clientPlan.weekCycle || 1} {(clientPlan.weekCycle || 1) > 1 ? t('trainingPlans.weeks') : t('trainingPlans.week')}</div>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Sessions/Week:</span>
-                    <div className="font-medium">{clientPlan.sessionsPerWeek || 'N/A'}</div>
+                    <span className="text-muted-foreground">{t('trainingPlans.sessionsPerWeek')}:</span>
+                    <div className="font-medium">{clientPlan.sessionsPerWeek || t('trainingPlans.na')}</div>
                   </div>
                 </div>
 
@@ -159,12 +161,12 @@ export default function ClientTrainingPlans() {
                 <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    Started: {new Date(clientPlan.assignedDate).toLocaleDateString()}
+                    {t('trainingPlans.started')}: {new Date(clientPlan.assignedDate).toLocaleDateString()}
                   </span>
                   {clientPlan.endDate && (
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      Ends: {new Date(clientPlan.endDate).toLocaleDateString()}
+                      {t('trainingPlans.ends')}: {new Date(clientPlan.endDate).toLocaleDateString()}
                     </span>
                   )}
                 </div>
@@ -174,20 +176,20 @@ export default function ClientTrainingPlans() {
                   <div className="grid grid-cols-3 gap-4 text-xs pt-2 border-t">
                     {clientPlan.dailyCalories && (
                       <div>
-                        <span className="text-muted-foreground">Calories:</span>
-                        <div className="font-medium">{clientPlan.dailyCalories} kcal</div>
+                        <span className="text-muted-foreground">{t('trainingPlans.calories')}:</span>
+                        <div className="font-medium">{clientPlan.dailyCalories} {t('trainingPlans.kcal')}</div>
                       </div>
                     )}
                     {clientPlan.protein && (
                       <div>
-                        <span className="text-muted-foreground">Protein:</span>
-                        <div className="font-medium">{clientPlan.protein}g</div>
+                        <span className="text-muted-foreground">{t('trainingPlans.protein')}:</span>
+                        <div className="font-medium">{clientPlan.protein}{t('trainingPlans.grams')}</div>
                       </div>
                     )}
                     {clientPlan.carbs && (
                       <div>
-                        <span className="text-muted-foreground">Carbs:</span>
-                        <div className="font-medium">{clientPlan.carbs}g</div>
+                        <span className="text-muted-foreground">{t('trainingPlans.carbs')}:</span>
+                        <div className="font-medium">{clientPlan.carbs}{t('trainingPlans.grams')}</div>
                       </div>
                     )}
                   </div>
@@ -197,7 +199,7 @@ export default function ClientTrainingPlans() {
                   <Link href={`/my-training-plan/${clientPlan.planId}`}>
                     <Button size="sm" className="w-full">
                       <Eye className="h-4 w-4 mr-1" />
-                      View Details & Exercises
+                      {t('trainingPlans.viewDetails')}
                     </Button>
                   </Link>
                 </div>
@@ -207,14 +209,14 @@ export default function ClientTrainingPlans() {
         ) : (
           <div className="col-span-full text-center py-12">
             <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No Training Plans Yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t('trainingPlans.noPlansYet')}</h3>
             <p className="text-muted-foreground mb-4">
-              Your trainer hasn't assigned any training plans yet. Check back soon or contact your trainer.
+              {t('trainingPlans.noPlansMessage')}
             </p>
             <Link href="/">
               <Button variant="outline">
                 <Play className="h-4 w-4 mr-2" />
-                Return to Dashboard
+                {t('trainingPlans.returnToDashboard')}
               </Button>
             </Link>
           </div>
@@ -227,15 +229,15 @@ export default function ClientTrainingPlans() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Need Help?
+              {t('trainingPlans.needHelp')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>• Click "View Details & Exercises" to see your complete workout schedule</p>
-              <p>• Each plan shows your weekly exercise pattern and nutrition guidelines</p>
-              <p>• Contact your trainer if you have questions about any exercise</p>
-              <p>• Track your progress and stay consistent for best results</p>
+              <p>{t('trainingPlans.helpText1')}</p>
+              <p>{t('trainingPlans.helpText2')}</p>
+              <p>{t('trainingPlans.helpText3')}</p>
+              <p>{t('trainingPlans.helpText4')}</p>
             </div>
           </CardContent>
         </Card>

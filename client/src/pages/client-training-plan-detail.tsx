@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useRoute, Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,12 +25,13 @@ export default function ClientTrainingPlanDetail() {
   const { toast } = useToast();
   const [match, params] = useRoute("/my-training-plan/:planId");
   const planId = params?.planId;
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('auth.unauthorized'),
+        description: t('auth.loggedOutRetry'),
         variant: "destructive",
       });
       setTimeout(() => {
@@ -45,8 +47,8 @@ export default function ClientTrainingPlanDetail() {
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -75,8 +77,8 @@ export default function ClientTrainingPlanDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
-          <p className="text-muted-foreground">You don't have permission to view this page.</p>
+          <h2 className="text-2xl font-bold mb-4">{t('common.accessDenied')}</h2>
+          <p className="text-muted-foreground">{t('common.accessDeniedMessage')}</p>
         </div>
       </div>
     );
@@ -86,12 +88,12 @@ export default function ClientTrainingPlanDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Error Loading Training Plan</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('common.errorLoading')} {t('trainingPlans.myTrainingPlans')}</h2>
           <p className="text-muted-foreground mb-4">
-            {isUnauthorizedError(planError) ? "You are not authorized to view this plan." : "Failed to load training plan details."}
+            {isUnauthorizedError(planError) ? t('auth.notAuthorizedToView') : t('common.failedToLoad')}
           </p>
           <Link href="/">
-            <Button>Return to Dashboard</Button>
+            <Button>{t('trainingPlanDetail.backToDashboard')}</Button>
           </Link>
         </div>
       </div>
@@ -102,10 +104,10 @@ export default function ClientTrainingPlanDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Training Plan Not Found</h2>
-          <p className="text-muted-foreground mb-4">The training plan you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold mb-4">{t('common.notFound')}</h2>
+          <p className="text-muted-foreground mb-4">{t('common.notFoundMessage')}</p>
           <Link href="/">
-            <Button>Return to Dashboard</Button>
+            <Button>{t('trainingPlanDetail.backToDashboard')}</Button>
           </Link>
         </div>
       </div>
@@ -117,8 +119,16 @@ export default function ClientTrainingPlanDetail() {
   };
 
   const getDayName = (dayNumber: number) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayNumber] || `Day ${dayNumber}`;
+    const days = [
+      t('trainingPlanDetail.sunday'), 
+      t('trainingPlanDetail.monday'), 
+      t('trainingPlanDetail.tuesday'), 
+      t('trainingPlanDetail.wednesday'), 
+      t('trainingPlanDetail.thursday'), 
+      t('trainingPlanDetail.friday'), 
+      t('trainingPlanDetail.saturday')
+    ];
+    return days[dayNumber] || `${t('trainingPlanDetail.day')} ${dayNumber}`;
   };
 
   // Group exercises by day
@@ -139,7 +149,7 @@ export default function ClientTrainingPlanDetail() {
           <Link href="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              {t('trainingPlanDetail.backToDashboard')}
             </Button>
           </Link>
           <div>
@@ -149,7 +159,7 @@ export default function ClientTrainingPlanDetail() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={plan.isActive ? "default" : "secondary"}>
-            {plan.isActive ? "Active" : "Draft"}
+            {plan.isActive ? t('trainingPlans.active') : t('trainingPlans.draft')}
           </Badge>
         </div>
       </div>
@@ -161,40 +171,40 @@ export default function ClientTrainingPlanDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Plan Overview
+                {t('trainingPlanDetail.planOverview')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Duration</p>
+                  <p className="text-sm font-medium">{t('trainingPlans.duration')}</p>
                   <p className="text-sm text-muted-foreground">
-                    {plan.duration === 0 ? 'Till goal is met' : `${plan.duration} weeks`}
+                    {plan.duration === 0 ? t('trainingPlans.tillGoalMet') : `${plan.duration} ${t('trainingPlans.weeks')}`}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Week Cycle</p>
+                  <p className="text-sm font-medium">{t('trainingPlans.weekCycle')}</p>
                   <p className="text-sm text-muted-foreground">
-                    {plan.weekCycle || 1} week{(plan.weekCycle || 1) > 1 ? 's' : ''} pattern
+                    {plan.weekCycle || 1} {(plan.weekCycle || 1) > 1 ? t('trainingPlans.weeks') : t('trainingPlans.week')} {t('trainingPlans.weekPattern')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Target className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Goal</p>
-                  <p className="text-sm text-muted-foreground">{plan.goal || 'Not specified'}</p>
+                  <p className="text-sm font-medium">{t('trainingPlans.goal')}</p>
+                  <p className="text-sm text-muted-foreground">{plan.goal || t('trainingPlans.notSpecified')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Play className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Total Exercises</p>
-                  <p className="text-sm text-muted-foreground">{plan.planExercises?.length || 0} exercises</p>
+                  <p className="text-sm font-medium">{t('trainingPlanDetail.totalExercises')}</p>
+                  <p className="text-sm text-muted-foreground">{plan.planExercises?.length || 0} {t('trainingPlanDetail.exercises')}</p>
                 </div>
               </div>
               
@@ -203,23 +213,23 @@ export default function ClientTrainingPlanDetail() {
                 <>
                   <Separator />
                   <div className="space-y-3">
-                    <h4 className="font-medium">Nutrition Guidelines</h4>
+                    <h4 className="font-medium">{t('trainingPlanDetail.nutritionGuidelines')}</h4>
                     {plan.dailyCalories && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Daily Calories:</span>
-                        <span className="font-medium">{plan.dailyCalories} kcal</span>
+                        <span className="text-muted-foreground">{t('trainingPlanDetail.dailyCalories')}:</span>
+                        <span className="font-medium">{plan.dailyCalories} {t('trainingPlans.kcal')}</span>
                       </div>
                     )}
                     {plan.protein && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Protein:</span>
-                        <span className="font-medium">{plan.protein}g</span>
+                        <span className="text-muted-foreground">{t('trainingPlans.protein')}:</span>
+                        <span className="font-medium">{plan.protein}{t('trainingPlans.grams')}</span>
                       </div>
                     )}
                     {plan.carbs && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Carbs:</span>
-                        <span className="font-medium">{plan.carbs}g</span>
+                        <span className="text-muted-foreground">{t('trainingPlans.carbs')}:</span>
+                        <span className="font-medium">{plan.carbs}{t('trainingPlans.grams')}</span>
                       </div>
                     )}
                   </div>
@@ -235,7 +245,7 @@ export default function ClientTrainingPlanDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Dumbbell className="h-5 w-5" />
-                Weekly Exercise Schedule
+                {t('trainingPlanDetail.weeklySchedule')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -250,7 +260,7 @@ export default function ClientTrainingPlanDetail() {
                           {parseInt(dayNumber) + 1}
                         </div>
                         <h3 className="text-lg font-semibold">{getDayName(parseInt(dayNumber))}</h3>
-                        <Badge variant="outline">{(dayExercises as any[]).length} exercises</Badge>
+                        <Badge variant="outline">{(dayExercises as any[]).length} {t('trainingPlanDetail.exercises')}</Badge>
                       </div>
                       
                       <div className="grid gap-3">
@@ -262,10 +272,10 @@ export default function ClientTrainingPlanDetail() {
                               <div className="flex items-start justify-between mb-2">
                                 <div>
                                   <h4 className="font-medium">
-                                    {exercise?.name || `Exercise ${index + 1}`}
+                                    {exercise?.name || `${t('trainingPlanDetail.exercise')} ${index + 1}`}
                                   </h4>
                                   <p className="text-sm text-muted-foreground">
-                                    {exercise?.category || 'General'}
+                                    {exercise?.category || t('trainingPlanDetail.general')}
                                   </p>
                                 </div>
                               </div>
@@ -277,41 +287,41 @@ export default function ClientTrainingPlanDetail() {
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                                 {planExercise.sets && (
                                   <div>
-                                    <span className="font-medium text-muted-foreground">Sets:</span>
+                                    <span className="font-medium text-muted-foreground">{t('trainingPlanDetail.sets')}:</span>
                                     <div className="font-medium">{planExercise.sets}</div>
                                   </div>
                                 )}
                                 {planExercise.reps && (
                                   <div>
-                                    <span className="font-medium text-muted-foreground">Reps:</span>
+                                    <span className="font-medium text-muted-foreground">{t('trainingPlanDetail.reps')}:</span>
                                     <div className="font-medium">{planExercise.reps}</div>
                                   </div>
                                 )}
                                 {planExercise.duration && (
                                   <div>
-                                    <span className="font-medium text-muted-foreground">Duration:</span>
-                                    <div className="font-medium">{planExercise.duration} min</div>
+                                    <span className="font-medium text-muted-foreground">{t('trainingPlanDetail.duration')}:</span>
+                                    <div className="font-medium">{planExercise.duration} {t('trainingPlanDetail.min')}</div>
                                   </div>
                                 )}
                                 {planExercise.restTime && (
                                   <div>
-                                    <span className="font-medium text-muted-foreground">Rest:</span>
-                                    <div className="font-medium">{planExercise.restTime} sec</div>
+                                    <span className="font-medium text-muted-foreground">{t('trainingPlanDetail.rest')}:</span>
+                                    <div className="font-medium">{planExercise.restTime} {t('trainingPlanDetail.sec')}</div>
                                   </div>
                                 )}
                               </div>
 
                               {planExercise.weight && (
                                 <div className="mt-2 text-sm">
-                                  <span className="font-medium text-muted-foreground">Weight: </span>
-                                  <span className="font-medium">{planExercise.weight} kg</span>
+                                  <span className="font-medium text-muted-foreground">{t('trainingPlanDetail.weight')}: </span>
+                                  <span className="font-medium">{planExercise.weight} {t('trainingPlanDetail.kg')}</span>
                                 </div>
                               )}
 
                               {planExercise.notes && (
                                 <div className="mt-2">
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">Notes: </span>
+                                    <span className="font-medium">{t('trainingPlanDetail.notes')}: </span>
                                     {planExercise.notes}
                                   </p>
                                 </div>
@@ -319,7 +329,7 @@ export default function ClientTrainingPlanDetail() {
 
                               {(exercise?.mediaUrl || exercise?.mediaURL) && (
                                 <div className="mt-3 pt-3 border-t">
-                                  <h5 className="text-sm font-medium mb-2">Exercise Media:</h5>
+                                  <h5 className="text-sm font-medium mb-2">{t('trainingPlanDetail.exerciseMedia')}:</h5>
                                   {exercise.mediaType === 'video' ? (
                                     <video 
                                       src={exercise.mediaUrl || exercise.mediaURL} 
@@ -327,7 +337,7 @@ export default function ClientTrainingPlanDetail() {
                                       className="w-full max-w-sm h-48 rounded-lg"
                                       poster=""
                                     >
-                                      Your browser does not support the video tag.
+                                      {t('trainingPlanDetail.videoNotSupported')}
                                     </video>
                                   ) : (
                                     <img 
@@ -348,9 +358,9 @@ export default function ClientTrainingPlanDetail() {
               ) : (
                 <div className="text-center py-8">
                   <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No exercises scheduled</h3>
+                  <h3 className="text-lg font-medium mb-2">{t('trainingPlanDetail.noExercises')}</h3>
                   <p className="text-muted-foreground">
-                    Your trainer hasn't added exercises to this plan yet.
+                    {t('trainingPlanDetail.noExercisesMessage')}
                   </p>
                 </div>
               )}
