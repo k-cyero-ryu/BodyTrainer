@@ -21,10 +21,12 @@ import {
   FileText
 } from "lucide-react";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function ClientEvaluationDetail() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [match, params] = useRoute("/clients/:clientId/evaluation/:evaluationId");
   const clientId = params?.clientId;
   const evaluationId = params?.evaluationId;

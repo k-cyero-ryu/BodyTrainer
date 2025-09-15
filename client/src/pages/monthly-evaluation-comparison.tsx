@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Minus, Weight, Ruler } from "lucide-react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 
 interface Evaluation {
   id: string;
@@ -28,6 +29,7 @@ interface Evaluation {
 
 export default function MonthlyEvaluationComparison() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [selectedEvaluation1, setSelectedEvaluation1] = useState<string>("");
   const [selectedEvaluation2, setSelectedEvaluation2] = useState<string>("");
 
@@ -113,14 +115,14 @@ export default function MonthlyEvaluationComparison() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="h-8 w-8" />
-              Monthly Evaluation Comparison
+{t('monthlyEvaluation.monthlyEvaluationComparison')}
             </h1>
-            <p className="text-gray-600 mt-2">Compare two monthly evaluations to track your progress</p>
+            <p className="text-gray-600 mt-2">{t('monthlyEvaluation.compareTwoEvaluations')}</p>
           </div>
           <Link href="/monthly-evaluation">
             <Button variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Evaluations
+{t('monthlyEvaluation.backToEvaluations')}
             </Button>
           </Link>
         </div>
@@ -129,22 +131,22 @@ export default function MonthlyEvaluationComparison() {
       {/* Evaluation Selection */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Select Evaluations to Compare</CardTitle>
+          <CardTitle>{t('monthlyEvaluation.selectEvaluationsToCompare')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                First Evaluation (Baseline)
+{t('monthlyEvaluation.firstEvaluation')}
               </label>
               <Select value={selectedEvaluation1} onValueChange={setSelectedEvaluation1}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select first evaluation" />
+                  <SelectValue placeholder={t('monthlyEvaluation.selectFirstEvaluation')} />
                 </SelectTrigger>
                 <SelectContent>
                   {evaluations.map((evaluation: Evaluation) => (
                     <SelectItem key={evaluation.id} value={evaluation.id}>
-                      Week {evaluation.weekNumber} - {new Date(evaluation.createdAt).toLocaleDateString()}
+                      {t('monthlyEvaluation.week')} {evaluation.weekNumber} - {new Date(evaluation.createdAt).toLocaleDateString()}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -153,16 +155,16 @@ export default function MonthlyEvaluationComparison() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Second Evaluation (Compare To)
+{t('monthlyEvaluation.secondEvaluation')}
               </label>
               <Select value={selectedEvaluation2} onValueChange={setSelectedEvaluation2}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select second evaluation" />
+                  <SelectValue placeholder={t('monthlyEvaluation.selectSecondEvaluation')} />
                 </SelectTrigger>
                 <SelectContent>
                   {evaluations.map((evaluation: Evaluation) => (
                     <SelectItem key={evaluation.id} value={evaluation.id}>
-                      Week {evaluation.weekNumber} - {new Date(evaluation.createdAt).toLocaleDateString()}
+                      {t('monthlyEvaluation.week')} {evaluation.weekNumber} - {new Date(evaluation.createdAt).toLocaleDateString()}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -190,7 +192,7 @@ export default function MonthlyEvaluationComparison() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Badge variant="outline">Baseline</Badge>
-                  Week {evaluation1.weekNumber}
+                  {t('monthlyEvaluation.week')} {evaluation1.weekNumber}
                 </CardTitle>
                 <p className="text-sm text-gray-500">
                   {new Date(evaluation1.createdAt).toLocaleDateString()}
@@ -202,7 +204,7 @@ export default function MonthlyEvaluationComparison() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Badge variant="default">Comparison</Badge>
-                  Week {evaluation2.weekNumber}
+                  {t('monthlyEvaluation.week')} {evaluation2.weekNumber}
                 </CardTitle>
                 <p className="text-sm text-gray-500">
                   {new Date(evaluation2.createdAt).toLocaleDateString()}

@@ -14,10 +14,12 @@ import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from "@uppy/core";
+import { useTranslation } from "react-i18next";
 
 export default function MonthlyEvaluation() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [currentEvaluationIndex, setCurrentEvaluationIndex] = useState(0);
   const [frontPhotoUrl, setFrontPhotoUrl] = useState<string>("");
@@ -213,15 +215,15 @@ export default function MonthlyEvaluation() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Monthly Evaluation</h1>
-            <p className="text-gray-600 mt-2">Track your progress with monthly measurements and self-assessment</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('monthlyEvaluation.title')}</h1>
+            <p className="text-gray-600 mt-2">{t('monthlyEvaluation.trackProgress')}</p>
           </div>
           <div className="flex gap-2">
             <Link href="/monthly-evaluation-comparison">
-              <Button variant="default">Compare Evaluations</Button>
+              <Button variant="default">{t('monthlyEvaluation.compareEvaluations')}</Button>
             </Link>
             <Link href="/">
-              <Button variant="outline">Back to Dashboard</Button>
+              <Button variant="outline">{t('monthlyEvaluation.backToDashboard')}</Button>
             </Link>
           </div>
         </div>
@@ -234,7 +236,7 @@ export default function MonthlyEvaluation() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Monthly Evaluations
+{t('monthlyEvaluation.monthlyEvaluations')}
                 <Badge variant={isLatest ? "default" : "secondary"}>
                   {currentEvaluationIndex + 1} of {evaluations.length}
                 </Badge>
@@ -249,7 +251,7 @@ export default function MonthlyEvaluation() {
                   disabled={!canGoPrev}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+{t('monthlyEvaluation.previous')}
                 </Button>
                 
                 <Button
@@ -258,7 +260,7 @@ export default function MonthlyEvaluation() {
                   onClick={() => navigateEvaluation('next')}
                   disabled={!canGoNext}
                 >
-                  Next
+{t('monthlyEvaluation.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 
@@ -268,7 +270,7 @@ export default function MonthlyEvaluation() {
                     size="sm"
                     onClick={goToLatest}
                   >
-                    Latest
+                    {t('monthlyEvaluation.latest')}
                   </Button>
                 )}
               </div>
@@ -279,7 +281,7 @@ export default function MonthlyEvaluation() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Badge variant={isLatest ? "default" : "secondary"}>
-                    Week {currentEvaluation.weekNumber}
+{t('monthlyEvaluation.week')} {currentEvaluation.weekNumber}
                   </Badge>
                   <span className="text-sm text-gray-500">
                     {new Date(currentEvaluation.createdAt).toLocaleDateString()}
@@ -420,16 +422,16 @@ export default function MonthlyEvaluation() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            New Monthly Evaluation
+{t('monthlyEvaluation.newMonthlyEvaluation')}
           </CardTitle>
-          <p className="text-sm text-gray-500">Submit your monthly measurements and self-assessment</p>
+          <p className="text-sm text-gray-500">{t('monthlyEvaluation.submitMeasurements')}</p>
         </CardHeader>
         <CardContent>
           {!showEvaluationForm ? (
             <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">Ready to submit your monthly evaluation?</p>
+              <p className="text-gray-600 mb-4">{t('monthlyEvaluation.readyToSubmit')}</p>
               <Button onClick={() => setShowEvaluationForm(true)} size="lg">
-                Start New Evaluation
+{t('monthlyEvaluation.startNewEvaluation')}
               </Button>
             </div>
           ) : (
@@ -437,34 +439,34 @@ export default function MonthlyEvaluation() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Body Measurements */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Body Measurements (cm)</h4>
+                  <h4 className="font-medium text-gray-900 mb-4">{t('monthlyEvaluation.bodyMeasurements')}</h4>
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="waist">Waist</Label>
+                      <Label htmlFor="waist">{t('monthlyEvaluation.waist')}</Label>
                       <Input id="waist" name="waist" type="number" step="0.1" placeholder="80" required />
                     </div>
                     <div>
-                      <Label htmlFor="chest">Chest</Label>
+                      <Label htmlFor="chest">{t('monthlyEvaluation.chest')}</Label>
                       <Input id="chest" name="chest" type="number" step="0.1" placeholder="95" required />
                     </div>
                     <div>
-                      <Label htmlFor="biceps">Biceps</Label>
+                      <Label htmlFor="biceps">{t('monthlyEvaluation.biceps')}</Label>
                       <Input id="biceps" name="biceps" type="number" step="0.1" placeholder="32" required />
                     </div>
                     <div>
-                      <Label htmlFor="abdomen">Abdomen</Label>
+                      <Label htmlFor="abdomen">{t('monthlyEvaluation.abdomen')}</Label>
                       <Input id="abdomen" name="abdomen" type="number" step="0.1" placeholder="85" required />
                     </div>
                     <div>
-                      <Label htmlFor="hips">Hips</Label>
+                      <Label htmlFor="hips">{t('monthlyEvaluation.hips')}</Label>
                       <Input id="hips" name="hips" type="number" step="0.1" placeholder="100" required />
                     </div>
                     <div>
-                      <Label htmlFor="thigh">Thigh</Label>
+                      <Label htmlFor="thigh">{t('monthlyEvaluation.thigh')}</Label>
                       <Input id="thigh" name="thigh" type="number" step="0.1" placeholder="55" required />
                     </div>
                     <div>
-                      <Label htmlFor="calf">Calf</Label>
+                      <Label htmlFor="calf">{t('monthlyEvaluation.calf')}</Label>
                       <Input id="calf" name="calf" type="number" step="0.1" placeholder="38" required />
                     </div>
                   </div>
@@ -472,18 +474,18 @@ export default function MonthlyEvaluation() {
 
                 {/* Physical Stats */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Physical Stats</h4>
+                  <h4 className="font-medium text-gray-900 mb-4">{t('monthlyEvaluation.physicalStats')}</h4>
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="weight">Weight (kg)</Label>
+                      <Label htmlFor="weight">{t('monthlyEvaluation.weight')}</Label>
                       <Input id="weight" name="weight" type="number" step="0.1" placeholder="68" required />
                     </div>
                     <div>
-                      <Label htmlFor="bodyFat">Body Fat %</Label>
+                      <Label htmlFor="bodyFat">{t('monthlyEvaluation.bodyFat')}</Label>
                       <Input id="bodyFat" name="bodyFat" type="number" step="0.1" placeholder="18" required />
                     </div>
                     <div>
-                      <Label htmlFor="weekNumber">Week #</Label>
+                      <Label htmlFor="weekNumber">{t('monthlyEvaluation.weekNumber')}</Label>
                       <Input id="weekNumber" name="weekNumber" type="number" placeholder="8" required />
                     </div>
                   </div>
@@ -491,10 +493,10 @@ export default function MonthlyEvaluation() {
 
                 {/* Self-Evaluation */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-4">Self-Evaluation (1-10)</h4>
+                  <h4 className="font-medium text-gray-900 mb-4">{t('monthlyEvaluation.selfEvaluation')}</h4>
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="trainingAdherence">Training Adherence</Label>
+                      <Label htmlFor="trainingAdherence">{t('monthlyEvaluation.trainingAdherence')}</Label>
                       <Select name="trainingAdherence" required>
                         <SelectTrigger>
                           <SelectValue placeholder="Select rating" />
@@ -509,7 +511,7 @@ export default function MonthlyEvaluation() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="mealAdherence">Meal Plan Adherence</Label>
+                      <Label htmlFor="mealAdherence">{t('monthlyEvaluation.mealPlanAdherence')}</Label>
                       <Select name="mealAdherence" required>
                         <SelectTrigger>
                           <SelectValue placeholder="Select rating" />
