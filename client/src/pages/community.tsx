@@ -395,7 +395,7 @@ export default function Community() {
   return (
     <div className="p-6 h-screen flex flex-col">
       <Card className="flex-1 flex flex-col">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
             <div className="flex-1">
               {/* Group Name */}
@@ -503,7 +503,7 @@ export default function Community() {
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-0">
+        <CardContent className="flex-1 flex flex-col p-0 min-h-0">
           {/* Messages Area */}
           <ScrollArea className="flex-1 px-6">
             <div className="space-y-4 pb-4">
@@ -556,7 +556,7 @@ export default function Community() {
           </ScrollArea>
 
           {/* Message Input */}
-          <div className="border-t p-4">
+          <div className="border-t p-4 flex-shrink-0">
             <div className="flex space-x-2">
               <div className="flex-1 relative">
                 <Input
