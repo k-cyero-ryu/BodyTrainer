@@ -33,7 +33,7 @@ export default function MonthlyEvaluationComparison() {
   const [selectedEvaluation1, setSelectedEvaluation1] = useState<string>("");
   const [selectedEvaluation2, setSelectedEvaluation2] = useState<string>("");
 
-  const { data: evaluations = [], isLoading } = useQuery({
+  const { data: evaluations = [], isLoading } = useQuery<Evaluation[]>({
     queryKey: ["/api/evaluations"],
     enabled: !!user && user.role === 'client',
   });
@@ -175,8 +175,7 @@ export default function MonthlyEvaluationComparison() {
           {evaluations.length < 2 && (
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-800 text-sm">
-                You need at least 2 monthly evaluations to use the comparison feature. 
-                Complete more evaluations to start tracking your progress!
+{t('monthlyEvaluation.needTwoEvaluations')}
               </p>
             </div>
           )}
@@ -191,7 +190,7 @@ export default function MonthlyEvaluationComparison() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Badge variant="outline">Baseline</Badge>
+                  <Badge variant="outline">{t('monthlyEvaluation.baseline')}</Badge>
                   {t('monthlyEvaluation.week')} {evaluation1.weekNumber}
                 </CardTitle>
                 <p className="text-sm text-gray-500">
@@ -203,7 +202,7 @@ export default function MonthlyEvaluationComparison() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Badge variant="default">Comparison</Badge>
+                  <Badge variant="default">{t('monthlyEvaluation.comparison')}</Badge>
                   {t('monthlyEvaluation.week')} {evaluation2.weekNumber}
                 </CardTitle>
                 <p className="text-sm text-gray-500">
@@ -218,20 +217,20 @@ export default function MonthlyEvaluationComparison() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Weight className="h-5 w-5" />
-                Physical Stats Comparison
+{t('monthlyEvaluation.physicalStatsComparison')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
                 <ComparisonRow
-                  label="Weight"
+                  label={t('monthlyEvaluation.weight')}
                   value1={evaluation1.weight}
                   value2={evaluation2.weight}
                   unit=" kg"
                   isPositiveGood={false}
                 />
                 <ComparisonRow
-                  label="Body Fat Percentage"
+                  label={t('monthlyEvaluation.bodyFat')}
                   value1={evaluation1.bodyFatPercentage}
                   value2={evaluation2.bodyFatPercentage}
                   unit="%"
@@ -246,55 +245,55 @@ export default function MonthlyEvaluationComparison() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Ruler className="h-5 w-5" />
-                Body Measurements Comparison
+{t('monthlyEvaluation.bodyMeasurementsComparison')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
                 <ComparisonRow
-                  label="Waist"
+                  label={t('monthlyEvaluation.waist')}
                   value1={evaluation1.waistMeasurement}
                   value2={evaluation2.waistMeasurement}
                   unit=" cm"
                   isPositiveGood={false}
                 />
                 <ComparisonRow
-                  label="Chest"
+                  label={t('monthlyEvaluation.chest')}
                   value1={evaluation1.chestMeasurement}
                   value2={evaluation2.chestMeasurement}
                   unit=" cm"
                   isPositiveGood={true}
                 />
                 <ComparisonRow
-                  label="Biceps"
+                  label={t('monthlyEvaluation.biceps')}
                   value1={evaluation1.bicepsMeasurement}
                   value2={evaluation2.bicepsMeasurement}
                   unit=" cm"
                   isPositiveGood={true}
                 />
                 <ComparisonRow
-                  label="Abdomen"
+                  label={t('monthlyEvaluation.abdomen')}
                   value1={evaluation1.abdomenMeasurement}
                   value2={evaluation2.abdomenMeasurement}
                   unit=" cm"
                   isPositiveGood={false}
                 />
                 <ComparisonRow
-                  label="Hips"
+                  label={t('monthlyEvaluation.hips')}
                   value1={evaluation1.hipsMeasurement}
                   value2={evaluation2.hipsMeasurement}
                   unit=" cm"
                   isPositiveGood={false}
                 />
                 <ComparisonRow
-                  label="Thigh"
+                  label={t('monthlyEvaluation.thigh')}
                   value1={evaluation1.thighMeasurement}
                   value2={evaluation2.thighMeasurement}
                   unit=" cm"
                   isPositiveGood={true}
                 />
                 <ComparisonRow
-                  label="Calf"
+                  label={t('monthlyEvaluation.calf')}
                   value1={evaluation1.calfMeasurement}
                   value2={evaluation2.calfMeasurement}
                   unit=" cm"
@@ -307,26 +306,26 @@ export default function MonthlyEvaluationComparison() {
           {/* Self-Assessment Comparison */}
           <Card>
             <CardHeader>
-              <CardTitle>Self-Assessment Comparison</CardTitle>
+              <CardTitle>{t('monthlyEvaluation.selfAssessmentComparison')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
                 <ComparisonRow
-                  label="Training Adherence"
+                  label={t('monthlyEvaluation.trainingAdherence')}
                   value1={evaluation1.trainingAdherence}
                   value2={evaluation2.trainingAdherence}
                   unit="/10"
                   isPositiveGood={true}
                 />
                 <ComparisonRow
-                  label="Meal Adherence"
+                  label={t('monthlyEvaluation.mealPlanAdherence')}
                   value1={evaluation1.mealAdherence}
                   value2={evaluation2.mealAdherence}
                   unit="/10"
                   isPositiveGood={true}
                 />
                 <ComparisonRow
-                  label="Overall Self-Evaluation"
+                  label={t('monthlyEvaluation.overallSatisfaction')}
                   value1={evaluation1.selfEvaluation}
                   value2={evaluation2.selfEvaluation}
                   unit="/10"
@@ -343,10 +342,9 @@ export default function MonthlyEvaluationComparison() {
         <Card>
           <CardContent className="text-center py-12">
             <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Select Two Evaluations</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('monthlyEvaluation.selectTwoEvaluations')}</h3>
             <p className="text-gray-600">
-              Choose two monthly evaluations from the dropdowns above to see a detailed comparison 
-              with percentage changes and progress indicators.
+              {t('monthlyEvaluation.chooseTwoEvaluations')}
             </p>
           </CardContent>
         </Card>

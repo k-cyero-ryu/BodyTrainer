@@ -131,7 +131,7 @@ export default function MonthlyEvaluation() {
       console.error('Upload failed:', result.failed);
       toast({
         title: "Upload Failed",
-        description: `Failed to upload: ${result.failed[0].error?.message || 'Unknown error'}`,
+        description: `Failed to upload: ${result.failed[0].error || 'Unknown error'}`,
         variant: "destructive",
       });
     }
