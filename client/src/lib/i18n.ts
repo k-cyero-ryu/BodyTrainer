@@ -44,6 +44,8 @@ const resources = {
       'common.success': 'Success',
       'common.cancel': 'Cancel',
       'common.save': 'Save',
+      'common.saving': 'Saving',
+      'common.notAvailable': 'N/A',
       'common.create': 'Create',
       'common.edit': 'Edit',
       'common.delete': 'Delete',
@@ -739,6 +741,7 @@ const resources = {
       'clientProfile.lastUpdated': 'Last updated',
       'clientProfile.accountStatus': 'Account status',
       'clientProfile.active': 'Active',
+      'clientProfile.noTrainerAssigned': 'No trainer assigned yet.',
     }
   },
   es: {
@@ -782,6 +785,8 @@ const resources = {
       'common.success': 'Éxito',
       'common.cancel': 'Cancelar',
       'common.save': 'Guardar',
+      'common.saving': 'Guardando',
+      'common.notAvailable': 'N/D',
       'common.create': 'Crear',
       'common.edit': 'Editar',
       'common.delete': 'Eliminar',
@@ -1269,6 +1274,7 @@ const resources = {
       'clientProfile.lastUpdated': 'Última actualización',
       'clientProfile.accountStatus': 'Estado de la cuenta',
       'clientProfile.active': 'Activo',
+      'clientProfile.noTrainerAssigned': 'Aún no tienes entrenador asignado.',
       
       // Profile
       'profile.trainerProfile': 'Perfil de Entrenador',
@@ -1528,6 +1534,8 @@ const resources = {
       'common.success': 'Succès',
       'common.cancel': 'Annuler',
       'common.save': 'Sauvegarder',
+      'common.saving': 'Sauvegarde',
+      'common.notAvailable': 'N/D',
       'common.create': 'Créer',
       'common.edit': 'Modifier',
       'common.delete': 'Supprimer',
@@ -1579,6 +1587,8 @@ const resources = {
       'common.success': 'Sucesso',
       'common.cancel': 'Cancelar',
       'common.save': 'Salvar',
+      'common.saving': 'Salvando',
+      'common.notAvailable': 'N/D',
       'common.create': 'Criar',
       'common.edit': 'Editar',
       'common.delete': 'Excluir',

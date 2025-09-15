@@ -191,7 +191,7 @@ export default function ClientProfile() {
           ) : (
             <Button variant="outline" onClick={() => setIsEditing(false)}>
               <X className="h-4 w-4 mr-2" />
-              {t('clientProfile.cancel')}
+              {t('common.cancel')}
             </Button>
           )}
         </div>
@@ -615,7 +615,7 @@ export default function ClientProfile() {
                 </DialogContent>
               </Dialog>
             ) : (
-              <p className="text-muted-foreground">No trainer assigned yet.</p>
+              <p className="text-muted-foreground">{t('clientProfile.noTrainerAssigned')}</p>
             )}
           </CardContent>
         </Card>
@@ -623,20 +623,20 @@ export default function ClientProfile() {
         {/* Account Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
+            <CardTitle>{t('clientProfile.accountInformation')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Member since:</span>
-              <span>{clientProfile.createdAt ? new Date(clientProfile.createdAt).toLocaleDateString() : 'N/A'}</span>
+              <span className="text-muted-foreground">{t('clientProfile.memberSince')}:</span>
+              <span>{clientProfile.createdAt ? new Date(clientProfile.createdAt).toLocaleDateString() : t('common.notAvailable')}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Last updated:</span>
-              <span>{clientProfile.updatedAt ? new Date(clientProfile.updatedAt).toLocaleDateString() : 'N/A'}</span>
+              <span className="text-muted-foreground">{t('clientProfile.lastUpdated')}:</span>
+              <span>{clientProfile.updatedAt ? new Date(clientProfile.updatedAt).toLocaleDateString() : t('common.notAvailable')}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Account status:</span>
-              <Badge variant="outline">Active</Badge>
+              <span className="text-muted-foreground">{t('clientProfile.accountStatus')}:</span>
+              <Badge variant="outline">{t('clientProfile.active')}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -650,7 +650,7 @@ export default function ClientProfile() {
               onClick={() => setIsEditing(false)}
               disabled={updateProfileMutation.isPending}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -659,7 +659,7 @@ export default function ClientProfile() {
               {updateProfileMutation.isPending ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
+                  {t('common.saving')}...
                 </>
               ) : (
                 <>
