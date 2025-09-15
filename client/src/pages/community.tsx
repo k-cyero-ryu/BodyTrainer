@@ -100,10 +100,7 @@ export default function Community() {
   const updateGroup = useMutation({
     mutationFn: async (updates: { name: string; description: string }) => {
       if (!group?.id) throw new Error('No group ID');
-      return apiRequest(`/api/community/group/${group.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(updates),
-      });
+      return apiRequest('PUT', `/api/community/group/${group.id}`, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/community/group'] });
