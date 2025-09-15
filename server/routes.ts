@@ -1445,9 +1445,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`[DEBUG] Completing exercise for client ID: ${client.id}, user ID: ${userId}`);
-      console.log(`[DEBUG] Request body:`, { planExerciseId, totalSets, actualWeight, actualReps, actualDuration, notes: req.body.notes, date: req.body.date });
-
+      
       const { planExerciseId, totalSets, actualWeight, actualReps, actualDuration, notes, date } = req.body;
+      console.log(`[DEBUG] Request body:`, { planExerciseId, totalSets, actualWeight, actualReps, actualDuration, notes, date });
       
       // Use the provided date or default to today
       const targetDate = date ? new Date(date) : new Date();
