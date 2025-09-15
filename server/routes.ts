@@ -1538,15 +1538,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only clients can create food entries" });
       }
 
-      console.log("Food entry request body:", req.body);
       const entryData = insertFoodEntrySchema.parse({
         ...req.body,
         clientId: client.id,
       });
-      console.log("Parsed food entry data:", entryData);
 
       const foodEntry = await storage.createFoodEntry(entryData);
-      console.log("Created food entry:", foodEntry);
       res.status(201).json(foodEntry);
     } catch (error) {
       console.error("Error creating food entry:", error);

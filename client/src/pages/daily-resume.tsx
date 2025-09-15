@@ -100,7 +100,7 @@ export default function DailyResume() {
 
   // Fetch food entries for selected date
   const { data: foodEntries, isLoading: loadingFood } = useQuery({
-    queryKey: ['/api/client/food-entries', selectedDate],
+    queryKey: ['/api/client/food-entries', { date: selectedDate }],
     enabled: isAuthenticated && selectedDate !== '',
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) return false;
@@ -110,7 +110,7 @@ export default function DailyResume() {
 
   // Fetch cardio activities for selected date
   const { data: cardioActivities, isLoading: loadingCardio } = useQuery({
-    queryKey: ['/api/client/cardio-activities', selectedDate],
+    queryKey: ['/api/client/cardio-activities', { date: selectedDate }],
     enabled: isAuthenticated && selectedDate !== '',
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) return false;
@@ -126,7 +126,7 @@ export default function DailyResume() {
         date: selectedDate, // Send as string, backend will transform to Date
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/food-entries', selectedDate] });
+      queryClient.invalidateQueries({ queryKey: ['/api/client/food-entries', { date: selectedDate }] });
       setIsFoodDialogOpen(false);
       foodForm.reset();
       toast({
@@ -153,7 +153,7 @@ export default function DailyResume() {
         date: selectedDate, // Send as string, backend will transform to Date
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/cardio-activities', selectedDate] });
+      queryClient.invalidateQueries({ queryKey: ['/api/client/cardio-activities', { date: selectedDate }] });
       setIsCardioDialogOpen(false);
       cardioForm.reset();
       toast({
@@ -174,7 +174,7 @@ export default function DailyResume() {
   const deleteFoodMutation = useMutation({
     mutationFn: (id: string) => apiRequest('DELETE', `/api/client/food-entries/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/food-entries', selectedDate] });
+      queryClient.invalidateQueries({ queryKey: ['/api/client/food-entries', { date: selectedDate }] });
       toast({
         title: t('common.success'),
         description: "Food entry deleted successfully",
@@ -186,7 +186,7 @@ export default function DailyResume() {
   const deleteCardioMutation = useMutation({
     mutationFn: (id: string) => apiRequest('DELETE', `/api/client/cardio-activities/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/cardio-activities', selectedDate] });
+      queryClient.invalidateQueries({ queryKey: ['/api/client/cardio-activities', { date: selectedDate }] });
       toast({
         title: t('common.success'),
         description: "Cardio activity deleted successfully",
