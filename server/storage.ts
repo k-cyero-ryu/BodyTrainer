@@ -214,6 +214,7 @@ export interface IStorage {
   
   // Helper method to check if image belongs to a social post
   isSocialPostImage(imageUrl: string): Promise<boolean>;
+  isCommunityFile(fileUrl: string): Promise<{ groupId: string } | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1346,6 +1347,16 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return !!post;
+  }
+
+  async isCommunityFile(fileUrl: string): Promise<{ groupId: string } | null> {
+    const [message] = await db
+      .select({ groupId: communityMessages.groupId })
+      .from(communityMessages)
+      .where(eq(communityMessages.attachmentUrl, fileUrl))
+      .limit(1);
+    
+    return message || null;
   }
 
   // Social Posts operations

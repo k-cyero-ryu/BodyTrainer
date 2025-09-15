@@ -212,17 +212,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user can access this object based on ACL policies
       const userId = req.user?.id; // User might not be authenticated for public files
       
-      // Special handling for social post images - check if the image belongs to a social post
+      // Special handling for social post images and community files - check if they belong to social posts or community
       let isSocialPostImage = false;
+      let communityFileInfo = null;
       if (!aclPolicy && req.path.includes('/objects/uploads/')) {
         try {
-          const imageUrl = req.path; // e.g., "/objects/uploads/89982710-5f4f-4d68-b40f-2caffd07ffd2"
-          const socialPostExists = await storage.isSocialPostImage(imageUrl);
+          const fileUrl = req.path; // e.g., "/objects/uploads/89982710-5f4f-4d68-b40f-2caffd07ffd2"
+          
+          // Check if it's a social post image first
+          const socialPostExists = await storage.isSocialPostImage(fileUrl);
           if (socialPostExists) {
             isSocialPostImage = true;
+          } else {
+            // Check if it's a community file
+            communityFileInfo = await storage.isCommunityFile(fileUrl);
           }
         } catch (error) {
-          console.error("Error checking social post image:", error);
+          console.error("Error checking social post image or community file:", error);
         }
       }
       
@@ -230,6 +236,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isSocialPostImage) {
         objectStorageService.downloadObject(objectFile, res);
         return;
+      }
+      
+      // Allow access if it's a community file and user is a member of that community
+      if (communityFileInfo && userId) {
+        try {
+          const isMember = await storage.isCommunityMember(communityFileInfo.groupId, userId);
+          if (isMember) {
+            objectStorageService.downloadObject(objectFile, res);
+            return;
+          }
+        } catch (error) {
+          console.error("Error checking community membership:", error);
+        }
       }
       
       const canAccess = await objectStorageService.canAccessObjectEntity({
