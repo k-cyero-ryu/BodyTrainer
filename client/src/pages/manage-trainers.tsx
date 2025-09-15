@@ -120,10 +120,9 @@ export default function ManageTrainers() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      approved: { variant: "default" as const, label: "Approved" },
+      active: { variant: "default" as const, label: "Approved" },
       pending: { variant: "secondary" as const, label: "Pending" },
-      rejected: { variant: "destructive" as const, label: "Rejected" },
-      suspended: { variant: "outline" as const, label: "Suspended" },
+      inactive: { variant: "destructive" as const, label: "Rejected" },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -272,7 +271,7 @@ export default function ManageTrainers() {
                           size="sm"
                           onClick={() => updateTrainerStatusMutation.mutate({
                             trainerId: trainer.id,
-                            status: 'approved'
+                            status: 'active'
                           })}
                         >
                           <UserCheck className="h-4 w-4 mr-1" />
@@ -283,7 +282,7 @@ export default function ManageTrainers() {
                           size="sm"
                           onClick={() => updateTrainerStatusMutation.mutate({
                             trainerId: trainer.id,
-                            status: 'rejected'
+                            status: 'inactive'
                           })}
                         >
                           <UserX className="h-4 w-4 mr-1" />
@@ -292,13 +291,13 @@ export default function ManageTrainers() {
                       </>
                     )}
                     
-                    {trainer.user.status === 'approved' && (
+                    {trainer.user.status === 'active' && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => updateTrainerStatusMutation.mutate({
                           trainerId: trainer.id,
-                          status: 'suspended'
+                          status: 'inactive'
                         })}
                       >
                         <UserX className="h-4 w-4 mr-1" />
