@@ -118,6 +118,12 @@ export default function Navigation() {
       roles: ['client']
     },
     { 
+      href: '/daily-resume', 
+      label: t('nav.dailyResume'), 
+      icon: BarChart3,
+      roles: ['client']
+    },
+    { 
       href: '/my-training-plans', 
       label: t('nav.plans'), 
       icon: Dumbbell,
