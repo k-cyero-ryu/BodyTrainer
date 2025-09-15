@@ -84,6 +84,13 @@ export default function ClientDetail() {
 
   const { data: client, isLoading: clientLoading } = useQuery({
     queryKey: ["/api/clients", clientId],
+    queryFn: async () => {
+      const response = await fetch(`/api/clients/${clientId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch client');
+      return response.json();
+    },
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
