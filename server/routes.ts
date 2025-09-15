@@ -7,7 +7,7 @@ import { setupAuth, isAuthenticated, optionalAuth } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission, ObjectAclPolicy, getObjectAclPolicy } from "./objectAcl";
 import { z } from "zod";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, insertFoodEntrySchema, insertCardioActivitySchema, updateFoodEntrySchema, updateCardioActivitySchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -1494,6 +1494,228 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error completing exercise:", error);
       res.status(500).json({ message: "Failed to complete exercise" });
+    }
+  });
+
+  // Food entry routes for Daily Resume
+  app.get('/api/client/food-entries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view food entries" });
+      }
+
+      const { date, startDate, endDate } = req.query;
+      let foodEntries;
+
+      if (date) {
+        // Get entries for specific date
+        const targetDate = new Date(date as string);
+        foodEntries = await storage.getFoodEntriesByDate(client.id, targetDate);
+      } else if (startDate && endDate) {
+        // Get entries for date range
+        const start = new Date(startDate as string);
+        const end = new Date(endDate as string);
+        foodEntries = await storage.getFoodEntriesByDateRange(client.id, start, end);
+      } else {
+        // Get all entries for client
+        foodEntries = await storage.getFoodEntriesByClient(client.id);
+      }
+
+      res.json(foodEntries);
+    } catch (error) {
+      console.error("Error fetching food entries:", error);
+      res.status(500).json({ message: "Failed to fetch food entries" });
+    }
+  });
+
+  app.post('/api/client/food-entries', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can create food entries" });
+      }
+
+      const entryData = insertFoodEntrySchema.parse({
+        ...req.body,
+        clientId: client.id,
+      });
+
+      const foodEntry = await storage.createFoodEntry(entryData);
+      res.status(201).json(foodEntry);
+    } catch (error) {
+      console.error("Error creating food entry:", error);
+      res.status(500).json({ message: "Failed to create food entry" });
+    }
+  });
+
+  app.put('/api/client/food-entries/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can update food entries" });
+      }
+
+      const entryId = req.params.id;
+      
+      // First, verify the entry exists and belongs to this client
+      const existingEntry = await storage.getFoodEntryById(entryId);
+      if (!existingEntry) {
+        return res.status(404).json({ message: "Food entry not found" });
+      }
+      if (existingEntry.clientId !== client.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Parse and validate update data using secure schema that excludes clientId
+      const updateData = updateFoodEntrySchema.partial().parse(req.body);
+      
+      const updatedEntry = await storage.updateFoodEntry(entryId, updateData);
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error("Error updating food entry:", error);
+      res.status(500).json({ message: "Failed to update food entry" });
+    }
+  });
+
+  app.delete('/api/client/food-entries/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can delete food entries" });
+      }
+
+      const entryId = req.params.id;
+      
+      // First, verify the entry exists and belongs to this client
+      const existingEntry = await storage.getFoodEntryById(entryId);
+      if (!existingEntry) {
+        return res.status(404).json({ message: "Food entry not found" });
+      }
+      if (existingEntry.clientId !== client.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deleteFoodEntry(entryId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting food entry:", error);
+      res.status(500).json({ message: "Failed to delete food entry" });
+    }
+  });
+
+  // Cardio activity routes for Daily Resume
+  app.get('/api/client/cardio-activities', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view cardio activities" });
+      }
+
+      const { date, startDate, endDate } = req.query;
+      let cardioActivities;
+
+      if (date) {
+        // Get activities for specific date
+        const targetDate = new Date(date as string);
+        cardioActivities = await storage.getCardioActivitiesByDate(client.id, targetDate);
+      } else if (startDate && endDate) {
+        // Get activities for date range
+        const start = new Date(startDate as string);
+        const end = new Date(endDate as string);
+        cardioActivities = await storage.getCardioActivitiesByDateRange(client.id, start, end);
+      } else {
+        // Get all activities for client
+        cardioActivities = await storage.getCardioActivitiesByClient(client.id);
+      }
+
+      res.json(cardioActivities);
+    } catch (error) {
+      console.error("Error fetching cardio activities:", error);
+      res.status(500).json({ message: "Failed to fetch cardio activities" });
+    }
+  });
+
+  app.post('/api/client/cardio-activities', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can create cardio activities" });
+      }
+
+      const activityData = insertCardioActivitySchema.parse({
+        ...req.body,
+        clientId: client.id,
+      });
+
+      const cardioActivity = await storage.createCardioActivity(activityData);
+      res.status(201).json(cardioActivity);
+    } catch (error) {
+      console.error("Error creating cardio activity:", error);
+      res.status(500).json({ message: "Failed to create cardio activity" });
+    }
+  });
+
+  app.put('/api/client/cardio-activities/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can update cardio activities" });
+      }
+
+      const activityId = req.params.id;
+      
+      // First, verify the activity exists and belongs to this client
+      const existingActivity = await storage.getCardioActivityById(activityId);
+      if (!existingActivity) {
+        return res.status(404).json({ message: "Cardio activity not found" });
+      }
+      if (existingActivity.clientId !== client.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Parse and validate update data using secure schema that excludes clientId
+      const updateData = updateCardioActivitySchema.partial().parse(req.body);
+      
+      const updatedActivity = await storage.updateCardioActivity(activityId, updateData);
+      res.json(updatedActivity);
+    } catch (error) {
+      console.error("Error updating cardio activity:", error);
+      res.status(500).json({ message: "Failed to update cardio activity" });
+    }
+  });
+
+  app.delete('/api/client/cardio-activities/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can delete cardio activities" });
+      }
+
+      const activityId = req.params.id;
+      
+      // First, verify the activity exists and belongs to this client
+      const existingActivity = await storage.getCardioActivityById(activityId);
+      if (!existingActivity) {
+        return res.status(404).json({ message: "Cardio activity not found" });
+      }
+      if (existingActivity.clientId !== client.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deleteCardioActivity(activityId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting cardio activity:", error);
+      res.status(500).json({ message: "Failed to delete cardio activity" });
     }
   });
 

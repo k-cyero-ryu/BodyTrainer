@@ -675,7 +675,13 @@ export const insertCardioActivitySchema = createInsertSchema(cardioActivities).o
   distance: z.union([z.string(), z.number(), z.null()]).optional().transform(val => val === null ? null : (typeof val === 'number' ? val.toString() : val)),
 });
 
+// Update schemas that explicitly exclude id and clientId to prevent reassignment
+export const updateFoodEntrySchema = insertFoodEntrySchema.omit({ clientId: true });
+export const updateCardioActivitySchema = insertCardioActivitySchema.omit({ clientId: true });
+
 export type InsertFoodEntry = z.infer<typeof insertFoodEntrySchema>;
 export type FoodEntry = typeof foodEntries.$inferSelect;
+export type UpdateFoodEntry = z.infer<typeof updateFoodEntrySchema>;
 export type InsertCardioActivity = z.infer<typeof insertCardioActivitySchema>;
 export type CardioActivity = typeof cardioActivities.$inferSelect;
+export type UpdateCardioActivity = z.infer<typeof updateCardioActivitySchema>;

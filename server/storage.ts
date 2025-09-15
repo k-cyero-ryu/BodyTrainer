@@ -18,6 +18,8 @@ import {
   socialComments,
   paymentPlans,
   clientPaymentPlans,
+  foodEntries,
+  cardioActivities,
   type User,
   type UpsertUser,
   type Trainer,
@@ -56,6 +58,12 @@ import {
   type InsertSocialPost,
   type InsertSocialLike,
   type InsertSocialComment,
+  type FoodEntry,
+  type InsertFoodEntry,
+  type UpdateFoodEntry,
+  type CardioActivity,
+  type InsertCardioActivity,
+  type UpdateCardioActivity,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql, gte, lte } from "drizzle-orm";
@@ -124,6 +132,26 @@ export interface IStorage {
   // Workout log operations
   createWorkoutLog(log: InsertWorkoutLog): Promise<WorkoutLog>;
   getWorkoutLogsByClient(clientId: string): Promise<WorkoutLog[]>;
+  getWorkoutLogsByDateRange(clientId: string, startDate: Date, endDate: Date): Promise<WorkoutLog[]>;
+  deleteWorkoutLog(id: string): Promise<void>;
+
+  // Food entry operations
+  createFoodEntry(entry: InsertFoodEntry): Promise<FoodEntry>;
+  getFoodEntryById(entryId: string): Promise<FoodEntry | undefined>;
+  getFoodEntriesByClient(clientId: string): Promise<FoodEntry[]>;
+  getFoodEntriesByDate(clientId: string, date: Date): Promise<FoodEntry[]>;
+  getFoodEntriesByDateRange(clientId: string, startDate: Date, endDate: Date): Promise<FoodEntry[]>;
+  updateFoodEntry(id: string, entry: Partial<UpdateFoodEntry>): Promise<FoodEntry>;
+  deleteFoodEntry(id: string): Promise<void>;
+
+  // Cardio activity operations
+  createCardioActivity(activity: InsertCardioActivity): Promise<CardioActivity>;
+  getCardioActivityById(activityId: string): Promise<CardioActivity | undefined>;
+  getCardioActivitiesByClient(clientId: string): Promise<CardioActivity[]>;
+  getCardioActivitiesByDate(clientId: string, date: Date): Promise<CardioActivity[]>;
+  getCardioActivitiesByDateRange(clientId: string, startDate: Date, endDate: Date): Promise<CardioActivity[]>;
+  updateCardioActivity(id: string, activity: Partial<UpdateCardioActivity>): Promise<CardioActivity>;
+  deleteCardioActivity(id: string): Promise<void>;
 
   // Monthly evaluation operations
   createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation>;
@@ -685,6 +713,132 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWorkoutLog(id: string): Promise<void> {
     await db.delete(workoutLogs).where(eq(workoutLogs.id, id));
+  }
+
+  // Food entry operations
+  async createFoodEntry(entry: InsertFoodEntry): Promise<FoodEntry> {
+    const [created] = await db.insert(foodEntries).values(entry).returning();
+    return created;
+  }
+
+  async getFoodEntryById(entryId: string): Promise<FoodEntry | undefined> {
+    const [entry] = await db
+      .select()
+      .from(foodEntries)
+      .where(eq(foodEntries.id, entryId));
+    return entry;
+  }
+
+  async getFoodEntriesByClient(clientId: string): Promise<FoodEntry[]> {
+    return await db
+      .select()
+      .from(foodEntries)
+      .where(eq(foodEntries.clientId, clientId))
+      .orderBy(desc(foodEntries.date));
+  }
+
+  async getFoodEntriesByDate(clientId: string, date: Date): Promise<FoodEntry[]> {
+    // Create new Date objects to avoid mutating the original
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    
+    return await db
+      .select()
+      .from(foodEntries)
+      .where(and(
+        eq(foodEntries.clientId, clientId),
+        gte(foodEntries.date, startOfDay),
+        lte(foodEntries.date, endOfDay)
+      ))
+      .orderBy(desc(foodEntries.date));
+  }
+
+  async getFoodEntriesByDateRange(clientId: string, startDate: Date, endDate: Date): Promise<FoodEntry[]> {
+    return await db
+      .select()
+      .from(foodEntries)
+      .where(and(
+        eq(foodEntries.clientId, clientId),
+        gte(foodEntries.date, startDate),
+        lte(foodEntries.date, endDate)
+      ))
+      .orderBy(desc(foodEntries.date));
+  }
+
+  async updateFoodEntry(id: string, entry: Partial<InsertFoodEntry>): Promise<FoodEntry> {
+    const [updated] = await db
+      .update(foodEntries)
+      .set(entry)
+      .where(eq(foodEntries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFoodEntry(id: string): Promise<void> {
+    await db.delete(foodEntries).where(eq(foodEntries.id, id));
+  }
+
+  // Cardio activity operations
+  async createCardioActivity(activity: InsertCardioActivity): Promise<CardioActivity> {
+    const [created] = await db.insert(cardioActivities).values(activity).returning();
+    return created;
+  }
+
+  async getCardioActivityById(activityId: string): Promise<CardioActivity | undefined> {
+    const [activity] = await db
+      .select()
+      .from(cardioActivities)
+      .where(eq(cardioActivities.id, activityId));
+    return activity;
+  }
+
+  async getCardioActivitiesByClient(clientId: string): Promise<CardioActivity[]> {
+    return await db
+      .select()
+      .from(cardioActivities)
+      .where(eq(cardioActivities.clientId, clientId))
+      .orderBy(desc(cardioActivities.date));
+  }
+
+  async getCardioActivitiesByDate(clientId: string, date: Date): Promise<CardioActivity[]> {
+    // Create new Date objects to avoid mutating the original
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    
+    return await db
+      .select()
+      .from(cardioActivities)
+      .where(and(
+        eq(cardioActivities.clientId, clientId),
+        gte(cardioActivities.date, startOfDay),
+        lte(cardioActivities.date, endOfDay)
+      ))
+      .orderBy(desc(cardioActivities.date));
+  }
+
+  async getCardioActivitiesByDateRange(clientId: string, startDate: Date, endDate: Date): Promise<CardioActivity[]> {
+    return await db
+      .select()
+      .from(cardioActivities)
+      .where(and(
+        eq(cardioActivities.clientId, clientId),
+        gte(cardioActivities.date, startDate),
+        lte(cardioActivities.date, endDate)
+      ))
+      .orderBy(desc(cardioActivities.date));
+  }
+
+  async updateCardioActivity(id: string, activity: Partial<InsertCardioActivity>): Promise<CardioActivity> {
+    const [updated] = await db
+      .update(cardioActivities)
+      .set(activity)
+      .where(eq(cardioActivities.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCardioActivity(id: string): Promise<void> {
+    await db.delete(cardioActivities).where(eq(cardioActivities.id, id));
   }
 
   // Monthly evaluation operations
