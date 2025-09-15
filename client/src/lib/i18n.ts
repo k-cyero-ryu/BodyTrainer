@@ -37,6 +37,12 @@ const resources = {
       'community.sharedFile': 'Shared a file',
       'community.community': 'Community',
       'community.members': 'members',
+      'community.success': 'Success',
+      'community.groupUpdated': 'Community group updated successfully',
+      'community.failedToUpdateGroup': 'Failed to update community group',
+      'community.nameRequired': 'Group name is required',
+      'community.descriptionPlaceholder': 'Enter group description...',
+      'community.noDescription': 'No description - click to add one',
       
       // Common
       'common.loading': 'Loading...',
@@ -851,6 +857,12 @@ const resources = {
       'community.sharedFile': 'Compartió un archivo',
       'community.community': 'Comunidad',
       'community.members': 'miembros',
+      'community.success': 'Éxito',
+      'community.groupUpdated': 'Grupo comunitario actualizado exitosamente',
+      'community.failedToUpdateGroup': 'Error al actualizar el grupo comunitario',
+      'community.nameRequired': 'El nombre del grupo es requerido',
+      'community.descriptionPlaceholder': 'Ingresa descripción del grupo...',
+      'community.noDescription': 'Sin descripción - haz clic para agregar una',
       
       // Common
       'common.loading': 'Cargando...',

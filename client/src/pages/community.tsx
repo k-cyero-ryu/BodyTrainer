@@ -7,9 +7,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Send, Paperclip, Image, FileText, Link as LinkIcon, X } from "lucide-react";
+import { Send, Paperclip, Image, FileText, Link as LinkIcon, X, Edit, Check, XIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface CommunityMessage {
@@ -43,8 +45,13 @@ interface CommunityGroup {
 export default function Community() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get community group for current user
@@ -84,6 +91,33 @@ export default function Community() {
       toast({
         title: t('common.error'),
         description: error.message || t('community.failedToSendMessage'),
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update community group mutation
+  const updateGroup = useMutation({
+    mutationFn: async (updates: { name: string; description: string }) => {
+      if (!group?.id) throw new Error('No group ID');
+      return apiRequest(`/api/community/group/${group.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/community/group'] });
+      setIsEditingName(false);
+      setIsEditingDescription(false);
+      toast({
+        title: t('community.success'),
+        description: t('community.groupUpdated'),
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common.error'),
+        description: error.message || t('community.failedToUpdateGroup'),
         variant: "destructive",
       });
     },
@@ -189,6 +223,48 @@ export default function Community() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Initialize edit values when group changes
+  useEffect(() => {
+    if (group) {
+      setEditedName(group.name);
+      setEditedDescription(group.description || "");
+    }
+  }, [group]);
+
+  // Handle edit functions
+  const handleStartEditName = () => {
+    setEditedName(group?.name || "");
+    setIsEditingName(true);
+  };
+
+  const handleStartEditDescription = () => {
+    setEditedDescription(group?.description || "");
+    setIsEditingDescription(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editedName.trim()) {
+      toast({
+        title: t('common.error'),
+        description: t('community.nameRequired'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateGroup.mutate({
+      name: editedName.trim(),
+      description: editedDescription.trim(),
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setIsEditingDescription(false);
+    setEditedName(group?.name || "");
+    setEditedDescription(group?.description || "");
+  };
 
   // Handle send message
   const handleSendMessage = () => {
@@ -324,11 +400,105 @@ export default function Community() {
       <Card className="flex-1 flex flex-col">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold" data-testid="text-community-title">{group.name}</h2>
-              {group.description && (
-                <p className="text-sm text-muted-foreground mt-1">{group.description}</p>
-              )}
+            <div className="flex-1">
+              {/* Group Name */}
+              <div className="flex items-center gap-2 mb-2">
+                {isEditingName ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <Input
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      className="text-xl font-bold"
+                      data-testid="input-group-name"
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleSaveEdit}
+                      disabled={updateGroup.isPending}
+                      data-testid="button-save-name"
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                      disabled={updateGroup.isPending}
+                      data-testid="button-cancel-name"
+                    >
+                      <XIcon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold" data-testid="text-community-title">{group.name}</h2>
+                    {user?.role === 'trainer' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleStartEditName}
+                        data-testid="button-edit-name"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Group Description */}
+              <div className="flex items-start gap-2">
+                {isEditingDescription ? (
+                  <div className="flex items-start gap-2 flex-1">
+                    <Textarea
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                      placeholder={t('community.descriptionPlaceholder')}
+                      className="text-sm resize-none"
+                      rows={2}
+                      data-testid="textarea-group-description"
+                    />
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        onClick={handleSaveEdit}
+                        disabled={updateGroup.isPending}
+                        data-testid="button-save-description"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        disabled={updateGroup.isPending}
+                        data-testid="button-cancel-description"
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2 flex-1">
+                    {group.description ? (
+                      <p className="text-sm text-muted-foreground mt-1">{group.description}</p>
+                    ) : user?.role === 'trainer' ? (
+                      <p className="text-sm text-muted-foreground mt-1 italic">{t('community.noDescription')}</p>
+                    ) : null}
+                    {user?.role === 'trainer' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleStartEditDescription}
+                        data-testid="button-edit-description"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <Badge variant="secondary" data-testid="badge-member-count">
               {messages.length > 0 ? `${new Set(messages.map(m => m.senderId)).size} ${t('community.members')}` : t('community.community')}
