@@ -59,6 +59,22 @@ export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
   }
 };
 
+// Optional authentication middleware - tries to load user from session but doesn't require it
+export const optionalAuth: RequestHandler = async (req: any, res, next) => {
+  if (req.session?.userId) {
+    try {
+      const user = await storage.getUser(req.session.userId);
+      if (user) {
+        req.user = user;
+      }
+    } catch (error) {
+      console.error("Optional authentication error:", error);
+      // Continue without authentication
+    }
+  }
+  next();
+};
+
 // Setup authentication routes and middleware
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
