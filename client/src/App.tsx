@@ -37,6 +37,7 @@ import MonthlyEvaluation from "@/pages/monthly-evaluation";
 import MonthlyEvaluationComparison from "@/pages/monthly-evaluation-comparison";
 import ClientProfile from "@/pages/client-profile";
 import DailyWorkout from "@/pages/daily-workout";
+import DailyResume from "@/pages/daily-resume";
 import Exercises from "@/pages/exercises";
 import Reports from "@/pages/reports";
 import ClientEvaluationDetail from "@/pages/client-evaluation-detail";
@@ -220,6 +221,7 @@ function Router() {
                   <Route path="/my-training-plans" component={ClientTrainingPlans} />
                   <Route path="/my-training-plan/:planId" component={ClientTrainingPlanDetail} />
                   <Route path="/daily-workout" component={DailyWorkout} />
+                  <Route path="/daily-resume" component={DailyResume} />
                   <Route path="/monthly-evaluation" component={MonthlyEvaluation} />
                   <Route path="/monthly-evaluation-comparison" component={MonthlyEvaluationComparison} />
                   <Route path="/profile" component={ClientProfile} />
