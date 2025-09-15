@@ -2020,6 +2020,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update community group (trainer only)
+  app.put('/api/community/group/:groupId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { groupId } = req.params;
+      const { name, description } = req.body;
+      
+      // Verify user is a trainer
+      const user = await storage.getUser(userId);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Only trainers can update community groups" });
+      }
+      
+      // Get trainer
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      
+      // Verify the group belongs to this trainer
+      const group = await storage.getCommunityGroupByTrainer(trainer.id);
+      if (!group || group.id !== groupId) {
+        return res.status(403).json({ message: "You can only update your own community group" });
+      }
+      
+      // Update the group
+      const updatedGroup = await storage.updateCommunityGroup(groupId, {
+        name: name?.trim(),
+        description: description?.trim() || null,
+      });
+      
+      res.json(updatedGroup);
+    } catch (error) {
+      console.error("Error updating community group:", error);
+      res.status(500).json({ message: "Failed to update community group" });
+    }
+  });
+
   // Get community messages
   app.get('/api/community/:groupId/messages', isAuthenticated, async (req: any, res) => {
     try {
