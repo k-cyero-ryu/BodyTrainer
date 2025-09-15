@@ -205,13 +205,15 @@ export default function DailyResume() {
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
-    const currentDate = new Date(selectedDate);
+    // Parse the date string directly to avoid timezone issues
+    const [year, month, day] = selectedDate.split('-').map(Number);
+    const currentDate = new Date(year, month - 1, day); // month is 0-indexed
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
-    const year = newDate.getFullYear();
-    const month = String(newDate.getMonth() + 1).padStart(2, '0');
-    const day = String(newDate.getDate()).padStart(2, '0');
-    setSelectedDate(`${year}-${month}-${day}`);
+    const newYear = newDate.getFullYear();
+    const newMonth = String(newDate.getMonth() + 1).padStart(2, '0');
+    const newDay = String(newDate.getDate()).padStart(2, '0');
+    setSelectedDate(`${newYear}-${newMonth}-${newDay}`);
   };
 
   const goToToday = () => {
