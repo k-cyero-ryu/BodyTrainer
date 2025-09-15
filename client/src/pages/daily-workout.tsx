@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -30,6 +31,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function DailyWorkout() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     // Force UTC date to match server timezone
     const now = new Date();
@@ -45,8 +47,8 @@ export default function DailyWorkout() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('auth.unauthorized'),
+        description: t('auth.loggedOutRetry'),
         variant: "destructive",
       });
       setTimeout(() => {
@@ -126,15 +128,15 @@ export default function DailyWorkout() {
         refetchLogs();
       }, 100);
       toast({
-        title: "Set Completed!",
-        description: "Great work! Keep it up.",
+        title: t('dailyWorkout.setCompleted'),
+        description: t('dailyWorkout.greatWork'),
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -143,8 +145,8 @@ export default function DailyWorkout() {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to complete set. Please try again.",
+        title: t('common.error'),
+        description: t('dailyWorkout.completeSetFailed'),
         variant: "destructive",
       });
     },
@@ -174,15 +176,15 @@ export default function DailyWorkout() {
         refetchLogs();
       }, 100);
       toast({
-        title: "Set Unchecked",
-        description: "Set has been unchecked successfully.",
+        title: t('dailyWorkout.setUnchecked'),
+        description: t('dailyWorkout.setUncheckedDescription'),
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -191,8 +193,8 @@ export default function DailyWorkout() {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to uncheck set. Please try again.",
+        title: t('common.error'),
+        description: t('dailyWorkout.uncheckSetFailed'),
         variant: "destructive",
       });
     },
@@ -226,15 +228,15 @@ export default function DailyWorkout() {
         refetchLogs();
       }, 100);
       toast({
-        title: "Exercise Completed!",
-        description: "All sets have been marked as complete. Great work!",
+        title: t('dailyWorkout.exerciseCompleted'),
+        description: t('dailyWorkout.allSetsComplete'),
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -243,8 +245,8 @@ export default function DailyWorkout() {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to complete exercise. Please try again.",
+        title: t('common.error'),
+        description: t('dailyWorkout.completeExerciseFailed'),
         variant: "destructive",
       });
     },
@@ -322,15 +324,15 @@ export default function DailyWorkout() {
         refetchLogs();
       }, 100);
       toast({
-        title: "Notes Saved",
-        description: "Your workout notes have been saved successfully.",
+        title: t('dailyWorkout.notesSaved'),
+        description: t('dailyWorkout.notesSavedDescription'),
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -339,8 +341,8 @@ export default function DailyWorkout() {
         return;
       }
       toast({
-        title: "Error",
-        description: "Failed to save notes. Please try again.",
+        title: t('common.error'),
+        description: t('dailyWorkout.saveNotesFailed'),
         variant: "destructive",
       });
     },
@@ -350,8 +352,8 @@ export default function DailyWorkout() {
     const notes = exerciseNotes[exerciseId] || '';
     if (!notes.trim()) {
       toast({
-        title: "No Notes",
-        description: "Please add some notes before saving.",
+        title: t('dailyWorkout.noNotes'),
+        description: t('dailyWorkout.noNotesDescription'),
         variant: "destructive",
       });
       return;
@@ -434,12 +436,12 @@ export default function DailyWorkout() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Daily Workout</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t('dailyWorkout.title')}</h1>
             <p className="text-gray-600 mt-2">{dateString}</p>
           </div>
           <Link href="/dashboard">
             <Button variant="outline">
-              ← Back to Dashboard
+              ← {t('dailyWorkout.backToDashboard')}
             </Button>
           </Link>
         </div>
@@ -452,7 +454,7 @@ export default function DailyWorkout() {
             onClick={() => navigateDate('prev')}
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous Day
+            {t('dailyWorkout.previousDay')}
           </Button>
           
           <div className="flex items-center gap-2">
@@ -470,7 +472,7 @@ export default function DailyWorkout() {
             size="sm"
             onClick={() => navigateDate('next')}
           >
-            Next Day
+            {t('dailyWorkout.nextDay')}
             <ChevronRight className="h-4 w-4" />
           </Button>
           
@@ -480,7 +482,7 @@ export default function DailyWorkout() {
               size="sm"
               onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
             >
-              Today
+              {t('dailyWorkout.today')}
             </Button>
           )}
         </div>
@@ -497,11 +499,11 @@ export default function DailyWorkout() {
                 {workoutData.planDetails.name}
               </CardTitle>
               <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span>Day {workoutData.workout.dayOfWeek}</span>
+                <span>{t('dailyWorkout.day')} {workoutData.workout.dayOfWeek}</span>
                 <span>•</span>
-                <span>Week {workoutData.workout.week}</span>
+                <span>{t('dailyWorkout.week')} {workoutData.workout.week}</span>
                 <span>•</span>
-                <span>{workoutData.workout.exercises.length} Exercises</span>
+                <span>{workoutData.workout.exercises.length} {t('dailyWorkout.exercises')}</span>
               </div>
             </CardHeader>
           </Card>
@@ -531,21 +533,21 @@ export default function DailyWorkout() {
                         </CardTitle>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="secondary">
-                            Sets: {completedSetsCount}/{totalSets}
+                            {t('dailyWorkout.sets')}: {completedSetsCount}/{totalSets}
                           </Badge>
                           {exercise.reps && (
                             <Badge variant="outline">
-                              {exercise.reps} reps
+                              {exercise.reps} {t('dailyWorkout.reps')}
                             </Badge>
                           )}
                           {exercise.weight && (
                             <Badge variant="outline">
-                              {exercise.weight} kg
+                              {exercise.weight} {t('dailyWorkout.kg')}
                             </Badge>
                           )}
                           {exercise.duration && (
                             <Badge variant="outline">
-                              {exercise.duration} min
+                              {exercise.duration} {t('dailyWorkout.min')}
                             </Badge>
                           )}
                         </div>
@@ -561,12 +563,12 @@ export default function DailyWorkout() {
                             disabled={completeExerciseMutation.isPending}
                             className="bg-green-600 hover:bg-green-700 text-white"
                           >
-                            {completeExerciseMutation.isPending ? "Completing..." : "Complete Exercise"}
+                            {completeExerciseMutation.isPending ? t('dailyWorkout.completing') : t('dailyWorkout.completeExercise')}
                           </Button>
                         )}
                         {completedSetsCount === totalSets && (
                           <Badge variant="default" className="bg-green-600 text-white">
-                            Exercise Complete!
+                            {t('dailyWorkout.exerciseComplete')}
                           </Badge>
                         )}
                       </div>
@@ -606,7 +608,7 @@ export default function DailyWorkout() {
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700">
                           <FileText className="h-4 w-4 inline mr-1" />
-                          Workout Notes (optional)
+                          {t('dailyWorkout.workoutNotes')}
                         </label>
                         <Button
                           size="sm"
@@ -615,11 +617,11 @@ export default function DailyWorkout() {
                           disabled={savingNotes[exercise.id] || !exerciseNotes[exercise.id]?.trim()}
                           className="text-xs px-2 py-1 h-7"
                         >
-                          {savingNotes[exercise.id] ? "Saving..." : "Save"}
+                          {savingNotes[exercise.id] ? t('dailyWorkout.saving') : t('dailyWorkout.save')}
                         </Button>
                       </div>
                       <Textarea
-                        placeholder="Add notes about this workout (e.g., how it felt, adjustments made, etc.)"
+                        placeholder={t('dailyWorkout.notesPlaceholder')}
                         value={exerciseNotes[exercise.id] || ''}
                         onChange={(e) => setExerciseNotes(prev => ({
                           ...prev,
@@ -642,7 +644,7 @@ export default function DailyWorkout() {
                                 <div className="flex-1">
                                   <p className="text-sm text-blue-800">{log.notes}</p>
                                   <p className="text-xs text-blue-600 mt-1">
-                                    Set {log.setNumber} - {new Date(log.completedAt).toLocaleDateString()}
+                                    {t('dailyWorkout.set')} {log.setNumber} - {new Date(log.completedAt).toLocaleDateString()}
                                   </p>
                                 </div>
                               </div>
@@ -654,7 +656,7 @@ export default function DailyWorkout() {
                     
                     {/* Sets */}
                     <div className="space-y-3">
-                      <h4 className="font-medium text-gray-900">Sets</h4>
+                      <h4 className="font-medium text-gray-900">{t('dailyWorkout.setsSection')}</h4>
                       <div className="grid grid-cols-1 gap-2">
                         {Array.from({ length: totalSets }, (_, setIndex) => {
                           const setNumber = setIndex + 1;
@@ -681,15 +683,15 @@ export default function DailyWorkout() {
                                 )}
                                 
                                 <div className="flex items-center gap-4">
-                                  <span className="font-medium">Set {setNumber}</span>
+                                  <span className="font-medium">{t('dailyWorkout.set')} {setNumber}</span>
                                   
                                   {exercise.reps && (
                                     <div className="flex items-center gap-1">
                                       <Target className="h-4 w-4 text-gray-500" />
                                       <span className="text-sm">
                                         {isCompleted && completedLog?.actualReps ? 
-                                          `${completedLog.actualReps} reps` : 
-                                          `${exercise.reps} reps`
+                                          `${completedLog.actualReps} ${t('dailyWorkout.reps')}` : 
+                                          `${exercise.reps} ${t('dailyWorkout.reps')}`
                                         }
                                       </span>
                                     </div>
@@ -700,8 +702,8 @@ export default function DailyWorkout() {
                                       <Weight className="h-4 w-4 text-gray-500" />
                                       <span className="text-sm">
                                         {isCompleted && completedLog?.actualWeight ? 
-                                          `${completedLog.actualWeight} kg` : 
-                                          `${exercise.weight} kg`
+                                          `${completedLog.actualWeight} ${t('dailyWorkout.kg')}` : 
+                                          `${exercise.weight} ${t('dailyWorkout.kg')}`
                                         }
                                       </span>
                                     </div>
@@ -710,7 +712,7 @@ export default function DailyWorkout() {
                                   {exercise.duration && (
                                     <div className="flex items-center gap-1">
                                       <Clock className="h-4 w-4 text-gray-500" />
-                                      <span className="text-sm">{exercise.duration} min</span>
+                                      <span className="text-sm">{exercise.duration} {t('dailyWorkout.min')}</span>
                                     </div>
                                   )}
                                 </div>
@@ -719,7 +721,7 @@ export default function DailyWorkout() {
                               {isCompleted && (
                                 <div className="flex items-center gap-2">
                                   <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                    Completed
+                                    {t('dailyWorkout.completed')}
                                   </Badge>
                                   <Button
                                     size="sm"
@@ -727,7 +729,7 @@ export default function DailyWorkout() {
                                     onClick={() => handleSetUncheck(exercise.id, setNumber)}
                                     disabled={uncheckSetMutation.isPending}
                                   >
-                                    Uncheck
+                                    {t('dailyWorkout.uncheck')}
                                   </Button>
                                 </div>
                               )}
@@ -741,7 +743,7 @@ export default function DailyWorkout() {
                       <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                         <div className="flex items-center gap-2 text-sm text-blue-700">
                           <Timer className="h-4 w-4" />
-                          <span>Rest: {exercise.restTime}s between sets</span>
+                          <span>{t('dailyWorkout.restBetweenSets', { time: `${exercise.restTime}s` })}</span>
                         </div>
                       </div>
                     )}
@@ -756,10 +758,10 @@ export default function DailyWorkout() {
           <CardContent className="text-center py-12">
             <Dumbbell className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Workout Scheduled
+              {t('dailyWorkout.noWorkoutScheduled')}
             </h3>
             <p className="text-gray-500">
-              {isToday ? "No workout scheduled for today" : "No workout scheduled for this date"}
+              {isToday ? t('dailyWorkout.noWorkoutScheduled') : t('dailyWorkout.noWorkoutDescription')}
             </p>
           </CardContent>
         </Card>
