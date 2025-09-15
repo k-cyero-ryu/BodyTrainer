@@ -145,7 +145,7 @@ export interface IStorage {
   // Community operations
   createCommunityGroup(group: InsertCommunityGroup): Promise<CommunityGroup>;
   getCommunityGroupByTrainer(trainerId: string): Promise<CommunityGroup | undefined>;
-  updateCommunityGroup(id: string, updates: Partial<InsertCommunityGroup>): Promise<CommunityGroup>;
+  updateCommunityGroup(id: string, updates: { name?: string; description?: string | null }): Promise<CommunityGroup>;
   addCommunityMember(member: InsertCommunityMember): Promise<CommunityMember>;
   isCommunityMember(groupId: string, userId: string): Promise<boolean>;
   createCommunityMessage(message: InsertCommunityMessage): Promise<CommunityMessage>;
@@ -1234,10 +1234,14 @@ export class DatabaseStorage implements IStorage {
     return group;
   }
 
-  async updateCommunityGroup(id: string, updates: Partial<InsertCommunityGroup>): Promise<CommunityGroup> {
+  async updateCommunityGroup(id: string, updates: { name?: string; description?: string | null }): Promise<CommunityGroup> {
     const [updated] = await db
       .update(communityGroups)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ 
+        ...(updates.name !== undefined && { name: updates.name }),
+        ...(updates.description !== undefined && { description: updates.description }),
+        updatedAt: new Date() 
+      })
       .where(eq(communityGroups.id, id))
       .returning();
     return updated;

@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, optionalAuth } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission, ObjectAclPolicy, getObjectAclPolicy } from "./objectAcl";
+import { z } from "zod";
 import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -2025,7 +2026,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const { groupId } = req.params;
-      const { name, description } = req.body;
+      
+      // Validate request body with zod
+      const updateSchema = z.object({
+        name: z.string().min(1).max(100).optional(),
+        description: z.string().max(500).optional(),
+      });
+      
+      const validationResult = updateSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid input data", 
+          errors: validationResult.error.issues 
+        });
+      }
+      
+      const { name, description } = validationResult.data;
       
       // Verify user is a trainer
       const user = await storage.getUser(userId);
