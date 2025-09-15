@@ -120,7 +120,7 @@ export default function DailyResume() {
     mutationFn: (data: FoodEntryFormData) => 
       apiRequest("POST", `/api/client/food-entries`, {
         ...data,
-        date: selectedDate,
+        date: new Date(selectedDate + 'T00:00:00.000Z'), // Convert to Date object
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/client/food-entries', selectedDate] });
@@ -147,7 +147,7 @@ export default function DailyResume() {
         ...data,
         duration: parseInt(data.duration),
         distance: data.distance ? parseFloat(data.distance) : null,
-        date: selectedDate,
+        date: new Date(selectedDate + 'T00:00:00.000Z'), // Convert to Date object
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/client/cardio-activities', selectedDate] });
