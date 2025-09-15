@@ -49,8 +49,8 @@ export default function ClientProfile() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: t('auth.unauthorized'),
+        description: t('auth.loggedOutRetry'),
         variant: "destructive",
       });
       setTimeout(() => {
@@ -66,8 +66,8 @@ export default function ClientProfile() {
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -88,15 +88,15 @@ export default function ClientProfile() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setIsEditing(false);
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
+        title: t('clientProfile.profileUpdated'),
+        description: t('clientProfile.profileUpdatedDescription'),
       });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: t('auth.unauthorized'),
+          description: t('auth.loggedOutRetry'),
           variant: "destructive",
         });
         setTimeout(() => {
@@ -105,8 +105,8 @@ export default function ClientProfile() {
         return;
       }
       toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update profile",
+        title: t('clientProfile.updateFailed'),
+        description: error.message || t('clientProfile.updateFailedDescription'),
         variant: "destructive",
       });
     },
@@ -144,8 +144,8 @@ export default function ClientProfile() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
-          <p className="text-muted-foreground">You don't have permission to view this page.</p>
+          <h2 className="text-2xl font-bold mb-4">{t('common.accessDenied')}</h2>
+          <p className="text-muted-foreground">{t('common.accessDeniedMessage')}</p>
         </div>
       </div>
     );
@@ -155,9 +155,9 @@ export default function ClientProfile() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Error Loading Profile</h2>
-          <p className="text-muted-foreground mb-4">Failed to load your profile information.</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+          <h2 className="text-2xl font-bold mb-4">{t('clientProfile.errorLoadingProfile')}</h2>
+          <p className="text-muted-foreground mb-4">{t('clientProfile.failedToLoadProfile')}</p>
+          <Button onClick={() => window.location.reload()}>{t('clientProfile.tryAgain')}</Button>
         </div>
       </div>
     );
@@ -167,8 +167,8 @@ export default function ClientProfile() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
-          <p className="text-muted-foreground">Your profile information could not be found.</p>
+          <h2 className="text-2xl font-bold mb-4">{t('clientProfile.profileNotFound')}</h2>
+          <p className="text-muted-foreground">{t('clientProfile.profileNotFoundDescription')}</p>
         </div>
       </div>
     );
@@ -186,12 +186,12 @@ export default function ClientProfile() {
           {!isEditing ? (
             <Button onClick={() => setIsEditing(true)}>
               <Edit2 className="h-4 w-4 mr-2" />
-              Edit Profile
+              {t('clientProfile.editProfile')}
             </Button>
           ) : (
             <Button variant="outline" onClick={() => setIsEditing(false)}>
               <X className="h-4 w-4 mr-2" />
-              Cancel
+              {t('clientProfile.cancel')}
             </Button>
           )}
         </div>
@@ -203,7 +203,7 @@ export default function ClientProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Basic Information
+              {t('clientProfile.basicInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -255,7 +255,7 @@ export default function ClientProfile() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Label htmlFor="dateOfBirth">{t('clientProfile.dateOfBirth')}</Label>
                 <Input
                   id="dateOfBirth"
                   name="dateOfBirth"
@@ -265,15 +265,15 @@ export default function ClientProfile() {
                 />
               </div>
               <div>
-                <Label htmlFor="referralSource">Referral Source</Label>
+                <Label htmlFor="referralSource">{t('clientProfile.referralSource')}</Label>
                 <Input
                   id="referralSource"
                   name="referralSource"
-                  placeholder="How did you hear about me?"
+                  placeholder={t('clientProfile.referralSourcePlaceholder')}
                   defaultValue={clientProfile.referralSource || ''}
                   disabled={!isEditing}
                 />
-                <p className="text-xs text-muted-foreground mt-1">How did you hear about your trainer?</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('clientProfile.referralSourceHelp')}</p>
               </div>
             </div>
           </CardContent>
@@ -284,7 +284,7 @@ export default function ClientProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Fitness Information
+              {t('clientProfile.fitnessInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -293,7 +293,7 @@ export default function ClientProfile() {
               <Textarea
                 id="goals"
                 name="goals"
-                placeholder="Describe your fitness goals and what you want to achieve..."
+                placeholder={t('clientProfile.fitnessGoalsPlaceholder')}
                 defaultValue={clientProfile.goals || ''}
                 disabled={!isEditing}
                 rows={3}
@@ -354,14 +354,14 @@ export default function ClientProfile() {
               </Label>
               <Select name="activityLevel" defaultValue={clientProfile.activityLevel || 'moderate'} disabled={!isEditing}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('profile.selectActivityLevel')} />
+                  <SelectValue placeholder={t('clientProfile.selectActivityLevel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sedentary">Sedentary (little or no exercise)</SelectItem>
-                  <SelectItem value="light">Light (light exercise 1-3 days/week)</SelectItem>
-                  <SelectItem value="moderate">Moderate (moderate exercise 3-5 days/week)</SelectItem>
-                  <SelectItem value="active">Active (hard exercise 6-7 days/week)</SelectItem>
-                  <SelectItem value="very_active">Very Active (very hard exercise/sports & physical job)</SelectItem>
+                  <SelectItem value="sedentary">{t('clientProfile.activitySedentary')}</SelectItem>
+                  <SelectItem value="light">{t('clientProfile.activityLight')}</SelectItem>
+                  <SelectItem value="moderate">{t('clientProfile.activityModerate')}</SelectItem>
+                  <SelectItem value="active">{t('clientProfile.activityActive')}</SelectItem>
+                  <SelectItem value="very_active">{t('clientProfile.activityVeryActive')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -373,7 +373,7 @@ export default function ClientProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Health Information
+              {t('clientProfile.healthInformation')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -406,7 +406,7 @@ export default function ClientProfile() {
         {/* Trainer Information */}
         <Card>
           <CardHeader>
-            <CardTitle>My Trainer</CardTitle>
+            <CardTitle>{t('clientProfile.myTrainer')}</CardTitle>
           </CardHeader>
           <CardContent>
             {clientProfile.trainer ? (
@@ -424,7 +424,7 @@ export default function ClientProfile() {
                         {clientProfile.trainer.firstName} {clientProfile.trainer.lastName}
                       </h3>
                       <p className="text-sm text-muted-foreground">{clientProfile.trainer.email}</p>
-                      <Badge variant="outline" className="mt-1">Personal Trainer</Badge>
+                      <Badge variant="outline" className="mt-1">{t('clientProfile.personalTrainer')}</Badge>
                     </div>
                     <Info className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
@@ -433,7 +433,7 @@ export default function ClientProfile() {
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <User className="h-5 w-5" />
-                      Trainer Details
+                      {t('clientProfile.trainerDetails')}
                     </DialogTitle>
                   </DialogHeader>
                   
@@ -451,30 +451,30 @@ export default function ClientProfile() {
                           <Mail className="h-4 w-4" />
                           {clientProfile.trainer.email}
                         </p>
-                        <Badge variant="default" className="mt-2">Certified Personal Trainer</Badge>
+                        <Badge variant="default" className="mt-2">{t('clientProfile.certifiedPersonalTrainer')}</Badge>
                       </div>
                     </div>
 
                     {/* Professional Information */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Professional Information</h3>
+                      <h3 className="text-lg font-semibold">{t('clientProfile.professionalInformation')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {clientProfile.trainer.expertise && (
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">Expertise</p>
+                            <p className="text-sm font-medium text-muted-foreground">{t('clientProfile.expertise')}</p>
                             <p className="font-medium" data-testid="trainer-expertise">{clientProfile.trainer.expertise}</p>
                           </div>
                         )}
                         {clientProfile.trainer.experience && (
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">Experience</p>
+                            <p className="text-sm font-medium text-muted-foreground">{t('clientProfile.experience')}</p>
                             <p className="font-medium" data-testid="trainer-experience">{clientProfile.trainer.experience}</p>
                           </div>
                         )}
                       </div>
                       {clientProfile.trainer.bio && (
                         <div>
-                          <p className="text-sm font-medium text-muted-foreground">Bio</p>
+                          <p className="text-sm font-medium text-muted-foreground">{t('clientProfile.bio')}</p>
                           <p className="text-gray-900" data-testid="trainer-bio">{clientProfile.trainer.bio}</p>
                         </div>
                       )}
@@ -482,7 +482,7 @@ export default function ClientProfile() {
 
                     {/* Contact Information */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Contact Information</h3>
+                      <h3 className="text-lg font-semibold">{t('clientProfile.contactInformation')}</h3>
                       <div className="space-y-3">
                         {clientProfile.trainer.phone && (
                           <div className="flex items-center gap-2">
@@ -498,7 +498,7 @@ export default function ClientProfile() {
                         )}
                         {clientProfile.trainer.address && (
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">Address</p>
+                            <p className="text-sm font-medium text-muted-foreground">{t('clientProfile.address')}</p>
                             <p data-testid="trainer-address">{clientProfile.trainer.address}</p>
                           </div>
                         )}
@@ -524,7 +524,7 @@ export default function ClientProfile() {
                       <div className="space-y-3">
                         <h3 className="text-lg font-semibold flex items-center gap-2">
                           <Award className="h-5 w-5" />
-                          Certifications
+                          {t('clientProfile.certifications')}
                         </h3>
                         <div className="space-y-2">
                           {clientProfile.trainer.certifications.map((cert: any, index: number) => (
@@ -543,7 +543,7 @@ export default function ClientProfile() {
                       <div className="space-y-3">
                         <h3 className="text-lg font-semibold flex items-center gap-2">
                           <Star className="h-5 w-5" />
-                          Specializations
+                          {t('clientProfile.specializations')}
                         </h3>
                         <div className="flex flex-wrap gap-2">
                           {clientProfile.trainer.specializations.map((spec: string, index: number) => (
@@ -558,7 +558,7 @@ export default function ClientProfile() {
                     {/* Social Media */}
                     {clientProfile.trainer.socialMedia && Object.keys(clientProfile.trainer.socialMedia).length > 0 && (
                       <div className="space-y-3">
-                        <h3 className="text-lg font-semibold">Social Media</h3>
+                        <h3 className="text-lg font-semibold">{t('clientProfile.socialMedia')}</h3>
                         <div className="space-y-2">
                           {clientProfile.trainer.socialMedia.instagram && (
                             <a 
