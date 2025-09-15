@@ -342,6 +342,7 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
   }),
 }));
 
+
 // Will add clientPaymentPlansRelations after clientPaymentPlans table is defined
 
 // Insert schemas
@@ -499,6 +500,33 @@ export const communityMessages = pgTable("community_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Meal type enum for food entries
+export const mealTypeEnum = pgEnum('meal_type', ['breakfast', 'lunch', 'dinner', 'snack']);
+
+// Food entries table for daily nutrition tracking
+export const foodEntries = pgTable("food_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  date: timestamp("date").notNull(), // Date of the meal
+  mealType: mealTypeEnum("meal_type").notNull(), // breakfast, lunch, dinner, snack
+  description: text("description").notNull(), // What food was eaten
+  quantity: decimal("quantity", { precision: 8, scale: 2 }), // Quantity in grams
+  notes: text("notes"), // Optional additional notes
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Cardio activities table for daily cardio tracking
+export const cardioActivities = pgTable("cardio_activities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  date: timestamp("date").notNull(), // Date of activity
+  activityType: varchar("activity_type").notNull(), // e.g., running, walking, dancing, cycling
+  duration: integer("duration"), // Duration in minutes
+  distance: decimal("distance", { precision: 8, scale: 2 }), // Distance in kilometers (optional)
+  notes: text("notes"), // Optional additional notes
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Social posts schema - platform-wide posts visible to all users
 export const socialPosts = pgTable("social_posts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -599,6 +627,22 @@ export const socialCommentsRelations = relations(socialComments, ({ one }) => ({
   }),
 }));
 
+// Food Entries Relations
+export const foodEntriesRelations = relations(foodEntries, ({ one }) => ({
+  client: one(clients, {
+    fields: [foodEntries.clientId],
+    references: [clients.id],
+  }),
+}));
+
+// Cardio Activities Relations
+export const cardioActivitiesRelations = relations(cardioActivities, ({ one }) => ({
+  client: one(clients, {
+    fields: [cardioActivities.clientId],
+    references: [clients.id],
+  }),
+}));
+
 // Community insert schemas and types (defined after tables)
 export const insertCommunityGroupSchema = createInsertSchema(communityGroups).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCommunityMemberSchema = createInsertSchema(communityMembers).omit({ id: true, joinedAt: true });
@@ -622,3 +666,16 @@ export type InsertSocialLike = z.infer<typeof insertSocialLikeSchema>;
 export type SocialLike = typeof socialLikes.$inferSelect;
 export type InsertSocialComment = z.infer<typeof insertSocialCommentSchema>;
 export type SocialComment = typeof socialComments.$inferSelect;
+
+// Food entries and cardio activities insert schemas and types
+export const insertFoodEntrySchema = createInsertSchema(foodEntries).omit({ id: true, createdAt: true }).extend({
+  quantity: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+});
+export const insertCardioActivitySchema = createInsertSchema(cardioActivities).omit({ id: true, createdAt: true }).extend({
+  distance: z.union([z.string(), z.number(), z.null()]).optional().transform(val => val === null ? null : (typeof val === 'number' ? val.toString() : val)),
+});
+
+export type InsertFoodEntry = z.infer<typeof insertFoodEntrySchema>;
+export type FoodEntry = typeof foodEntries.$inferSelect;
+export type InsertCardioActivity = z.infer<typeof insertCardioActivitySchema>;
+export type CardioActivity = typeof cardioActivities.$inferSelect;
