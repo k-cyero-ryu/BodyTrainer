@@ -863,6 +863,11 @@ const resources = {
       'monthlyEvaluation.training': 'Entrenamiento',
       'monthlyEvaluation.nutrition': 'Nutrición',
       'monthlyEvaluation.overall': 'General',
+      'monthlyEvaluation.photoGuidelines': 'Pautas de Fotos:',
+      'monthlyEvaluation.photoInstructions': 'Párate en una pose T con los brazos extendidos horizontalmente. Usa ropa ajustada para mejores resultados. Estas fotos ayudan con el seguimiento visual del progreso y las mediciones.',
+      'monthlyEvaluation.cancel': 'Cancelar',
+      'monthlyEvaluation.submitEvaluation': 'Enviar Evaluación',
+      'monthlyEvaluation.submitting': 'Enviando...',
       
       // Profile
       'profile.trainerProfile': 'Perfil de Entrenador',

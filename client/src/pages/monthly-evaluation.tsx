@@ -381,7 +381,7 @@ export default function MonthlyEvaluation() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {currentEvaluation.frontPhotoUrl && (
                       <div className="text-center">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Front View</p>
+                        <p className="text-sm font-medium text-gray-700 mb-2">{t('monthlyEvaluation.frontView')}</p>
                         <img 
                           src={currentEvaluation.frontPhotoUrl} 
                           alt="Front view T-pose" 
@@ -391,7 +391,7 @@ export default function MonthlyEvaluation() {
                     )}
                     {currentEvaluation.backPhotoUrl && (
                       <div className="text-center">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Back View</p>
+                        <p className="text-sm font-medium text-gray-700 mb-2">{t('monthlyEvaluation.backView')}</p>
                         <img 
                           src={currentEvaluation.backPhotoUrl} 
                           alt="Back view T-pose" 
@@ -401,7 +401,7 @@ export default function MonthlyEvaluation() {
                     )}
                     {currentEvaluation.sidePhotoUrl && (
                       <div className="text-center">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Side View</p>
+                        <p className="text-sm font-medium text-gray-700 mb-2">{t('monthlyEvaluation.sideView')}</p>
                         <img 
                           src={currentEvaluation.sidePhotoUrl} 
                           alt="Side view T-pose" 
@@ -499,12 +499,12 @@ export default function MonthlyEvaluation() {
                       <Label htmlFor="trainingAdherence">{t('monthlyEvaluation.trainingAdherence')}</Label>
                       <Select name="trainingAdherence" required>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select rating" />
+                          <SelectValue placeholder={t('monthlyEvaluation.selectRating')} />
                         </SelectTrigger>
                         <SelectContent>
                           {[...Array(10)].map((_, i) => (
                             <SelectItem key={i + 1} value={(i + 1).toString()}>
-                              {i + 1} - {i + 1 === 10 ? 'Perfect' : i + 1 >= 8 ? 'Excellent' : i + 1 >= 6 ? 'Good' : 'Needs Improvement'}
+                              {i + 1} - {i + 1 === 10 ? t('monthlyEvaluation.perfect') : i + 1 >= 8 ? t('monthlyEvaluation.excellent') : i + 1 >= 6 ? t('monthlyEvaluation.good') : t('monthlyEvaluation.needsImprovement')}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -514,27 +514,27 @@ export default function MonthlyEvaluation() {
                       <Label htmlFor="mealAdherence">{t('monthlyEvaluation.mealPlanAdherence')}</Label>
                       <Select name="mealAdherence" required>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select rating" />
+                          <SelectValue placeholder={t('monthlyEvaluation.selectRating')} />
                         </SelectTrigger>
                         <SelectContent>
                           {[...Array(10)].map((_, i) => (
                             <SelectItem key={i + 1} value={(i + 1).toString()}>
-                              {i + 1} - {i + 1 === 10 ? 'Perfect' : i + 1 >= 8 ? 'Excellent' : i + 1 >= 6 ? 'Good' : 'Needs Improvement'}
+                              {i + 1} - {i + 1 === 10 ? t('monthlyEvaluation.perfect') : i + 1 >= 8 ? t('monthlyEvaluation.excellent') : i + 1 >= 6 ? t('monthlyEvaluation.good') : t('monthlyEvaluation.needsImprovement')}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="selfEvaluation">Overall Satisfaction</Label>
+                      <Label htmlFor="selfEvaluation">{t('monthlyEvaluation.overallSatisfaction')}</Label>
                       <Select name="selfEvaluation" required>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select rating" />
+                          <SelectValue placeholder={t('monthlyEvaluation.selectRating')} />
                         </SelectTrigger>
                         <SelectContent>
                           {[...Array(10)].map((_, i) => (
                             <SelectItem key={i + 1} value={(i + 1).toString()}>
-                              {i + 1} - {i + 1 === 10 ? 'Perfect' : i + 1 >= 8 ? 'Excellent' : i + 1 >= 6 ? 'Good' : 'Needs Improvement'}
+                              {i + 1} - {i + 1 === 10 ? t('monthlyEvaluation.perfect') : i + 1 >= 8 ? t('monthlyEvaluation.excellent') : i + 1 >= 6 ? t('monthlyEvaluation.good') : t('monthlyEvaluation.needsImprovement')}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -548,16 +548,16 @@ export default function MonthlyEvaluation() {
               <div className="border-t pt-6">
                 <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
                   <Camera className="h-5 w-5" />
-                  T-Pose Photos for Visual Intelligence
+                  {t('monthlyEvaluation.tPosePhotos')}
                 </h4>
                 <p className="text-sm text-gray-600 mb-6">
-                  Upload three T-pose photos (front, back, and side view) for better progress tracking and visual analysis.
+                  {t('monthlyEvaluation.uploadThreePhotos')}
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Front Photo */}
                   <div className="space-y-3">
-                    <Label htmlFor="frontPhoto">Front View</Label>
+                    <Label htmlFor="frontPhoto">{t('monthlyEvaluation.frontView')}</Label>
                     <ObjectUploader
                       maxNumberOfFiles={1}
                       maxFileSize={10485760} // 10MB
@@ -567,7 +567,7 @@ export default function MonthlyEvaluation() {
                     >
                       <div className="flex items-center justify-center gap-2 py-8 border-2 border-dashed border-gray-300 rounded-lg">
                         <Camera className="h-5 w-5" />
-                        {frontPhotoUrl ? "Change Front Photo" : "Upload Front Photo"}
+                        {frontPhotoUrl ? "Change Front Photo" : t('monthlyEvaluation.uploadFrontPhoto')}
                       </div>
                     </ObjectUploader>
                     {frontPhotoUrl && (
@@ -579,7 +579,7 @@ export default function MonthlyEvaluation() {
 
                   {/* Back Photo */}
                   <div className="space-y-3">
-                    <Label htmlFor="backPhoto">Back View</Label>
+                    <Label htmlFor="backPhoto">{t('monthlyEvaluation.backView')}</Label>
                     <ObjectUploader
                       maxNumberOfFiles={1}
                       maxFileSize={10485760} // 10MB
@@ -589,7 +589,7 @@ export default function MonthlyEvaluation() {
                     >
                       <div className="flex items-center justify-center gap-2 py-8 border-2 border-dashed border-gray-300 rounded-lg">
                         <Camera className="h-5 w-5" />
-                        {backPhotoUrl ? "Change Back Photo" : "Upload Back Photo"}
+                        {backPhotoUrl ? "Change Back Photo" : t('monthlyEvaluation.uploadBackPhoto')}
                       </div>
                     </ObjectUploader>
                     {backPhotoUrl && (
@@ -601,7 +601,7 @@ export default function MonthlyEvaluation() {
 
                   {/* Side Photo */}
                   <div className="space-y-3">
-                    <Label htmlFor="sidePhoto">Side View</Label>
+                    <Label htmlFor="sidePhoto">{t('monthlyEvaluation.sideView')}</Label>
                     <ObjectUploader
                       maxNumberOfFiles={1}
                       maxFileSize={10485760} // 10MB
@@ -611,7 +611,7 @@ export default function MonthlyEvaluation() {
                     >
                       <div className="flex items-center justify-center gap-2 py-8 border-2 border-dashed border-gray-300 rounded-lg">
                         <Camera className="h-5 w-5" />
-                        {sidePhotoUrl ? "Change Side Photo" : "Upload Side Photo"}
+                        {sidePhotoUrl ? "Change Side Photo" : t('monthlyEvaluation.uploadSidePhoto')}
                       </div>
                     </ObjectUploader>
                     {sidePhotoUrl && (
@@ -624,8 +624,7 @@ export default function MonthlyEvaluation() {
                 
                 <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <strong>Photo Guidelines:</strong> Stand in a T-pose with arms extended horizontally. 
-                    Wear fitted clothing for best results. These photos help with visual progress tracking and measurements.
+                    <strong>{t('monthlyEvaluation.photoGuidelines')}</strong> {t('monthlyEvaluation.photoInstructions')}
                   </p>
                 </div>
               </div>
@@ -636,13 +635,13 @@ export default function MonthlyEvaluation() {
                   variant="outline" 
                   onClick={() => setShowEvaluationForm(false)}
                 >
-                  Cancel
+                  {t('monthlyEvaluation.cancel')}
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={evaluationMutation.isPending}
                 >
-                  {evaluationMutation.isPending ? "Submitting..." : "Submit Evaluation"}
+                  {evaluationMutation.isPending ? t('monthlyEvaluation.submitting') : t('monthlyEvaluation.submitEvaluation')}
                 </Button>
               </div>
             </form>
