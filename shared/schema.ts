@@ -670,9 +670,11 @@ export type SocialComment = typeof socialComments.$inferSelect;
 // Food entries and cardio activities insert schemas and types
 export const insertFoodEntrySchema = createInsertSchema(foodEntries).omit({ id: true, createdAt: true }).extend({
   quantity: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  date: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
 });
 export const insertCardioActivitySchema = createInsertSchema(cardioActivities).omit({ id: true, createdAt: true }).extend({
   distance: z.union([z.string(), z.number(), z.null()]).optional().transform(val => val === null ? null : (typeof val === 'number' ? val.toString() : val)),
+  date: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
 });
 
 // Update schemas that explicitly exclude id and clientId to prevent reassignment
