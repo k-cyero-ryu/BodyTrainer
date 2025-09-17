@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,6 +52,11 @@ export default function DailyResume() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const params = useParams();
+  const clientId = params.clientId; // Will be undefined for clients viewing their own resume
+  
+  // Determine if this is a trainer viewing a client's resume
+  const isTrainerView = Boolean(clientId && user?.role === 'trainer');
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -98,9 +104,17 @@ export default function DailyResume() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
+  // Determine API endpoints based on view type
+  const foodEntriesEndpoint = isTrainerView 
+    ? `/api/clients/${clientId}/food-entries`
+    : '/api/client/food-entries';
+  const cardioActivitiesEndpoint = isTrainerView 
+    ? `/api/clients/${clientId}/cardio-activities`
+    : '/api/client/cardio-activities';
+
   // Fetch food entries for selected date
   const { data: foodEntries, isLoading: loadingFood } = useQuery({
-    queryKey: ['/api/client/food-entries', { date: selectedDate }],
+    queryKey: [foodEntriesEndpoint, { date: selectedDate }],
     enabled: isAuthenticated && selectedDate !== '',
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) return false;
@@ -110,7 +124,7 @@ export default function DailyResume() {
 
   // Fetch cardio activities for selected date
   const { data: cardioActivities, isLoading: loadingCardio } = useQuery({
-    queryKey: ['/api/client/cardio-activities', { date: selectedDate }],
+    queryKey: [cardioActivitiesEndpoint, { date: selectedDate }],
     enabled: isAuthenticated && selectedDate !== '',
     retry: (failureCount, error) => {
       if (isUnauthorizedError(error)) return false;
@@ -118,7 +132,7 @@ export default function DailyResume() {
     },
   });
 
-  // Create food entry mutation
+  // Create food entry mutation (only for clients, not trainers viewing client data)
   const createFoodMutation = useMutation({
     mutationFn: (data: FoodEntryFormData) => 
       apiRequest("POST", `/api/client/food-entries`, {
@@ -126,7 +140,7 @@ export default function DailyResume() {
         date: selectedDate, // Send as string, backend will transform to Date
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/food-entries', { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: [foodEntriesEndpoint, { date: selectedDate }] });
       setIsFoodDialogOpen(false);
       foodForm.reset();
       toast({
@@ -143,7 +157,7 @@ export default function DailyResume() {
     },
   });
 
-  // Create cardio activity mutation
+  // Create cardio activity mutation (only for clients, not trainers viewing client data)
   const createCardioMutation = useMutation({
     mutationFn: (data: CardioActivityFormData) => 
       apiRequest("POST", `/api/client/cardio-activities`, {
@@ -153,7 +167,7 @@ export default function DailyResume() {
         date: selectedDate, // Send as string, backend will transform to Date
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/cardio-activities', { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: [cardioActivitiesEndpoint, { date: selectedDate }] });
       setIsCardioDialogOpen(false);
       cardioForm.reset();
       toast({
@@ -170,11 +184,11 @@ export default function DailyResume() {
     },
   });
 
-  // Delete food entry mutation
+  // Delete food entry mutation (only for clients, not trainers viewing client data)
   const deleteFoodMutation = useMutation({
     mutationFn: (id: string) => apiRequest('DELETE', `/api/client/food-entries/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/food-entries', { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: [foodEntriesEndpoint, { date: selectedDate }] });
       toast({
         title: t('common.success'),
         description: "Food entry deleted successfully",
@@ -182,11 +196,11 @@ export default function DailyResume() {
     },
   });
 
-  // Delete cardio activity mutation
+  // Delete cardio activity mutation (only for clients, not trainers viewing client data)
   const deleteCardioMutation = useMutation({
     mutationFn: (id: string) => apiRequest('DELETE', `/api/client/cardio-activities/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/client/cardio-activities', { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: [cardioActivitiesEndpoint, { date: selectedDate }] });
       toast({
         title: t('common.success'),
         description: "Cardio activity deleted successfully",
@@ -252,10 +266,10 @@ export default function DailyResume() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('nav.dailyResume')}
+            {isTrainerView ? "Client's Daily Resume" : t('nav.dailyResume')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Track your daily nutrition and cardio activities
+            {isTrainerView ? "View client's daily nutrition and cardio activities" : "Track your daily nutrition and cardio activities"}
           </p>
         </div>
       </div>
@@ -308,16 +322,17 @@ export default function DailyResume() {
                 <Apple className="h-5 w-5" />
                 Food & Nutrition
               </CardTitle>
-              <Dialog open={isFoodDialogOpen} onOpenChange={setIsFoodDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" onClick={() => foodForm.reset()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Food
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Food Entry</DialogTitle>
+              {!isTrainerView && (
+                <Dialog open={isFoodDialogOpen} onOpenChange={setIsFoodDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" onClick={() => foodForm.reset()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Food
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Food Entry</DialogTitle>
                   </DialogHeader>
                   <Form {...foodForm}>
                     <form onSubmit={foodForm.handleSubmit(onSubmitFood)} className="space-y-4">
@@ -391,6 +406,7 @@ export default function DailyResume() {
                   </Form>
                 </DialogContent>
               </Dialog>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -451,16 +467,17 @@ export default function DailyResume() {
                 <Activity className="h-5 w-5" />
                 Cardio Activities
               </CardTitle>
-              <Dialog open={isCardioDialogOpen} onOpenChange={setIsCardioDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" onClick={() => cardioForm.reset()}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Activity
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Cardio Activity</DialogTitle>
+              {!isTrainerView && (
+                <Dialog open={isCardioDialogOpen} onOpenChange={setIsCardioDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" onClick={() => cardioForm.reset()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Activity
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Cardio Activity</DialogTitle>
                   </DialogHeader>
                   <Form {...cardioForm}>
                     <form onSubmit={cardioForm.handleSubmit(onSubmitCardio)} className="space-y-4">
@@ -524,6 +541,7 @@ export default function DailyResume() {
                   </Form>
                 </DialogContent>
               </Dialog>
+              )}
             </div>
           </CardHeader>
           <CardContent>

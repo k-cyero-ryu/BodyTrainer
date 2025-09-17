@@ -207,6 +207,7 @@ function Router() {
                   <Route path="/clients/:clientId/evaluations" component={ClientEvaluationsList} />
                   <Route path="/clients/:clientId/evaluations/compare" component={ClientEvaluationsCompare} />
                   <Route path="/clients/:clientId/evaluation/:evaluationId" component={ClientEvaluationDetail} />
+                  <Route path="/clients/:clientId/daily-resume" component={DailyResume} />
                   <Route path="/training-plans" component={TrainingPlans} />
                   <Route path="/training-plans/:planId" component={TrainingPlanDetail} />
                   <Route path="/exercises" component={Exercises} />
