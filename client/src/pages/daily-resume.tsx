@@ -83,6 +83,8 @@ export default function DailyResume() {
   const [editingFood, setEditingFood] = useState<any>(null);
   const [editingCardio, setEditingCardio] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedFood, setSelectedFood] = useState<NutritionData | null>(null);
+  const [calculatedCalories, setCalculatedCalories] = useState<number | null>(null);
 
   const foodForm = useForm<FoodEntryFormData>({
     resolver: zodResolver(getFoodEntrySchema(t)),
@@ -295,6 +297,10 @@ export default function DailyResume() {
     calculatedCalories: number;
     calculatedNutrition: NutritionData;
   }) => {
+    // Set state for nutrition preview
+    setSelectedFood(data.food);
+    setCalculatedCalories(data.calculatedCalories);
+    
     // Auto-fill form with selected food data
     foodForm.setValue('description', `${data.food.name} (${data.quantity}g)`);
     foodForm.setValue('quantity', data.quantity.toString());
@@ -314,21 +320,7 @@ export default function DailyResume() {
       foodForm.setValue('category', 'carbs'); // default
     }
     
-    setIsFoodDialogOpen(false);
-    // Submit the form automatically
-    onSubmitFood({
-      mealType: foodForm.getValues('mealType'),
-      category: foodForm.getValues('category'),
-      description: foodForm.getValues('description'),
-      quantity: foodForm.getValues('quantity'),
-      notes: foodForm.getValues('notes') || '',
-      fdcId: data.food.fdcId,
-      calories: data.calculatedCalories,
-      protein: data.calculatedNutrition.protein,
-      carbs: data.calculatedNutrition.carbs,
-      totalFat: data.calculatedNutrition.totalFat,
-      isUSDAFood: true,
-    });
+    // Don't auto-submit anymore - let user manually submit
   };
 
   const onSubmitCardio = (data: CardioActivityFormData) => {
@@ -419,7 +411,7 @@ export default function DailyResume() {
               <div className="flex justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               </div>
-            ) : calorieSummary && (calorieSummary as any).goal > 0 ? (
+            ) : calorieSummary && (calorieSummary as any).goal && (calorieSummary as any).goal > 0 ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
@@ -506,6 +498,111 @@ export default function DailyResume() {
                 <Apple className="h-5 w-5" />
                 {t('dailyResume.foodNutrition')}
               </CardTitle>
+              {!isTrainerView && (
+                <Dialog open={isFoodDialogOpen} onOpenChange={setIsFoodDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" onClick={() => foodForm.reset()}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t('dailyResume.addFood')}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>{t('dailyResume.addFoodEntry')}</DialogTitle>
+                    </DialogHeader>
+                    
+                    {/* Food Dropdown Selection */}
+                    <div className="mb-4">
+                      <FoodDropdownSelector
+                        onFoodSelect={handleFoodSelect}
+                        placeholder={t('dailyResume.selectFood')}
+                        selectedCategory="all"
+                      />
+                    </div>
+                    
+                    <Form {...foodForm}>
+                      <form onSubmit={foodForm.handleSubmit(onSubmitFood)} className="space-y-4">
+                        <FormField
+                          control={foodForm.control}
+                          name="mealType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('dailyResume.mealType')}</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-meal-type">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="breakfast">{t('dailyResume.breakfast')}</SelectItem>
+                                  <SelectItem value="lunch">{t('dailyResume.lunch')}</SelectItem>
+                                  <SelectItem value="dinner">{t('dailyResume.dinner')}</SelectItem>
+                                  <SelectItem value="snack">{t('dailyResume.snack')}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={foodForm.control}
+                          name="quantity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('dailyResume.quantityGrams')}</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.1"
+                                  placeholder={t('dailyResume.quantityPlaceholder')} 
+                                  {...field} 
+                                  data-testid="input-quantity"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {selectedFood && (
+                          <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-medium text-green-800 dark:text-green-300">
+                                {t('dailyResume.nutritionPreview')}
+                              </span>
+                            </div>
+                            <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                              {t('dailyResume.calories')}: {calculatedCalories}
+                            </p>
+                          </div>
+                        )}
+                        
+                        <FormField
+                          control={foodForm.control}
+                          name="notes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('dailyResume.notesOptional')}</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder={t('dailyResume.notesPlaceholder')} {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <Button type="button" variant="outline" onClick={() => setIsFoodDialogOpen(false)}>
+                            {t('dailyResume.cancel')}
+                          </Button>
+                          <Button type="submit" disabled={createFoodMutation.isPending}>
+                            {createFoodMutation.isPending ? t('dailyResume.addingFood') : t('dailyResume.addFood')}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </CardHeader>
           <CardContent>
