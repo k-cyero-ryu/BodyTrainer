@@ -298,30 +298,32 @@ export default function DailyResume() {
     calculatedCalories: number;
     calculatedNutrition: NutritionData;
   }) => {
-    // Set state for nutrition preview
-    setSelectedFood(data.food);
-    setCalculatedCalories(data.calculatedCalories);
-    
-    // Auto-fill form with selected food data
-    foodForm.setValue('description', `${data.food.name} (${data.quantity}g)`);
-    foodForm.setValue('quantity', data.quantity.toString());
-    foodForm.setValue('fdcId', data.food.fdcId);
-    foodForm.setValue('calories', data.calculatedCalories);
-    foodForm.setValue('protein', data.calculatedNutrition.protein);
-    foodForm.setValue('carbs', data.calculatedNutrition.carbs);
-    foodForm.setValue('totalFat', data.calculatedNutrition.totalFat);
-    foodForm.setValue('isUSDAFood', true);
+    // Create food entry directly since there's no separate submit button
+    const mealType = foodForm.getValues('mealType') || 'breakfast';
+    const notes = foodForm.getValues('notes') || '';
     
     // Auto-categorize based on macronutrients
+    let category: "carbs" | "proteins" | "sugar" = 'carbs'; // default
     if (data.calculatedNutrition.protein && data.calculatedNutrition.protein > 10) {
-      foodForm.setValue('category', 'proteins');
+      category = 'proteins';
     } else if (data.calculatedNutrition.carbs && data.calculatedNutrition.carbs > 10) {
-      foodForm.setValue('category', 'carbs');
-    } else {
-      foodForm.setValue('category', 'carbs'); // default
+      category = 'carbs';
     }
     
-    // Don't auto-submit anymore - let user manually submit
+    // Submit the food entry immediately
+    createFoodMutation.mutate({
+      mealType,
+      category,
+      description: `${data.food.name} (${data.quantity}g)`,
+      quantity: data.quantity.toString(),
+      notes,
+      fdcId: data.food.fdcId,
+      calories: data.calculatedCalories,
+      protein: data.calculatedNutrition.protein,
+      carbs: data.calculatedNutrition.carbs,
+      totalFat: data.calculatedNutrition.totalFat,
+      isUSDAFood: true,
+    });
   };
 
   const onSubmitCardio = (data: CardioActivityFormData) => {
@@ -524,6 +526,7 @@ export default function DailyResume() {
                         placeholder={t('dailyResume.selectFood')}
                         selectedCategory={selectedFoodCategory}
                         onCategoryChange={setSelectedFoodCategory}
+                        hideTitle={true}
                       />
                     </div>
                     
@@ -579,11 +582,6 @@ export default function DailyResume() {
                             </FormItem>
                           )}
                         />
-                        <div className="flex justify-end">
-                          <Button type="submit" disabled={createFoodMutation.isPending} className="w-full">
-                            {createFoodMutation.isPending ? t('dailyResume.addingFood') : t('dailyResume.addFood')}
-                          </Button>
-                        </div>
                       </form>
                     </Form>
                   </DialogContent>

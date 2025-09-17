@@ -29,6 +29,7 @@ interface FoodDropdownSelectorProps {
   placeholder?: string;
   selectedCategory?: string;
   onCategoryChange?: (category: string) => void;
+  hideTitle?: boolean;
 }
 
 interface CuratedFoodsResponse {
@@ -54,7 +55,8 @@ export function FoodDropdownSelector({
   className = "",
   placeholder,
   selectedCategory = "all",
-  onCategoryChange
+  onCategoryChange,
+  hideTitle = false
 }: FoodDropdownSelectorProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -172,12 +174,14 @@ export function FoodDropdownSelector({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calculator className="h-5 w-5" />
-          Food Calculator
-        </CardTitle>
-      </CardHeader>
+      {!hideTitle && (
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calculator className="h-5 w-5" />
+            Food Calculator
+          </CardTitle>
+        </CardHeader>
+      )}
       <CardContent className="space-y-4">
         {/* Category Selection */}
         <div className="space-y-2">

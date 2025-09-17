@@ -750,29 +750,13 @@ export default function CalorieTracker() {
                       </div>
                     </div>
                     
-                    {/* Calories Edit */}
+                    {/* Calories Display */}
                     <div className="flex items-center space-x-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                      <Input
-                        type="number"
-                        placeholder={t('calorieTracker.editCalories')}
-                        defaultValue={entry.calories || ''}
-                        className="w-32"
-                        data-testid={`input-calories-${entry.id}`}
-                        onBlur={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (!isNaN(value) && value !== entry.calories) {
-                            updateFoodEntryCalories(entry, value);
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            const value = parseInt(e.currentTarget.value);
-                            if (!isNaN(value) && value !== entry.calories) {
-                              updateFoodEntryCalories(entry, value);
-                            }
-                          }
-                        }}
-                      />
+                      <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md border w-32 text-center">
+                        <span className="text-lg font-medium" data-testid={`display-calories-${entry.id}`}>
+                          {entry.calories || 0}
+                        </span>
+                      </div>
                       <span className="text-sm text-gray-600 dark:text-gray-400">{t('calorieTracker.calories')}</span>
                     </div>
                   </div>
