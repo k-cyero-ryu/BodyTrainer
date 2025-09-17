@@ -7,7 +7,7 @@ import { setupAuth, isAuthenticated, optionalAuth } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission, ObjectAclPolicy, getObjectAclPolicy } from "./objectAcl";
 import { z } from "zod";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, insertFoodEntrySchema, insertCardioActivitySchema, updateFoodEntrySchema, updateCardioActivitySchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, insertFoodEntrySchema, insertCardioActivitySchema, updateFoodEntrySchema, updateCardioActivitySchema, insertCustomCalorieEntrySchema, updateCustomCalorieEntrySchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -1809,6 +1809,212 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching client cardio activities:", error);
       res.status(500).json({ message: "Failed to fetch cardio activities" });
+    }
+  });
+
+  // Custom Calorie Entries CRUD routes
+  app.post('/api/custom-calories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can create custom calorie entries" });
+      }
+
+      const entryData = insertCustomCalorieEntrySchema.parse({
+        ...req.body,
+        clientId: client.id,
+      });
+
+      const customCalorieEntry = await storage.createCustomCalorieEntry(entryData);
+      res.status(201).json(customCalorieEntry);
+    } catch (error) {
+      console.error("Error creating custom calorie entry:", error);
+      res.status(500).json({ message: "Failed to create custom calorie entry" });
+    }
+  });
+
+  app.get('/api/custom-calories/:date', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view custom calorie entries" });
+      }
+
+      const { date } = req.params;
+      const targetDate = new Date(date as string);
+      const customCalorieEntries = await storage.getCustomCalorieEntriesByDate(client.id, targetDate);
+
+      res.json(customCalorieEntries);
+    } catch (error) {
+      console.error("Error fetching custom calorie entries:", error);
+      res.status(500).json({ message: "Failed to fetch custom calorie entries" });
+    }
+  });
+
+  app.put('/api/custom-calories/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can update custom calorie entries" });
+      }
+
+      const entryId = req.params.id;
+      
+      // First, verify the entry exists and belongs to this client
+      const existingEntry = await storage.getCustomCalorieEntryById(entryId);
+      if (!existingEntry) {
+        return res.status(404).json({ message: "Custom calorie entry not found" });
+      }
+      if (existingEntry.clientId !== client.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Parse and validate update data using secure schema that excludes clientId
+      const updateData = updateCustomCalorieEntrySchema.partial().parse(req.body);
+      
+      const updatedEntry = await storage.updateCustomCalorieEntry(entryId, updateData);
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error("Error updating custom calorie entry:", error);
+      res.status(500).json({ message: "Failed to update custom calorie entry" });
+    }
+  });
+
+  app.delete('/api/custom-calories/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can delete custom calorie entries" });
+      }
+
+      const entryId = req.params.id;
+      
+      // First, verify the entry exists and belongs to this client
+      const existingEntry = await storage.getCustomCalorieEntryById(entryId);
+      if (!existingEntry) {
+        return res.status(404).json({ message: "Custom calorie entry not found" });
+      }
+      if (existingEntry.clientId !== client.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deleteCustomCalorieEntry(entryId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting custom calorie entry:", error);
+      res.status(500).json({ message: "Failed to delete custom calorie entry" });
+    }
+  });
+
+  // Calorie Summary & Goals routes
+  app.get('/api/calories/summary/:date', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view calorie summary" });
+      }
+
+      const { date } = req.params;
+      const targetDate = new Date(date as string);
+      const calorieSummary = await storage.getCalorieSummaryByDate(client.id, targetDate);
+
+      res.json(calorieSummary);
+    } catch (error) {
+      console.error("Error fetching calorie summary:", error);
+      res.status(500).json({ message: "Failed to fetch calorie summary" });
+    }
+  });
+
+  app.get('/api/calories/goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can view calorie goal" });
+      }
+
+      const calorieGoal = await storage.getCalorieGoal(client.id);
+      res.json({ goal: calorieGoal });
+    } catch (error) {
+      console.error("Error fetching calorie goal:", error);
+      res.status(500).json({ message: "Failed to fetch calorie goal" });
+    }
+  });
+
+  app.put('/api/calories/goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can set calorie goal" });
+      }
+
+      const { goal } = req.body;
+      
+      // Validate goal is a positive number
+      if (typeof goal !== 'number' || goal <= 0) {
+        return res.status(400).json({ message: "Goal must be a positive number" });
+      }
+
+      await storage.setCalorieGoal(client.id, goal);
+      res.json({ goal, message: "Calorie goal updated successfully" });
+    } catch (error) {
+      console.error("Error setting calorie goal:", error);
+      res.status(500).json({ message: "Failed to set calorie goal" });
+    }
+  });
+
+  // Enhanced Food Entries endpoint for updating calories
+  app.patch('/api/food-entries/:id/calories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const client = await storage.getClientByUserId(userId);
+      if (!client) {
+        return res.status(403).json({ message: "Only clients can update food entry calories" });
+      }
+
+      const entryId = req.params.id;
+      
+      // First, verify the entry exists and belongs to this client
+      const existingEntry = await storage.getFoodEntryById(entryId);
+      if (!existingEntry) {
+        return res.status(404).json({ message: "Food entry not found" });
+      }
+      if (existingEntry.clientId !== client.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { calories, isIncludedInCalories } = req.body;
+      
+      // Validate data
+      const updateData: any = {};
+      if (calories !== undefined) {
+        if (typeof calories !== 'number' || calories < 0) {
+          return res.status(400).json({ message: "Calories must be a non-negative number" });
+        }
+        updateData.calories = calories;
+      }
+      if (isIncludedInCalories !== undefined) {
+        if (typeof isIncludedInCalories !== 'boolean') {
+          return res.status(400).json({ message: "isIncludedInCalories must be a boolean" });
+        }
+        updateData.isIncludedInCalories = isIncludedInCalories;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update" });
+      }
+      
+      const updatedEntry = await storage.updateFoodEntry(entryId, updateData);
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error("Error updating food entry calories:", error);
+      res.status(500).json({ message: "Failed to update food entry calories" });
     }
   });
 
