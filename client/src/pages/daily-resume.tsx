@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,8 @@ import {
   Clock,
   Edit2,
   Trash2,
-  Activity
+  Activity,
+  TrendingUp
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -144,6 +146,16 @@ export default function DailyResume() {
     },
   });
 
+  // Fetch calorie summary for selected date (only for client view, not trainer view)
+  const { data: calorieSummary, isLoading: loadingCalories } = useQuery({
+    queryKey: ["/api/calories/summary", { date: selectedDate }],
+    enabled: !isTrainerView && isAuthenticated && selectedDate !== '',
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
+  });
+
   // Create food entry mutation (only for clients, not trainers viewing client data)
   const createFoodMutation = useMutation({
     mutationFn: (data: FoodEntryFormData) => 
@@ -153,6 +165,7 @@ export default function DailyResume() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [foodEntriesEndpoint, { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: ["/api/calories/summary", { date: selectedDate }] });
       setIsFoodDialogOpen(false);
       foodForm.reset();
       toast({
@@ -180,6 +193,7 @@ export default function DailyResume() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [cardioActivitiesEndpoint, { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: ["/api/calories/summary", { date: selectedDate }] });
       setIsCardioDialogOpen(false);
       cardioForm.reset();
       toast({
@@ -201,6 +215,7 @@ export default function DailyResume() {
     mutationFn: (id: string) => apiRequest('DELETE', `/api/client/food-entries/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [foodEntriesEndpoint, { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: ["/api/calories/summary", { date: selectedDate }] });
       toast({
         title: t('common.success'),
         description: "Food entry deleted successfully",
@@ -213,6 +228,7 @@ export default function DailyResume() {
     mutationFn: (id: string) => apiRequest('DELETE', `/api/client/cardio-activities/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [cardioActivitiesEndpoint, { date: selectedDate }] });
+      queryClient.invalidateQueries({ queryKey: ["/api/calories/summary", { date: selectedDate }] });
       toast({
         title: t('common.success'),
         description: "Cardio activity deleted successfully",
@@ -327,6 +343,98 @@ export default function DailyResume() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Calorie Summary Widget - Only shown in client view */}
+      {!isTrainerView && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              {t('calorieWidget.calorieSummary')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingCalories ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            ) : calorieSummary && calorieSummary.goal > 0 ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('calorieWidget.goal')}</p>
+                    <p className="text-xl font-bold text-blue-600" data-testid="daily-calorie-goal">
+                      {calorieSummary.goal}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('calorieWidget.consumed')}</p>
+                    <p className="text-xl font-bold text-green-600" data-testid="daily-calorie-consumed">
+                      {calorieSummary.total}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {calorieSummary.remaining > 0 ? t('calorieWidget.remaining') : t('calorieWidget.over')}
+                    </p>
+                    <p className={`text-xl font-bold ${calorieSummary.remaining > 0 ? 'text-orange-600' : 'text-red-600'}`} 
+                       data-testid="daily-calorie-remaining">
+                      {Math.abs(calorieSummary.remaining)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>{t('calorieWidget.consumed')}</span>
+                    <span>
+                      {Math.round((calorieSummary.total / calorieSummary.goal) * 100)}% {t('calorieWidget.percentOfGoal')}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={Math.min(100, (calorieSummary.total / calorieSummary.goal) * 100)} 
+                    className="h-2"
+                    data-testid="daily-calorie-progress"
+                  />
+                </div>
+                
+                <div className="flex justify-between items-center pt-2">
+                  <Badge 
+                    variant={calorieSummary.remaining > 0 ? "default" : "destructive"} 
+                    data-testid="daily-calorie-status"
+                  >
+                    {calorieSummary.remaining > 0 ? t('calorieWidget.onTrack') : t('calorieWidget.exceededGoal')}
+                  </Badge>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => window.location.href = "/calorie-tracker"}
+                    data-testid="daily-view-full-tracker"
+                  >
+                    {t('calorieWidget.viewFullTracker')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4" data-testid="daily-no-calorie-goal">
+                <TrendingUp className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground mb-2">{t('calorieWidget.noGoalSet')}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = "/calorie-tracker"}
+                  data-testid="daily-set-calorie-goal"
+                >
+                  {t('calorieWidget.setGoal')}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Food Entries */}

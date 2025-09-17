@@ -109,6 +109,24 @@ const resources = {
       'calorieTracker.updateEntry': 'Update Entry',
       'calorieTracker.addEntry': 'Add Entry',
       
+      // Calorie Summary Widgets
+      'calorieWidget.title': 'Today\'s Calories',
+      'calorieWidget.goal': 'Goal',
+      'calorieWidget.consumed': 'Consumed',
+      'calorieWidget.remaining': 'Remaining',
+      'calorieWidget.over': 'Over',
+      'calorieWidget.calories': 'calories',
+      'calorieWidget.calSuffix': 'cal',
+      'calorieWidget.percentOfGoal': 'of goal',
+      'calorieWidget.viewFullTracker': 'View Full Tracker',
+      'calorieWidget.setGoal': 'Set Goal',
+      'calorieWidget.noGoalSet': 'No calorie goal set',
+      'calorieWidget.clickToSetGoal': 'Click to set your daily goal',
+      'calorieWidget.calorieSummary': 'Calorie Summary',
+      'calorieWidget.onTrack': 'On track',
+      'calorieWidget.exceededGoal': 'Exceeded goal',
+      'calorieWidget.goalAchieved': 'Goal achieved',
+      
       // Meal Types
       'mealType.breakfast': 'Breakfast',
       'mealType.lunch': 'Lunch',

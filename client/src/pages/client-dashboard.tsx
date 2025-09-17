@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock, Ruler } from "lucide-react";
+import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock, Ruler, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -95,6 +95,12 @@ export default function ClientDashboard() {
   // Fetch workout streak
   const { data: streakData } = useQuery({
     queryKey: ["/api/client/workout-streak"],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch today's calorie summary
+  const { data: calorieSummary, isLoading: loadingCalories } = useQuery({
+    queryKey: ["/api/calories/summary", { date: todayDate }],
     enabled: !!user && user.role === 'client',
   });
 
@@ -399,6 +405,88 @@ export default function ClientDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Calorie Tracking Widget */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            {t('calorieWidget.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingCalories ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            </div>
+          ) : calorieSummary && calorieSummary.goal > 0 ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">{t('calorieWidget.goal')}</p>
+                  <p className="text-2xl font-bold text-blue-600" data-testid="calorie-goal">
+                    {calorieSummary.goal}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{t('calorieWidget.consumed')}</p>
+                  <p className="text-2xl font-bold text-green-600" data-testid="calorie-consumed">
+                    {calorieSummary.total}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    {calorieSummary.remaining > 0 ? t('calorieWidget.remaining') : t('calorieWidget.over')}
+                  </p>
+                  <p className={`text-2xl font-bold ${calorieSummary.remaining > 0 ? 'text-orange-600' : 'text-red-600'}`} 
+                     data-testid="calorie-remaining">
+                    {Math.abs(calorieSummary.remaining)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span>{t('calorieWidget.consumed')}</span>
+                  <span>
+                    {Math.round((calorieSummary.total / calorieSummary.goal) * 100)}% {t('calorieWidget.percentOfGoal')}
+                  </span>
+                </div>
+                <Progress 
+                  value={Math.min(100, (calorieSummary.total / calorieSummary.goal) * 100)} 
+                  className="h-3"
+                  data-testid="calorie-progress-bar"
+                />
+              </div>
+              
+              <div className="flex justify-between items-center pt-2">
+                <Badge variant={calorieSummary.remaining > 0 ? "default" : "destructive"} data-testid="calorie-status">
+                  {calorieSummary.remaining > 0 ? t('calorieWidget.onTrack') : t('calorieWidget.exceededGoal')}
+                </Badge>
+                <Link href="/calorie-tracker">
+                  <Button variant="outline" size="sm" data-testid="view-full-tracker">
+                    {t('calorieWidget.viewFullTracker')}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6" data-testid="no-calorie-goal">
+              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground font-medium">{t('calorieWidget.noGoalSet')}</p>
+              <p className="text-sm text-muted-foreground mb-4">{t('calorieWidget.clickToSetGoal')}</p>
+              <Link href="/calorie-tracker">
+                <Button variant="outline" data-testid="set-calorie-goal">
+                  {t('calorieWidget.setGoal')}
+                </Button>
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
