@@ -719,3 +719,55 @@ export type InsertCustomCalorieEntry = z.infer<typeof insertCustomCalorieEntrySc
 export type CustomCalorieEntry = typeof customCalorieEntries.$inferSelect;
 export type UpdateCustomCalorieEntry = z.infer<typeof updateCustomCalorieEntrySchema>;
 export type UpdateCardioActivity = z.infer<typeof updateCardioActivitySchema>;
+
+// USDA FoodData Central API Types
+export interface USDASearchResult {
+  fdcId: number;
+  description: string;
+  brandOwner?: string;
+  ingredients?: string;
+  dataType: string;
+  foodCategory?: string;
+}
+
+export interface USDASearchResponse {
+  totalHits: number;
+  currentPage: number;
+  totalPages: number;
+  foods: USDASearchResult[];
+}
+
+export interface USDANutrient {
+  nutrientId: number;
+  nutrientName: string;
+  nutrientNumber: string;
+  unitName: string;
+  value: number;
+}
+
+export interface USDAFoodDetail {
+  fdcId: number;
+  description: string;
+  brandOwner?: string;
+  ingredients?: string;
+  dataType: string;
+  foodCategory?: string;
+  foodNutrients: USDANutrient[];
+}
+
+// Standardized nutrition data format for API responses
+export interface NutritionData {
+  fdcId: number;
+  name: string;
+  brandOwner?: string;
+  category?: string;
+  calories?: number;
+  protein?: number; // grams
+  carbs?: number; // grams
+  totalFat?: number; // grams
+  fiber?: number; // grams
+  sugar?: number; // grams
+  sodium?: number; // milligrams
+  servingSize?: number; // grams (usually 100g)
+  servingUnit?: string;
+}

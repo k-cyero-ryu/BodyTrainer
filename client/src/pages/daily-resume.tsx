@@ -21,7 +21,9 @@ import {
   Edit2,
   Trash2,
   Activity,
-  TrendingUp
+  TrendingUp,
+  Search,
+  CheckCircle
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -30,6 +32,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import FoodSearchAutocomplete, { type SelectedFoodData } from "@/components/FoodSearchAutocomplete";
 
 // Food Entry Form Schema
 const getFoodEntrySchema = (t: any) => z.object({
@@ -38,6 +41,13 @@ const getFoodEntrySchema = (t: any) => z.object({
   description: z.string().min(1, t('validation.foodDescriptionRequired')),
   quantity: z.string().min(1, t('validation.quantityRequired')),
   notes: z.string().optional(),
+  // USDA-specific fields (optional)
+  fdcId: z.number().optional(),
+  calories: z.number().optional(),
+  protein: z.number().optional(),
+  carbs: z.number().optional(),
+  totalFat: z.number().optional(),
+  isUSDAFood: z.boolean().optional(),
 });
 
 // Cardio Activity Form Schema
@@ -71,6 +81,8 @@ export default function DailyResume() {
   const [isCardioDialogOpen, setIsCardioDialogOpen] = useState(false);
   const [editingFood, setEditingFood] = useState<any>(null);
   const [editingCardio, setEditingCardio] = useState<any>(null);
+  const [showUSDASearch, setShowUSDASearch] = useState(false);
+  const [selectedUSDAFood, setSelectedUSDAFood] = useState<SelectedFoodData | null>(null);
 
   const foodForm = useForm<FoodEntryFormData>({
     resolver: zodResolver(getFoodEntrySchema(t)),
@@ -80,6 +92,12 @@ export default function DailyResume() {
       description: '',
       quantity: '',
       notes: '',
+      fdcId: undefined,
+      calories: undefined,
+      protein: undefined,
+      carbs: undefined,
+      totalFat: undefined,
+      isUSDAFood: false,
     },
   });
 
@@ -270,6 +288,34 @@ export default function DailyResume() {
     createFoodMutation.mutate(data);
   };
 
+  const handleUSDAFoodSelect = (foodData: SelectedFoodData) => {
+    setSelectedUSDAFood(foodData);
+    
+    // Auto-fill form with USDA data
+    foodForm.setValue('description', foodData.name);
+    foodForm.setValue('quantity', foodData.servingSize?.toString() || '100');
+    
+    if (foodData.isUSDAFood) {
+      foodForm.setValue('fdcId', foodData.fdcId);
+      foodForm.setValue('calories', foodData.calories);
+      foodForm.setValue('protein', foodData.protein);
+      foodForm.setValue('carbs', foodData.carbs);
+      foodForm.setValue('totalFat', foodData.totalFat);
+      foodForm.setValue('isUSDAFood', true);
+      
+      // Auto-categorize based on macronutrients
+      if (foodData.protein && foodData.protein > 10) {
+        foodForm.setValue('category', 'proteins');
+      } else if (foodData.carbs && foodData.carbs > 10) {
+        foodForm.setValue('category', 'carbs');
+      } else {
+        foodForm.setValue('category', 'carbs'); // default
+      }
+    }
+    
+    setShowUSDASearch(false);
+  };
+
   const onSubmitCardio = (data: CardioActivityFormData) => {
     createCardioMutation.mutate(data);
   };
@@ -358,30 +404,30 @@ export default function DailyResume() {
               <div className="flex justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               </div>
-            ) : calorieSummary && calorieSummary.goal > 0 ? (
+            ) : calorieSummary && (calorieSummary as any).goal > 0 ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <p className="text-sm text-muted-foreground">{t('calorieWidget.goal')}</p>
                     <p className="text-xl font-bold text-blue-600" data-testid="daily-calorie-goal">
-                      {calorieSummary.goal}
+                      {(calorieSummary as any).goal}
                     </p>
                     <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{t('calorieWidget.consumed')}</p>
                     <p className="text-xl font-bold text-green-600" data-testid="daily-calorie-consumed">
-                      {calorieSummary.total}
+                      {(calorieSummary as any).total}
                     </p>
                     <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      {calorieSummary.remaining > 0 ? t('calorieWidget.remaining') : t('calorieWidget.over')}
+                      {(calorieSummary as any).remaining > 0 ? t('calorieWidget.remaining') : t('calorieWidget.over')}
                     </p>
-                    <p className={`text-xl font-bold ${calorieSummary.remaining > 0 ? 'text-orange-600' : 'text-red-600'}`} 
+                    <p className={`text-xl font-bold ${(calorieSummary as any).remaining > 0 ? 'text-orange-600' : 'text-red-600'}`} 
                        data-testid="daily-calorie-remaining">
-                      {Math.abs(calorieSummary.remaining)}
+                      {Math.abs((calorieSummary as any).remaining)}
                     </p>
                     <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
                   </div>
@@ -391,11 +437,11 @@ export default function DailyResume() {
                   <div className="flex justify-between text-sm mb-2">
                     <span>{t('calorieWidget.consumed')}</span>
                     <span>
-                      {Math.round((calorieSummary.total / calorieSummary.goal) * 100)}% {t('calorieWidget.percentOfGoal')}
+                      {Math.round(((calorieSummary as any).total / (calorieSummary as any).goal) * 100)}% {t('calorieWidget.percentOfGoal')}
                     </span>
                   </div>
                   <Progress 
-                    value={Math.min(100, (calorieSummary.total / calorieSummary.goal) * 100)} 
+                    value={Math.min(100, ((calorieSummary as any).total / (calorieSummary as any).goal) * 100)} 
                     className="h-2"
                     data-testid="daily-calorie-progress"
                   />
@@ -403,10 +449,10 @@ export default function DailyResume() {
                 
                 <div className="flex justify-between items-center pt-2">
                   <Badge 
-                    variant={calorieSummary.remaining > 0 ? "default" : "destructive"} 
+                    variant={(calorieSummary as any).remaining > 0 ? "default" : "destructive"} 
                     data-testid="daily-calorie-status"
                   >
-                    {calorieSummary.remaining > 0 ? t('calorieWidget.onTrack') : t('calorieWidget.exceededGoal')}
+                    {(calorieSummary as any).remaining > 0 ? t('calorieWidget.onTrack') : t('calorieWidget.exceededGoal')}
                   </Badge>
                   <Button 
                     variant="outline" 
@@ -453,10 +499,50 @@ export default function DailyResume() {
                       {t('dailyResume.addFood')}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>{t('dailyResume.addFoodEntry')}</DialogTitle>
                   </DialogHeader>
+                  
+                  {/* USDA Food Search Integration */}
+                  <div className="mb-4">
+                    <FoodSearchAutocomplete
+                      onFoodSelect={handleUSDAFoodSelect}
+                      trigger={
+                        <Button 
+                          variant="outline" 
+                          className="w-full" 
+                          type="button"
+                          data-testid="button-search-usda-food"
+                        >
+                          <Search className="h-4 w-4 mr-2" />
+                          {t('usda.searchFood')}
+                        </Button>
+                      }
+                      isOpen={showUSDASearch}
+                      onOpenChange={setShowUSDASearch}
+                    />
+                    
+                    {selectedUSDAFood && (
+                      <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800" data-testid="selected-usda-food-info">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                            {t('usda.usdaEntry')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-green-700 dark:text-green-300" data-testid="text-selected-food-name">
+                          {selectedUSDAFood.name}
+                        </p>
+                        {selectedUSDAFood.calories && (
+                          <p className="text-xs text-green-600 dark:text-green-400" data-testid="text-selected-food-calories">
+                            {selectedUSDAFood.calories} {t('usda.caloriesPer100g')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
                   <Form {...foodForm}>
                     <form onSubmit={foodForm.handleSubmit(onSubmitFood)} className="space-y-4">
                       <FormField
@@ -467,7 +553,7 @@ export default function DailyResume() {
                             <FormLabel>{t('dailyResume.mealType')}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger data-testid="select-meal-type">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -489,7 +575,7 @@ export default function DailyResume() {
                             <FormLabel>{t('dailyResume.foodCategory')}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger data-testid="select-food-category">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -509,7 +595,11 @@ export default function DailyResume() {
                           <FormItem>
                             <FormLabel>{t('dailyResume.foodDescription')}</FormLabel>
                             <FormControl>
-                              <Input placeholder={t('dailyResume.foodPlaceholder')} {...field} />
+                              <Input 
+                                placeholder={t('dailyResume.foodPlaceholder')} 
+                                {...field} 
+                                data-testid="input-food-description"
+                              />
                             </FormControl>
                           </FormItem>
                         )}
@@ -521,7 +611,12 @@ export default function DailyResume() {
                           <FormItem>
                             <FormLabel>{t('dailyResume.quantityGrams')}</FormLabel>
                             <FormControl>
-                              <Input placeholder={t('dailyResume.quantityPlaceholder')} type="number" {...field} />
+                              <Input 
+                                placeholder={t('dailyResume.quantityPlaceholder')} 
+                                type="number" 
+                                {...field} 
+                                data-testid="input-food-quantity"
+                              />
                             </FormControl>
                           </FormItem>
                         )}
@@ -533,16 +628,33 @@ export default function DailyResume() {
                           <FormItem>
                             <FormLabel>{t('dailyResume.notesOptional')}</FormLabel>
                             <FormControl>
-                              <Textarea placeholder={t('dailyResume.notesPlaceholder')} {...field} />
+                              <Textarea 
+                                placeholder={t('dailyResume.notesPlaceholder')} 
+                                {...field} 
+                                data-testid="textarea-food-notes"
+                              />
                             </FormControl>
                           </FormItem>
                         )}
                       />
                       <div className="flex justify-end space-x-2">
-                        <Button type="button" variant="outline" onClick={() => setIsFoodDialogOpen(false)}>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsFoodDialogOpen(false);
+                            setSelectedUSDAFood(null);
+                            foodForm.reset();
+                          }}
+                          data-testid="button-cancel-food-entry"
+                        >
                           {t('dailyResume.cancel')}
                         </Button>
-                        <Button type="submit" disabled={createFoodMutation.isPending}>
+                        <Button 
+                          type="submit" 
+                          disabled={createFoodMutation.isPending}
+                          data-testid="button-add-food-entry"
+                        >
                           {createFoodMutation.isPending ? t('dailyResume.adding') : t('dailyResume.addEntry')}
                         </Button>
                       </div>

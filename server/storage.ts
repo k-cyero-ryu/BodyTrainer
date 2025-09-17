@@ -1025,6 +1025,12 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  /**
+   * Get the calorie goal for a client using priority order:
+   * 1. Training plan dailyCalories (primary source)
+   * 2. Client manual override (fallback if no training plan or plan has no calories)
+   * 3. Default 2000 calories (final fallback)
+   */
   async getCalorieGoal(clientId: string): Promise<number> {
     // Get client data
     const client = await this.getClient(clientId);
@@ -1032,12 +1038,7 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Client not found');
     }
 
-    // Use client's override if set
-    if (client.calorieGoalOverride) {
-      return client.calorieGoalOverride;
-    }
-
-    // Otherwise, get the goal from the client's active training plan
+    // First, check for goal from the client's active training plan (primary source)
     const activePlan = await this.getActiveClientPlan(clientId);
     if (activePlan) {
       const trainingPlan = await this.getTrainingPlan(activePlan.planId);
@@ -1046,10 +1047,22 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    // Default calorie goal if no plan or plan doesn't have calories set
+    // Fallback to client's manual override if no training plan or plan has no dailyCalories
+    if (client.calorieGoalOverride) {
+      return client.calorieGoalOverride;
+    }
+
+    // Default calorie goal if no plan or manual override is set
     return 2000;
   }
 
+  /**
+   * Set a manual calorie goal override for a client.
+   * This override will only be used as a fallback if:
+   * - The client has no active training plan, OR
+   * - The active training plan has no dailyCalories set
+   * Training plan dailyCalories always take priority when available.
+   */
   async setCalorieGoal(clientId: string, goal: number): Promise<void> {
     await db
       .update(clients)

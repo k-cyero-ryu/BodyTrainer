@@ -26,7 +26,9 @@ import {
   Coffee,
   Apple,
   Sandwich,
-  Cookie
+  Cookie,
+  Search,
+  CheckCircle
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -35,6 +37,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import FoodSearchAutocomplete, { type SelectedFoodData } from "@/components/FoodSearchAutocomplete";
 
 // TypeScript interfaces for API responses
 interface CalorieSummary {
@@ -86,6 +89,12 @@ const getCustomCalorieEntrySchema = (t: any) => z.object({
   ).refine(val => val > 0 && val <= 5000, t('validation.caloriesRange')),
   mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional(),
   notes: z.string().optional(),
+  // USDA-specific fields
+  fdcId: z.number().optional(),
+  protein: z.number().optional(),
+  carbs: z.number().optional(),
+  totalFat: z.number().optional(),
+  isUSDAFood: z.boolean().optional(),
 });
 
 // Food Entry Calories Update Schema
@@ -136,6 +145,8 @@ export default function CalorieTracker() {
   const [isCustomEntryDialogOpen, setIsCustomEntryDialogOpen] = useState(false);
   const [editingCustomEntry, setEditingCustomEntry] = useState<CustomCalorieEntry | null>(null);
   const [editingFoodEntry, setEditingFoodEntry] = useState<FoodEntryWithCalories | null>(null);
+  const [showUSDASearch, setShowUSDASearch] = useState(false);
+  const [selectedUSDAFood, setSelectedUSDAFood] = useState<SelectedFoodData | null>(null);
 
   const goalForm = useForm<CalorieGoalFormData>({
     resolver: zodResolver(getCalorieGoalSchema(t)),
@@ -149,6 +160,11 @@ export default function CalorieTracker() {
       calories: 0,
       mealType: 'breakfast',
       notes: '',
+      fdcId: undefined,
+      protein: undefined,
+      carbs: undefined,
+      totalFat: undefined,
+      isUSDAFood: false,
     },
   });
 
@@ -305,6 +321,43 @@ export default function CalorieTracker() {
       });
     },
   });
+
+  // Handle USDA food selection
+  const handleUSDAFoodSelect = (foodData: SelectedFoodData) => {
+    setSelectedUSDAFood(foodData);
+    
+    // Auto-fill form with USDA data
+    customEntryForm.setValue('description', foodData.name);
+    
+    if (foodData.isUSDAFood && foodData.calories) {
+      // Calculate calories for the serving size (default to 100g if not specified)
+      const servingSize = foodData.servingSize || 100;
+      const calories = Math.round((foodData.calories * servingSize) / 100);
+      
+      customEntryForm.setValue('calories', calories);
+      customEntryForm.setValue('fdcId', foodData.fdcId);
+      customEntryForm.setValue('protein', foodData.protein);
+      customEntryForm.setValue('carbs', foodData.carbs);
+      customEntryForm.setValue('totalFat', foodData.totalFat);
+      customEntryForm.setValue('isUSDAFood', true);
+      
+      // Add nutrition info to notes
+      let nutritionInfo = '';
+      if (foodData.protein || foodData.carbs || foodData.totalFat) {
+        const parts = [];
+        if (foodData.protein) parts.push(`${t('usda.proteinLabel')}: ${foodData.protein}g`);
+        if (foodData.carbs) parts.push(`${t('usda.carbsLabel')}: ${foodData.carbs}g`);
+        if (foodData.totalFat) parts.push(`${t('usda.fatLabel')}: ${foodData.totalFat}g`);
+        nutritionInfo = `${t('usda.nutritionInfo')}: ${parts.join(', ')}`;
+      }
+      
+      const currentNotes = customEntryForm.getValues('notes') || '';
+      const updatedNotes = currentNotes ? `${currentNotes}\n${nutritionInfo}` : nutritionInfo;
+      customEntryForm.setValue('notes', updatedNotes);
+    }
+    
+    setShowUSDASearch(false);
+  };
 
   // Update food entry calories mutation
   const updateFoodCaloriesMutation = useMutation({
@@ -818,6 +871,48 @@ export default function CalorieTracker() {
               {editingCustomEntry ? t('calorieTracker.editQuickEntry') : t('calorieTracker.addQuickEntry')}
             </DialogTitle>
           </DialogHeader>
+          
+          {/* USDA Food Search Integration - Only for new entries */}
+          {!editingCustomEntry && (
+            <div className="mb-4">
+              <FoodSearchAutocomplete
+                onFoodSelect={handleUSDAFoodSelect}
+                trigger={
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    type="button"
+                    data-testid="button-search-usda-food-tracker"
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    {t('usda.searchFood')}
+                  </Button>
+                }
+                isOpen={showUSDASearch}
+                onOpenChange={setShowUSDASearch}
+              />
+              
+              {selectedUSDAFood && (
+                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800" data-testid="selected-usda-food-info-tracker">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                      {t('usda.usdaEntry')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-green-700 dark:text-green-300" data-testid="text-selected-food-name-tracker">
+                    {selectedUSDAFood.name}
+                  </p>
+                  {selectedUSDAFood.calories && (
+                    <p className="text-xs text-green-600 dark:text-green-400" data-testid="text-selected-food-calories-tracker">
+                      {selectedUSDAFood.calories} {t('usda.caloriesPer100g')}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
           <Form {...customEntryForm}>
             <form onSubmit={customEntryForm.handleSubmit(onSubmitCustomEntry)} className="space-y-6">
               <FormField
@@ -907,6 +1002,7 @@ export default function CalorieTracker() {
                   onClick={() => {
                     setIsCustomEntryDialogOpen(false);
                     setEditingCustomEntry(null);
+                    setSelectedUSDAFood(null);
                     customEntryForm.reset();
                   }}
                   data-testid="button-cancel-custom"

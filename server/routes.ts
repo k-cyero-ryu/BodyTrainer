@@ -7,7 +7,8 @@ import { setupAuth, isAuthenticated, optionalAuth } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission, ObjectAclPolicy, getObjectAclPolicy } from "./objectAcl";
 import { z } from "zod";
-import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, insertFoodEntrySchema, insertCardioActivitySchema, updateFoodEntrySchema, updateCardioActivitySchema, insertCustomCalorieEntrySchema, updateCustomCalorieEntrySchema, socialComments, paymentPlans, clientPaymentPlans, type User } from "@shared/schema";
+import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, insertFoodEntrySchema, insertCardioActivitySchema, updateFoodEntrySchema, updateCardioActivitySchema, insertCustomCalorieEntrySchema, updateCustomCalorieEntrySchema, socialComments, paymentPlans, clientPaymentPlans, type User, type USDASearchResponse, type USDAFoodDetail, type NutritionData } from "@shared/schema";
+import { searchFoods, getFoodDetails, getFoodNutrition, checkUSDAApiHealth } from "./usdaService";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -1605,6 +1606,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting food entry:", error);
       res.status(500).json({ message: "Failed to delete food entry" });
+    }
+  });
+
+  // USDA FoodData Central API routes
+  app.get('/api/usda/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const { query, pageSize = 10, pageNumber = 1 } = req.query;
+
+      if (!query || typeof query !== 'string' || query.trim().length === 0) {
+        return res.status(400).json({ 
+          message: "Query parameter is required",
+          example: "/api/usda/search?query=apple&pageSize=10&pageNumber=1"
+        });
+      }
+
+      // Validate pagination parameters
+      const size = Math.min(Math.max(parseInt(pageSize as string) || 10, 1), 50); // Limit to 50 max
+      const page = Math.max(parseInt(pageNumber as string) || 1, 1);
+
+      console.log(`[USDA API] Searching for foods with query: "${query}", pageSize: ${size}, pageNumber: ${page}`);
+      
+      const searchResults: USDASearchResponse = await searchFoods(query, size, page);
+      
+      res.json({
+        success: true,
+        data: searchResults,
+        message: `Found ${searchResults.totalHits} results for "${query}"`
+      });
+    } catch (error) {
+      console.error("Error searching USDA foods:", error);
+      
+      // Handle specific USDA API errors
+      if (error.message.includes('USDA API key')) {
+        return res.status(503).json({ 
+          message: "USDA API service is not configured properly",
+          error: "Missing or invalid API key"
+        });
+      }
+      
+      if (error.message.includes('USDA API request failed')) {
+        return res.status(502).json({ 
+          message: "USDA API service is temporarily unavailable",
+          error: "External API error"
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to search for foods",
+        error: process.env.NODE_ENV === 'development' ? error.message : "Internal server error"
+      });
+    }
+  });
+
+  app.get('/api/usda/food/:fdcId', isAuthenticated, async (req: any, res) => {
+    try {
+      const fdcId = parseInt(req.params.fdcId);
+
+      if (!fdcId || fdcId <= 0) {
+        return res.status(400).json({ 
+          message: "Valid FDC ID is required",
+          example: "/api/usda/food/123456"
+        });
+      }
+
+      console.log(`[USDA API] Getting food details for FDC ID: ${fdcId}`);
+      
+      const foodDetail: USDAFoodDetail = await getFoodDetails(fdcId);
+      
+      res.json({
+        success: true,
+        data: foodDetail,
+        message: `Food details retrieved for FDC ID ${fdcId}`
+      });
+    } catch (error) {
+      console.error(`Error getting USDA food details for FDC ID ${req.params.fdcId}:`, error);
+      
+      // Handle specific USDA API errors
+      if (error.message.includes('USDA API key')) {
+        return res.status(503).json({ 
+          message: "USDA API service is not configured properly",
+          error: "Missing or invalid API key"
+        });
+      }
+      
+      if (error.message.includes('USDA API request failed: 404')) {
+        return res.status(404).json({ 
+          message: `Food item not found for FDC ID ${req.params.fdcId}`,
+          error: "Food not found in USDA database"
+        });
+      }
+      
+      if (error.message.includes('USDA API request failed')) {
+        return res.status(502).json({ 
+          message: "USDA API service is temporarily unavailable",
+          error: "External API error"
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to get food details",
+        error: process.env.NODE_ENV === 'development' ? error.message : "Internal server error"
+      });
+    }
+  });
+
+  app.get('/api/usda/nutrients/:fdcId', isAuthenticated, async (req: any, res) => {
+    try {
+      const fdcId = parseInt(req.params.fdcId);
+
+      if (!fdcId || fdcId <= 0) {
+        return res.status(400).json({ 
+          message: "Valid FDC ID is required",
+          example: "/api/usda/nutrients/123456"
+        });
+      }
+
+      console.log(`[USDA API] Getting nutrition data for FDC ID: ${fdcId}`);
+      
+      const nutritionData: NutritionData = await getFoodNutrition(fdcId);
+      
+      res.json({
+        success: true,
+        data: nutritionData,
+        message: `Nutrition data retrieved for ${nutritionData.name}`,
+        servingInfo: {
+          size: nutritionData.servingSize,
+          unit: nutritionData.servingUnit,
+          note: "Nutrition values are per serving size shown"
+        }
+      });
+    } catch (error) {
+      console.error(`Error getting USDA nutrition data for FDC ID ${req.params.fdcId}:`, error);
+      
+      // Handle specific USDA API errors
+      if (error.message.includes('USDA API key')) {
+        return res.status(503).json({ 
+          message: "USDA API service is not configured properly",
+          error: "Missing or invalid API key"
+        });
+      }
+      
+      if (error.message.includes('USDA API request failed: 404')) {
+        return res.status(404).json({ 
+          message: `Food item not found for FDC ID ${req.params.fdcId}`,
+          error: "Food not found in USDA database"
+        });
+      }
+      
+      if (error.message.includes('USDA API request failed')) {
+        return res.status(502).json({ 
+          message: "USDA API service is temporarily unavailable",
+          error: "External API error"
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to get nutrition data",
+        error: process.env.NODE_ENV === 'development' ? error.message : "Internal server error"
+      });
+    }
+  });
+
+  // USDA API health check endpoint
+  app.get('/api/usda/health', isAuthenticated, async (req: any, res) => {
+    try {
+      console.log('[USDA API] Performing health check');
+      
+      const healthStatus = await checkUSDAApiHealth();
+      
+      res.status(healthStatus.healthy ? 200 : 503).json({
+        success: healthStatus.healthy,
+        service: 'USDA FoodData Central API',
+        status: healthStatus.healthy ? 'healthy' : 'unhealthy',
+        message: healthStatus.message,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error checking USDA API health:', error);
+      res.status(500).json({
+        success: false,
+        service: 'USDA FoodData Central API',
+        status: 'error',
+        message: 'Failed to perform health check',
+        error: process.env.NODE_ENV === 'development' ? error.message : "Internal server error",
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
