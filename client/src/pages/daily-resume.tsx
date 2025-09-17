@@ -85,6 +85,7 @@ export default function DailyResume() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedFood, setSelectedFood] = useState<NutritionData | null>(null);
   const [calculatedCalories, setCalculatedCalories] = useState<number | null>(null);
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
 
   const foodForm = useForm<FoodEntryFormData>({
     resolver: zodResolver(getFoodEntrySchema(t)),
@@ -501,7 +502,12 @@ export default function DailyResume() {
               {!isTrainerView && (
                 <Dialog open={isFoodDialogOpen} onOpenChange={setIsFoodDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" onClick={() => foodForm.reset()}>
+                    <Button size="sm" onClick={() => {
+                      foodForm.reset();
+                      setSelectedFood(null);
+                      setCalculatedCalories(null);
+                      setSelectedFoodCategory('all');
+                    }}>
                       <Plus className="h-4 w-4 mr-2" />
                       {t('dailyResume.addFood')}
                     </Button>
@@ -516,7 +522,8 @@ export default function DailyResume() {
                       <FoodDropdownSelector
                         onFoodSelect={handleFoodSelect}
                         placeholder={t('dailyResume.selectFood')}
-                        selectedCategory="all"
+                        selectedCategory={selectedFoodCategory}
+                        onCategoryChange={setSelectedFoodCategory}
                       />
                     </div>
                     
@@ -545,24 +552,6 @@ export default function DailyResume() {
                           )}
                         />
                         
-                        <FormField
-                          control={foodForm.control}
-                          name="quantity"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('dailyResume.quantityGrams')}</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  step="0.1"
-                                  placeholder={t('dailyResume.quantityPlaceholder')} 
-                                  {...field} 
-                                  data-testid="input-quantity"
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
                         
                         {selectedFood && (
                           <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
@@ -590,11 +579,8 @@ export default function DailyResume() {
                             </FormItem>
                           )}
                         />
-                        <div className="flex justify-end space-x-2">
-                          <Button type="button" variant="outline" onClick={() => setIsFoodDialogOpen(false)}>
-                            {t('dailyResume.cancel')}
-                          </Button>
-                          <Button type="submit" disabled={createFoodMutation.isPending}>
+                        <div className="flex justify-end">
+                          <Button type="submit" disabled={createFoodMutation.isPending} className="w-full">
                             {createFoodMutation.isPending ? t('dailyResume.addingFood') : t('dailyResume.addFood')}
                           </Button>
                         </div>
