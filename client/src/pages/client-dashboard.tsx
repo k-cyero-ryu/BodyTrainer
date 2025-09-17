@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock, Ruler, TrendingUp } from "lucide-react";
+import { CalendarCheck, Weight, Target, Flame, Dumbbell, Play, CreditCard, Calendar, Clock, Ruler, TrendingUp, Route } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -107,6 +107,27 @@ export default function ClientDashboard() {
   // Fetch calorie goal
   const { data: goalData } = useQuery({
     queryKey: ['/api/calories/goal'],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch weekly cardio activities for distance tracking
+  const { data: weeklyCardio = [] } = useQuery({
+    queryKey: ["/api/client/cardio-activities", "weekly"],
+    queryFn: () => {
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 7);
+      
+      const start = startDate.toISOString().split('T')[0];
+      const end = endDate.toISOString().split('T')[0];
+      
+      return fetch(`/api/client/cardio-activities?startDate=${start}&endDate=${end}`).then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch weekly cardio data');
+        }
+        return res.json();
+      });
+    },
     enabled: !!user && user.role === 'client',
   });
 
@@ -333,12 +354,19 @@ export default function ClientDashboard() {
   const completedWorkoutsThisWeek = weeklyStats?.completedWorkouts || 0;
   const currentStreak = streakData?.streak || 0;
   
+  // Calculate weekly distance from cardio activities
+  const weeklyDistance = (weeklyCardio as any[]).reduce((total, activity) => {
+    const distance = parseFloat(activity.distance || 0);
+    return total + distance;
+  }, 0);
+
   const clientStats = {
     workoutsThisWeek: completedWorkoutsThisWeek,
     totalWorkouts: totalWorkoutsThisWeek,
     currentWeight: currentWeight,
     goalProgress: goalProgress,
     streak: currentStreak,
+    weeklyDistance: weeklyDistance.toFixed(1),
   };
 
   return (
@@ -352,7 +380,7 @@ export default function ClientDashboard() {
 
 
       {/* Client Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -406,6 +434,20 @@ export default function ClientDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">{t('client.streak')}</p>
                 <p className="text-2xl font-bold text-gray-900">{clientStats.streak} days</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-full bg-purple-100">
+                <Route className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">{t('client.weeklyDistance')}</p>
+                <p className="text-2xl font-bold text-gray-900">{clientStats.weeklyDistance} km</p>
               </div>
             </div>
           </CardContent>
