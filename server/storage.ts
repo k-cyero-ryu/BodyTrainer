@@ -20,6 +20,7 @@ import {
   clientPaymentPlans,
   foodEntries,
   cardioActivities,
+  customCalorieEntries,
   type User,
   type UpsertUser,
   type Trainer,
@@ -64,6 +65,9 @@ import {
   type CardioActivity,
   type InsertCardioActivity,
   type UpdateCardioActivity,
+  type CustomCalorieEntry,
+  type InsertCustomCalorieEntry,
+  type UpdateCustomCalorieEntry,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql, gte, lte } from "drizzle-orm";
@@ -152,6 +156,35 @@ export interface IStorage {
   getCardioActivitiesByDateRange(clientId: string, startDate: Date, endDate: Date): Promise<CardioActivity[]>;
   updateCardioActivity(id: string, activity: Partial<UpdateCardioActivity>): Promise<CardioActivity>;
   deleteCardioActivity(id: string): Promise<void>;
+
+  // Custom calorie entry operations
+  createCustomCalorieEntry(entry: InsertCustomCalorieEntry): Promise<CustomCalorieEntry>;
+  getCustomCalorieEntryById(entryId: string): Promise<CustomCalorieEntry | undefined>;
+  getCustomCalorieEntriesByClient(clientId: string): Promise<CustomCalorieEntry[]>;
+  getCustomCalorieEntriesByDate(clientId: string, date: Date): Promise<CustomCalorieEntry[]>;
+  updateCustomCalorieEntry(id: string, entry: Partial<UpdateCustomCalorieEntry>): Promise<CustomCalorieEntry>;
+  deleteCustomCalorieEntry(id: string): Promise<void>;
+  
+  // Calorie tracking operations
+  getCalorieSummaryByDate(clientId: string, date: Date): Promise<{
+    goal: number;
+    total: number;
+    remaining: number;
+    breakdown: {
+      foodEntries: number;
+      customEntries: number;
+    };
+    items: Array<{
+      type: 'food' | 'custom';
+      id: string;
+      description: string;
+      calories: number;
+      mealType?: string;
+      isIncludedInCalories?: boolean;
+    }>;
+  }>;
+  getCalorieGoal(clientId: string): Promise<number>;
+  setCalorieGoal(clientId: string, goal: number): Promise<void>;
 
   // Monthly evaluation operations
   createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation>;
@@ -839,6 +872,192 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCardioActivity(id: string): Promise<void> {
     await db.delete(cardioActivities).where(eq(cardioActivities.id, id));
+  }
+
+  // Custom calorie entry operations
+  async createCustomCalorieEntry(entry: InsertCustomCalorieEntry): Promise<CustomCalorieEntry> {
+    const [created] = await db.insert(customCalorieEntries).values(entry).returning();
+    return created;
+  }
+
+  async getCustomCalorieEntryById(entryId: string): Promise<CustomCalorieEntry | undefined> {
+    const [entry] = await db
+      .select()
+      .from(customCalorieEntries)
+      .where(eq(customCalorieEntries.id, entryId));
+    return entry;
+  }
+
+  async getCustomCalorieEntriesByClient(clientId: string): Promise<CustomCalorieEntry[]> {
+    return await db
+      .select()
+      .from(customCalorieEntries)
+      .where(eq(customCalorieEntries.clientId, clientId))
+      .orderBy(desc(customCalorieEntries.date));
+  }
+
+  async getCustomCalorieEntriesByDate(clientId: string, date: Date): Promise<CustomCalorieEntry[]> {
+    // Create new Date objects to avoid mutating the original
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    
+    return await db
+      .select()
+      .from(customCalorieEntries)
+      .where(and(
+        eq(customCalorieEntries.clientId, clientId),
+        gte(customCalorieEntries.date, startOfDay),
+        lte(customCalorieEntries.date, endOfDay)
+      ))
+      .orderBy(desc(customCalorieEntries.date));
+  }
+
+  async updateCustomCalorieEntry(id: string, entry: Partial<UpdateCustomCalorieEntry>): Promise<CustomCalorieEntry> {
+    const [updated] = await db
+      .update(customCalorieEntries)
+      .set(entry)
+      .where(eq(customCalorieEntries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCustomCalorieEntry(id: string): Promise<void> {
+    await db.delete(customCalorieEntries).where(eq(customCalorieEntries.id, id));
+  }
+
+  // Calorie tracking operations
+  async getCalorieSummaryByDate(clientId: string, date: Date): Promise<{
+    goal: number;
+    total: number;
+    remaining: number;
+    breakdown: {
+      foodEntries: number;
+      customEntries: number;
+    };
+    items: Array<{
+      type: 'food' | 'custom';
+      id: string;
+      description: string;
+      calories: number;
+      mealType?: string;
+      isIncludedInCalories?: boolean;
+    }>;
+  }> {
+    // Get calorie goal for the client
+    const goal = await this.getCalorieGoal(clientId);
+
+    // Create new Date objects to avoid mutating the original
+    const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+
+    // Get food entries for the date (only those included in calories)
+    const foodResults = await db
+      .select()
+      .from(foodEntries)
+      .where(and(
+        eq(foodEntries.clientId, clientId),
+        gte(foodEntries.date, startOfDay),
+        lte(foodEntries.date, endOfDay),
+        eq(foodEntries.isIncludedInCalories, true)
+      ))
+      .orderBy(desc(foodEntries.date));
+
+    // Get custom calorie entries for the date
+    const customResults = await db
+      .select()
+      .from(customCalorieEntries)
+      .where(and(
+        eq(customCalorieEntries.clientId, clientId),
+        gte(customCalorieEntries.date, startOfDay),
+        lte(customCalorieEntries.date, endOfDay)
+      ))
+      .orderBy(desc(customCalorieEntries.date));
+
+    // Calculate totals
+    const foodCalories = foodResults.reduce((sum, entry) => sum + (entry.calories || 0), 0);
+    const customCalories = customResults.reduce((sum, entry) => sum + entry.calories, 0);
+    const total = foodCalories + customCalories;
+
+    // Build items array
+    const items: Array<{
+      type: 'food' | 'custom';
+      id: string;
+      description: string;
+      calories: number;
+      mealType?: string;
+      isIncludedInCalories?: boolean;
+    }> = [
+      ...foodResults.map(entry => ({
+        type: 'food' as const,
+        id: entry.id,
+        description: entry.description,
+        calories: entry.calories || 0,
+        mealType: entry.mealType,
+        isIncludedInCalories: entry.isIncludedInCalories ?? undefined,
+      })),
+      ...customResults.map(entry => ({
+        type: 'custom' as const,
+        id: entry.id,
+        description: entry.description,
+        calories: entry.calories,
+        mealType: entry.mealType || undefined,
+      }))
+    ];
+
+    // Sort items by date (most recent first)
+    items.sort((a, b) => {
+      const aEntry = a.type === 'food' ? foodResults.find(f => f.id === a.id) : customResults.find(c => c.id === a.id);
+      const bEntry = b.type === 'food' ? foodResults.find(f => f.id === b.id) : customResults.find(c => c.id === b.id);
+      const aDate = aEntry?.date || new Date(0);
+      const bDate = bEntry?.date || new Date(0);
+      return bDate.getTime() - aDate.getTime();
+    });
+
+    return {
+      goal,
+      total,
+      remaining: Math.max(0, goal - total),
+      breakdown: {
+        foodEntries: foodCalories,
+        customEntries: customCalories,
+      },
+      items,
+    };
+  }
+
+  async getCalorieGoal(clientId: string): Promise<number> {
+    // Get client data
+    const client = await this.getClient(clientId);
+    if (!client) {
+      throw new Error('Client not found');
+    }
+
+    // Use client's override if set
+    if (client.calorieGoalOverride) {
+      return client.calorieGoalOverride;
+    }
+
+    // Otherwise, get the goal from the client's active training plan
+    const activePlan = await this.getActiveClientPlan(clientId);
+    if (activePlan) {
+      const trainingPlan = await this.getTrainingPlan(activePlan.planId);
+      if (trainingPlan && trainingPlan.dailyCalories) {
+        return trainingPlan.dailyCalories;
+      }
+    }
+
+    // Default calorie goal if no plan or plan doesn't have calories set
+    return 2000;
+  }
+
+  async setCalorieGoal(clientId: string, goal: number): Promise<void> {
+    await db
+      .update(clients)
+      .set({ 
+        calorieGoalOverride: goal,
+        updatedAt: new Date() 
+      })
+      .where(eq(clients.id, clientId));
   }
 
   // Monthly evaluation operations
