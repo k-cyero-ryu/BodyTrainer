@@ -32,6 +32,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 // Food Entry Form Schema
 const foodEntrySchema = z.object({
   mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  category: z.enum(['carbs', 'proteins', 'sugar']),
   description: z.string().min(1, "Food description is required"),
   quantity: z.string().min(1, "Quantity is required"),
   notes: z.string().optional(),
@@ -73,6 +74,7 @@ export default function DailyResume() {
     resolver: zodResolver(foodEntrySchema),
     defaultValues: {
       mealType: 'breakfast',
+      category: 'carbs',
       description: '',
       quantity: '',
       notes: '',
@@ -373,6 +375,27 @@ export default function DailyResume() {
                       />
                       <FormField
                         control={foodForm.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('dailyResume.foodCategory')}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="carbs">{t('dailyResume.carbs')}</SelectItem>
+                                <SelectItem value="proteins">{t('dailyResume.proteins')}</SelectItem>
+                                <SelectItem value="sugar">{t('dailyResume.sugar')}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={foodForm.control}
                         name="description"
                         render={({ field }) => (
                           <FormItem>
@@ -435,7 +458,10 @@ export default function DailyResume() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <Badge variant="outline" className="capitalize">
-                            {entry.mealType}
+                            {t(`dailyResume.${entry.mealType}`)}
+                          </Badge>
+                          <Badge variant="secondary" className="capitalize">
+                            {t(`dailyResume.${entry.category}`)}
                           </Badge>
                           <span className="text-sm text-gray-500">
                             {entry.quantity}g

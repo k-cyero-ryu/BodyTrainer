@@ -503,12 +503,16 @@ export const communityMessages = pgTable("community_messages", {
 // Meal type enum for food entries
 export const mealTypeEnum = pgEnum('meal_type', ['breakfast', 'lunch', 'dinner', 'snack']);
 
+// Food category enum for food entries
+export const foodCategoryEnum = pgEnum('food_category', ['carbs', 'proteins', 'sugar']);
+
 // Food entries table for daily nutrition tracking
 export const foodEntries = pgTable("food_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
   date: timestamp("date").notNull(), // Date of the meal
   mealType: mealTypeEnum("meal_type").notNull(), // breakfast, lunch, dinner, snack
+  category: foodCategoryEnum("category").notNull().default('carbs'), // carbs, proteins, sugar
   description: text("description").notNull(), // What food was eaten
   quantity: decimal("quantity", { precision: 8, scale: 2 }), // Quantity in grams
   notes: text("notes"), // Optional additional notes
