@@ -638,6 +638,11 @@ const resources = {
       'dailyWorkout.completeExerciseFailed': 'Failed to complete exercise. Please try again.',
       'dailyWorkout.saveNotesFailed': 'Failed to save notes. Please try again.',
       
+      // Daily Resume translations
+      'dailyResume.title': 'Daily Resume',
+      'dailyResume.viewDescription': "View client's daily nutrition and cardio activities",
+      'dailyResume.trackDescription': 'Track your daily nutrition and cardio activities',
+      
       // Training Plans
       'trainingPlans.myTrainingPlans': 'My Training Plans',
       'trainingPlans.viewProgress': 'View your assigned training plans and track your progress',
@@ -1249,6 +1254,11 @@ const resources = {
       'dailyWorkout.uncheckSetFailed': 'Error al desmarcar la serie. Por favor intenta de nuevo.',
       'dailyWorkout.completeExerciseFailed': 'Error al completar el ejercicio. Por favor intenta de nuevo.',
       'dailyWorkout.saveNotesFailed': 'Error al guardar las notas. Por favor intenta de nuevo.',
+      
+      // Daily Resume translations
+      'dailyResume.title': 'Resumen Diario',
+      'dailyResume.viewDescription': 'Ver la nutrición diaria y actividades cardiovasculares del cliente',
+      'dailyResume.trackDescription': 'Rastrea tu nutrición diaria y actividades cardiovasculares',
       
       // Training Plans
       'trainingPlans.myTrainingPlans': 'Mis Planes de Entrenamiento',

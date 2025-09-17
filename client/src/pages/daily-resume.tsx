@@ -132,6 +132,16 @@ export default function DailyResume() {
     },
   });
 
+  // Fetch client information when trainer is viewing client data
+  const { data: clientInfo } = useQuery({
+    queryKey: [`/api/clients/${clientId}`],
+    enabled: isTrainerView && Boolean(clientId),
+    retry: (failureCount, error) => {
+      if (isUnauthorizedError(error)) return false;
+      return failureCount < 3;
+    },
+  });
+
   // Create food entry mutation (only for clients, not trainers viewing client data)
   const createFoodMutation = useMutation({
     mutationFn: (data: FoodEntryFormData) => 
@@ -266,10 +276,13 @@ export default function DailyResume() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {isTrainerView ? "Client's Daily Resume" : t('nav.dailyResume')}
+            {isTrainerView 
+              ? `${(clientInfo as any)?.firstName || (clientInfo as any)?.user?.firstName || 'Client'}'s ${t('dailyResume.title')}`
+              : t('nav.dailyResume')
+            }
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {isTrainerView ? "View client's daily nutrition and cardio activities" : "Track your daily nutrition and cardio activities"}
+            {isTrainerView ? t('dailyResume.viewDescription') : t('dailyResume.trackDescription')}
           </p>
         </div>
       </div>
