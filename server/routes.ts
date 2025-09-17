@@ -2238,6 +2238,220 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Trainer routes for client calorie management
+  app.get('/api/clients/:clientId/calories/summary/:date', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId, date } = req.params;
+      
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.id);
+      if (!trainer) {
+        return res.status(403).json({ message: "Trainer not found" });
+      }
+      
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      const targetDate = new Date(date as string);
+      const calorieSummary = await storage.getCalorieSummaryByDate(clientId, targetDate);
+
+      res.json(calorieSummary);
+    } catch (error) {
+      console.error("Error fetching client calorie summary:", error);
+      res.status(500).json({ message: "Failed to fetch calorie summary" });
+    }
+  });
+
+  app.get('/api/clients/:clientId/calories/goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.id);
+      if (!trainer) {
+        return res.status(403).json({ message: "Trainer not found" });
+      }
+      
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      const calorieGoal = await storage.getCalorieGoal(clientId);
+      res.json({ goal: calorieGoal });
+    } catch (error) {
+      console.error("Error fetching client calorie goal:", error);
+      res.status(500).json({ message: "Failed to fetch calorie goal" });
+    }
+  });
+
+  app.put('/api/clients/:clientId/calories/goal', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const { goal } = req.body;
+      
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.id);
+      if (!trainer) {
+        return res.status(403).json({ message: "Trainer not found" });
+      }
+      
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      // Validate goal is a positive number
+      if (typeof goal !== 'number' || goal <= 0) {
+        return res.status(400).json({ message: "Goal must be a positive number" });
+      }
+
+      await storage.setCalorieGoal(clientId, goal);
+      res.json({ goal, message: "Calorie goal updated successfully" });
+    } catch (error) {
+      console.error("Error setting client calorie goal:", error);
+      res.status(500).json({ message: "Failed to set calorie goal" });
+    }
+  });
+
+  app.get('/api/clients/:clientId/calories/adherence', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const { clientId } = req.params;
+      const { days = 7 } = req.query;
+      
+      // Verify client belongs to this trainer
+      const trainer = await storage.getTrainerByUserId(req.user.id);
+      if (!trainer) {
+        return res.status(403).json({ message: "Trainer not found" });
+      }
+      
+      const client = await storage.getClientById(clientId);
+      if (!client || client.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Client not found" });
+      }
+
+      // Calculate adherence for the last N days
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - parseInt(days as string));
+
+      const adherenceData = [];
+      const totalDays = parseInt(days as string);
+      let daysOnTrack = 0;
+
+      for (let i = 0; i < totalDays; i++) {
+        const checkDate = new Date(endDate);
+        checkDate.setDate(endDate.getDate() - i);
+        
+        const summary = await storage.getCalorieSummaryByDate(clientId, checkDate);
+        const onTrack = summary.total > 0 && Math.abs(summary.total - summary.goal) <= (summary.goal * 0.1); // Within 10% of goal
+        
+        if (onTrack) daysOnTrack++;
+        
+        adherenceData.push({
+          date: checkDate.toISOString().split('T')[0],
+          goal: summary.goal,
+          consumed: summary.total,
+          onTrack,
+          percentage: summary.goal > 0 ? Math.round((summary.total / summary.goal) * 100) : 0
+        });
+      }
+
+      const adherencePercentage = Math.round((daysOnTrack / totalDays) * 100);
+
+      res.json({
+        adherencePercentage,
+        daysOnTrack,
+        totalDays,
+        dailyData: adherenceData.reverse() // Most recent first
+      });
+    } catch (error) {
+      console.error("Error fetching client calorie adherence:", error);
+      res.status(500).json({ message: "Failed to fetch calorie adherence" });
+    }
+  });
+
+  // Trainer route for aggregate calorie stats across all clients
+  app.get('/api/trainers/calorie-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (user?.role !== 'trainer') {
+        return res.status(403).json({ message: "Trainer access required" });
+      }
+
+      const trainer = await storage.getTrainerByUserId(req.user.id);
+      if (!trainer) {
+        return res.status(403).json({ message: "Trainer not found" });
+      }
+
+      // Get all clients for this trainer
+      const clients = await storage.getClientsByTrainer(trainer.id);
+      
+      if (clients.length === 0) {
+        return res.json({
+          totalClients: 0,
+          clientsWithGoals: 0,
+          adherencePercentage: 0,
+          avgCalorieGoal: 0
+        });
+      }
+
+      const today = new Date();
+      let clientsWithGoals = 0;
+      let clientsOnTrack = 0;
+      let totalCalorieGoals = 0;
+
+      for (const client of clients) {
+        const goal = await storage.getCalorieGoal(client.id);
+        if (goal && goal > 0) {
+          clientsWithGoals++;
+          totalCalorieGoals += goal;
+          
+          // Check today's adherence
+          const summary = await storage.getCalorieSummaryByDate(client.id, today);
+          const onTrack = summary.total > 0 && Math.abs(summary.total - summary.goal) <= (summary.goal * 0.1); // Within 10% of goal
+          
+          if (onTrack) clientsOnTrack++;
+        }
+      }
+
+      const adherencePercentage = clientsWithGoals > 0 ? Math.round((clientsOnTrack / clientsWithGoals) * 100) : 0;
+      const avgCalorieGoal = clientsWithGoals > 0 ? Math.round(totalCalorieGoals / clientsWithGoals) : 0;
+
+      res.json({
+        totalClients: clients.length,
+        clientsWithGoals,
+        adherencePercentage,
+        avgCalorieGoal
+      });
+    } catch (error) {
+      console.error("Error fetching trainer calorie stats:", error);
+      res.status(500).json({ message: "Failed to fetch calorie stats" });
+    }
+  });
+
   // Monthly evaluation routes
   app.post('/api/evaluations', isAuthenticated, async (req: any, res) => {
     try {
