@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Chat from "@/components/chat";
-import { Users, UserCheck, DollarSign, Dumbbell, Plus, PenTool, BarChart, Copy, MessageCircle, X } from "lucide-react";
+import { Users, UserCheck, DollarSign, Dumbbell, Plus, PenTool, BarChart, Copy, MessageCircle, X, Target, Apple, TrendingUp } from "lucide-react";
 
 export default function TrainerDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -47,6 +47,11 @@ export default function TrainerDashboard() {
 
   const { data: trainer } = useQuery({
     queryKey: ["/api/trainers/profile"],
+    enabled: !!user && user.role === 'trainer',
+  });
+
+  const { data: calorieStats = {} } = useQuery({
+    queryKey: ["/api/trainers/calorie-stats"],
     enabled: !!user && user.role === 'trainer',
   });
 
@@ -167,6 +172,76 @@ export default function TrainerDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Calorie Tracking Stats */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Calorie Tracking Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-orange-100">
+                  <Target className="h-6 w-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600" data-testid="text-clients-with-goals">Clients with Goals</p>
+                  <p className="text-2xl font-bold text-gray-900" data-testid="stat-clients-with-goals">{calorieStats?.clientsWithGoals || 0}</p>
+                  <p className="text-xs text-gray-500" data-testid="text-total-clients-count">of {calorieStats?.totalClients || 0} total</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-100">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600" data-testid="text-adherence-rate">Goal Adherence</p>
+                  <p className="text-2xl font-bold text-gray-900" data-testid="stat-adherence-percentage">{calorieStats?.adherencePercentage || 0}%</p>
+                  <p className="text-xs text-gray-500" data-testid="text-adherence-description">clients on track today</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-blue-100">
+                  <Apple className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600" data-testid="text-avg-calorie-goal">Avg. Daily Goal</p>
+                  <p className="text-2xl font-bold text-gray-900" data-testid="stat-avg-calorie-goal">{calorieStats?.avgCalorieGoal || 0}</p>
+                  <p className="text-xs text-gray-500" data-testid="text-calories-unit">calories per day</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-100">
+                  <BarChart className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600" data-testid="text-tracking-status">Tracking Status</p>
+                  <p className="text-2xl font-bold text-gray-900" data-testid="stat-tracking-percentage">
+                    {calorieStats?.totalClients > 0 
+                      ? Math.round(((calorieStats?.clientsWithGoals || 0) / calorieStats.totalClients) * 100) 
+                      : 0}%
+                  </p>
+                  <p className="text-xs text-gray-500" data-testid="text-tracking-description">clients actively tracking</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Main Content Grid */}

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, Plus, Filter, Eye, Edit, MessageCircle, Copy, ExternalLink, X } from "lucide-react";
+import { Users, Plus, Filter, Eye, Edit, MessageCircle, Copy, ExternalLink, X, Target, Apple, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import Chat from "@/components/chat";
 
@@ -48,6 +48,50 @@ export default function Clients() {
   });
 
   const { clients = [], referralCode = '', referralUrl = '' } = trainerData;
+
+  // Get client calorie data for status indicators
+  const { data: clientCalorieData = {} } = useQuery({
+    queryKey: ["/api/trainers/client-calorie-status"],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const clientCalorieStatus: any = {};
+      
+      if (clients.length > 0) {
+        // Fetch calorie data for each client
+        for (const client of clients) {
+          try {
+            const [goalResponse, summaryResponse] = await Promise.all([
+              fetch(`/api/clients/${client.id}/calories/goal`, { credentials: 'include' }),
+              fetch(`/api/clients/${client.id}/calories/summary/${today}`, { credentials: 'include' })
+            ]);
+            
+            const goal = goalResponse.ok ? await goalResponse.json() : null;
+            const summary = summaryResponse.ok ? await summaryResponse.json() : null;
+            
+            clientCalorieStatus[client.id] = {
+              hasGoal: goal?.goal > 0,
+              goal: goal?.goal || 0,
+              consumed: summary?.total || 0,
+              adherence: goal?.goal > 0 ? Math.min((summary?.total || 0) / goal.goal, 1.5) : 0,
+              isOnTrack: goal?.goal > 0 && summary?.total > 0 && Math.abs((summary?.total || 0) - goal.goal) <= (goal.goal * 0.1)
+            };
+          } catch (error) {
+            clientCalorieStatus[client.id] = {
+              hasGoal: false,
+              goal: 0,
+              consumed: 0,
+              adherence: 0,
+              isOnTrack: false
+            };
+          }
+        }
+      }
+      
+      return clientCalorieStatus;
+    },
+    enabled: !!user && user.role === 'trainer' && clients.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -223,6 +267,7 @@ export default function Clients() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('clients.client')}</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('clients.plan')}</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('clients.progress')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calorie Tracking</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('clients.status')}</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('clients.actions')}</th>
                   </tr>
@@ -252,6 +297,44 @@ export default function Clients() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">75% {t('clients.complete')}</div>
                         <Progress value={75} className="w-full mt-1" />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          const calorieStatus = clientCalorieData[client.id];
+                          if (!calorieStatus?.hasGoal) {
+                            return (
+                              <div className="flex items-center" data-testid={`client-calorie-no-goal-${client.id}`}>
+                                <Target className="h-4 w-4 text-gray-400 mr-2" />
+                                <span className="text-xs text-gray-500">No goal set</span>
+                              </div>
+                            );
+                          }
+                          
+                          const adherencePercentage = Math.round(calorieStatus.adherence * 100);
+                          const isOnTrack = calorieStatus.isOnTrack;
+                          const isOverGoal = calorieStatus.adherence > 1.1;
+                          
+                          return (
+                            <div className="space-y-1">
+                              <div className="flex items-center" data-testid={`client-calorie-status-${client.id}`}>
+                                <Apple className={`h-4 w-4 mr-2 ${
+                                  isOnTrack ? 'text-green-500' : 
+                                  isOverGoal ? 'text-red-500' : 'text-yellow-500'
+                                }`} />
+                                <Badge 
+                                  variant={isOnTrack ? 'default' : isOverGoal ? 'destructive' : 'secondary'}
+                                  className="text-xs"
+                                  data-testid={`badge-calorie-adherence-${client.id}`}
+                                >
+                                  {adherencePercentage}%
+                                </Badge>
+                              </div>
+                              <div className="text-xs text-gray-500" data-testid={`text-calorie-summary-${client.id}`}>
+                                {calorieStatus.consumed}/{calorieStatus.goal} cal
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge 

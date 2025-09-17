@@ -35,7 +35,9 @@ import {
   Plus,
   Users,
   Heart,
-  Apple
+  Apple,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 const formatCurrency = (amount: number, currency: string = "USD") => {
@@ -67,6 +69,9 @@ export default function ClientDetail() {
   const clientId = params?.clientId;
   const [showChat, setShowChat] = useState(false);
   const [showAssignPlanModal, setShowAssignPlanModal] = useState(false);
+  const [showCalorieGoalModal, setShowCalorieGoalModal] = useState(false);
+  const [newCalorieGoal, setNewCalorieGoal] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -148,6 +153,48 @@ export default function ClientDetail() {
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
+  // Load client's calorie data
+  const formatDateForAPI = (date: Date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const { data: calorieSummary } = useQuery({
+    queryKey: ["/api/clients", clientId, "calories", "summary", formatDateForAPI(selectedDate)],
+    queryFn: async () => {
+      const response = await fetch(`/api/clients/${clientId}/calories/summary/${formatDateForAPI(selectedDate)}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch calorie summary');
+      return response.json();
+    },
+    enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
+  const { data: clientCalorieGoal } = useQuery({
+    queryKey: ["/api/clients", clientId, "calories", "goal"],
+    queryFn: async () => {
+      const response = await fetch(`/api/clients/${clientId}/calories/goal`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch calorie goal');
+      return response.json();
+    },
+    enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
+  // Load recent custom calorie entries
+  const { data: customCalorieEntries = [] } = useQuery({
+    queryKey: ["/api/clients", clientId, "custom-calorie-entries"],
+    queryFn: async () => {
+      const response = await fetch(`/api/clients/${clientId}/custom-calorie-entries?limit=5`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch custom calorie entries');
+      return response.json();
+    },
+    enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
   const suspendMutation = useMutation({
     mutationFn: async () => {
       return await apiRequest('POST', `/api/clients/${clientId}/suspend`);
@@ -221,6 +268,40 @@ export default function ClientDetail() {
       toast({
         title: "Error",
         description: "Failed to assign training plan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateCalorieGoalMutation = useMutation({
+    mutationFn: async (goal: number) => {
+      return await apiRequest('PUT', `/api/clients/${clientId}/calories/goal`, { goal });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", clientId, "calories", "goal"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients", clientId, "calories", "summary"] });
+      toast({
+        title: "Success",
+        description: "Calorie goal updated successfully",
+      });
+      setShowCalorieGoalModal(false);
+      setNewCalorieGoal("");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to update calorie goal",
         variant: "destructive",
       });
     },
@@ -610,6 +691,183 @@ export default function ClientDetail() {
             </CardContent>
           </Card>
 
+          {/* Calorie Management Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Calorie Management
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCalorieGoalModal(true)}
+                    data-testid="button-update-goal"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Update Goal
+                  </Button>
+                  <Link href={`/clients/${clientId}/calorie-tracker`}>
+                    <Button variant="outline" size="sm" data-testid="link-full-tracker">
+                      View Full Tracker
+                    </Button>
+                  </Link>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Date Navigation */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(newDate.getDate() - 1);
+                      setSelectedDate(newDate);
+                    }}
+                    data-testid="button-previous-day"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="font-medium text-sm min-w-[120px] text-center" data-testid="text-selected-date">
+                    {selectedDate.toLocaleDateString('en-US', { 
+                      weekday: 'short',
+                      month: 'short', 
+                      day: 'numeric',
+                      year: selectedDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                    })}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(newDate.getDate() + 1);
+                      setSelectedDate(newDate);
+                    }}
+                    data-testid="button-next-day"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDate(new Date())}
+                  disabled={formatDateForAPI(selectedDate) === formatDateForAPI(new Date())}
+                  data-testid="button-today"
+                >
+                  Today
+                </Button>
+              </div>
+
+              {/* Calorie Summary */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 p-4 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400" data-testid="text-calories-consumed">
+                      {calorieSummary?.total || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Calories Consumed</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="text-calorie-goal">
+                      {clientCalorieGoal?.goal || calorieSummary?.goal || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Daily Goal</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold ${
+                      (calorieSummary?.total || 0) <= (clientCalorieGoal?.goal || calorieSummary?.goal || 0) 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-red-600 dark:text-red-400'
+                    }`} data-testid="text-calories-remaining">
+                      {(clientCalorieGoal?.goal || calorieSummary?.goal || 0) - (calorieSummary?.total || 0)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {(calorieSummary?.total || 0) <= (clientCalorieGoal?.goal || calorieSummary?.goal || 0) ? 'Remaining' : 'Over Goal'}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="mt-4">
+                  <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                    <span>Progress</span>
+                    <span data-testid="text-progress-percentage">
+                      {Math.round(((calorieSummary?.total || 0) / Math.max(clientCalorieGoal?.goal || calorieSummary?.goal || 1, 1)) * 100)}%
+                    </span>
+                  </div>
+                  <Progress 
+                    value={Math.min(((calorieSummary?.total || 0) / Math.max(clientCalorieGoal?.goal || calorieSummary?.goal || 1, 1)) * 100, 100)} 
+                    className="h-2"
+                    data-testid="progress-calorie"
+                  />
+                </div>
+
+                {/* Breakdown */}
+                {calorieSummary?.breakdown && (
+                  <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                    <div className="text-center">
+                      <div className="font-medium" data-testid="text-food-entries-calories">{calorieSummary.breakdown.foodEntries}</div>
+                      <div className="text-muted-foreground">From Meals</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium" data-testid="text-custom-entries-calories">{calorieSummary.breakdown.customEntries}</div>
+                      <div className="text-muted-foreground">Quick Entries</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Custom Calorie Entries */}
+              {customCalorieEntries.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Recent Quick Calorie Entries
+                  </h4>
+                  <div className="space-y-2">
+                    {customCalorieEntries.slice(0, 3).map((entry: any) => (
+                      <div key={entry.id} className="p-3 border rounded-lg text-sm" data-testid={`card-custom-entry-${entry.id}`}>
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="flex items-center gap-2">
+                            {entry.mealType && (
+                              <Badge variant="secondary" className="text-xs capitalize">
+                                {entry.mealType}
+                              </Badge>
+                            )}
+                            <span className="font-medium">{entry.description}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-medium text-orange-600 dark:text-orange-400" data-testid={`text-entry-calories-${entry.id}`}>
+                              {entry.calories} cal
+                            </span>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(entry.date).toLocaleDateString('en-US', { 
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        {entry.notes && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {entry.notes}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Recent Daily Resume */}
           <Card>
             <CardHeader>
@@ -869,6 +1127,85 @@ export default function ClientDetail() {
                 disabled={assignPlanMutation.isPending}
               >
                 {assignPlanMutation.isPending ? t('clientDetail.assigning') : t('clientDetail.assignPlan')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Calorie Goal Modal */}
+      <Dialog open={showCalorieGoalModal} onOpenChange={setShowCalorieGoalModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Calorie Goal</DialogTitle>
+          </DialogHeader>
+          
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 mb-2">
+              Client: <span className="font-medium">{getUserDisplayName()}</span>
+            </p>
+            {clientCalorieGoal?.goal && (
+              <p className="text-sm text-gray-600">
+                Current Goal: <span className="font-medium">{clientCalorieGoal.goal} calories/day</span>
+              </p>
+            )}
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const goal = parseInt(newCalorieGoal);
+              
+              if (!goal || goal <= 0 || goal > 10000) {
+                toast({
+                  title: "Error",
+                  description: "Please enter a valid calorie goal between 1 and 10,000",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              updateCalorieGoalMutation.mutate(goal);
+            }}
+          >
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="calorieGoal">Daily Calorie Goal</Label>
+                <Input
+                  type="number"
+                  id="calorieGoal"
+                  value={newCalorieGoal}
+                  onChange={(e) => setNewCalorieGoal(e.target.value)}
+                  placeholder={clientCalorieGoal?.goal?.toString() || "2000"}
+                  min="1"
+                  max="10000"
+                  required
+                  data-testid="input-calorie-goal"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Recommended range: 1,200 - 3,500 calories per day
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowCalorieGoalModal(false);
+                  setNewCalorieGoal("");
+                }}
+                data-testid="button-cancel-goal"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateCalorieGoalMutation.isPending}
+                data-testid="button-save-goal"
+              >
+                {updateCalorieGoalMutation.isPending ? "Updating..." : "Update Goal"}
               </Button>
             </div>
           </form>
