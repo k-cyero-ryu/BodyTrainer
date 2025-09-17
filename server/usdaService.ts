@@ -26,11 +26,18 @@ export interface USDASearchResponse {
 }
 
 export interface USDANutrient {
-  nutrientId: number;
-  nutrientName: string;
-  nutrientNumber: string;
-  unitName: string;
-  value: number;
+  value?: number;
+  amount?: number;
+  nutrient?: {
+    id: number;
+    name: string;
+    number: string | number;
+    unitName: string;
+  };
+  nutrientNumber?: string; // Legacy field for compatibility
+  nutrientId?: number;
+  nutrientName?: string;
+  unitName?: string;
 }
 
 export interface USDAFoodDetail {
@@ -139,48 +146,80 @@ export async function getFoodDetails(fdcId: number): Promise<USDAFoodDetail> {
   }
 }
 
+// Helper functions for USDA API response parsing
+function getNutrientNumber(n: USDANutrient): string {
+  return (n.nutrient?.number ?? n.nutrientNumber ?? "").toString().trim();
+}
+
+function getAmount(n: USDANutrient): number | undefined {
+  const amount = n.amount ?? n.value;
+  return (typeof amount === 'number' && isFinite(amount)) ? amount : undefined;
+}
+
+function getUnitName(n: USDANutrient): string {
+  return n.nutrient?.unitName ?? n.unitName ?? '';
+}
+
 // Extract nutrition data from USDA food details
 export function parseNutritionData(foodDetail: USDAFoodDetail): NutritionData {
   const nutrients = foodDetail.foodNutrients || [];
   
-  // Nutrient ID mappings based on USDA FoodData Central
-  const findNutrientByNumber = (numbers: string[]): USDANutrient | undefined => {
-    return nutrients.find(n => numbers.includes(n.nutrientNumber));
+  // Find nutrient by its number - support both legacy and modern IDs
+  const findNutrientByNumbers = (numbers: string[]): USDANutrient | undefined => {
+    return nutrients.find(n => {
+      const nutrientNumber = getNutrientNumber(n);
+      return numbers.includes(nutrientNumber);
+    });
   };
 
-  // Energy (calories) - nutrient numbers: 208
-  const energyNutrient = findNutrientByNumber(['208']);
+  // Energy (calories) - legacy: 208, modern: 1008
+  const energyNutrient = findNutrientByNumbers(['208', '1008']);
   
-  // Protein - nutrient numbers: 203
-  const proteinNutrient = findNutrientByNumber(['203']);
+  // Protein - legacy: 203, modern: 1003
+  const proteinNutrient = findNutrientByNumbers(['203', '1003']);
   
-  // Carbohydrates - nutrient numbers: 205
-  const carbsNutrient = findNutrientByNumber(['205']);
+  // Carbohydrates - legacy: 205, modern: 1005
+  const carbsNutrient = findNutrientByNumbers(['205', '1005']);
   
-  // Total fat - nutrient numbers: 204
-  const fatNutrient = findNutrientByNumber(['204']);
+  // Total fat - legacy: 204, modern: 1004
+  const fatNutrient = findNutrientByNumbers(['204', '1004']);
   
-  // Fiber - nutrient numbers: 291
-  const fiberNutrient = findNutrientByNumber(['291']);
+  // Fiber - legacy: 291
+  const fiberNutrient = findNutrientByNumbers(['291']);
   
-  // Sugar - nutrient numbers: 269 (total sugars)
-  const sugarNutrient = findNutrientByNumber(['269']);
+  // Sugar - legacy: 269 (total sugars)
+  const sugarNutrient = findNutrientByNumbers(['269']);
   
-  // Sodium - nutrient numbers: 307
-  const sodiumNutrient = findNutrientByNumber(['307']);
+  // Sodium - legacy: 307
+  const sodiumNutrient = findNutrientByNumbers(['307']);
+
+  // Helper to safely extract and round values
+  const safeValue = (nutrient: USDANutrient | undefined, multiplier: number = 1): number | undefined => {
+    if (!nutrient) return undefined;
+    const amount = getAmount(nutrient);
+    if (amount === undefined) return undefined;
+    
+    // Convert kJ to kcal if needed for energy
+    let finalAmount = amount;
+    if (nutrient === energyNutrient && getUnitName(nutrient).toLowerCase() === 'kj') {
+      finalAmount = amount / 4.184; // Convert kJ to kcal
+    }
+    
+    return Math.round(finalAmount * multiplier) / multiplier;
+  };
 
   return {
     fdcId: foodDetail.fdcId,
     name: foodDetail.description,
     brandOwner: foodDetail.brandOwner,
     category: foodDetail.foodCategory,
-    calories: energyNutrient ? Math.round(energyNutrient.value) : undefined,
-    protein: proteinNutrient ? Math.round(proteinNutrient.value * 100) / 100 : undefined,
-    carbs: carbsNutrient ? Math.round(carbsNutrient.value * 100) / 100 : undefined,
-    totalFat: fatNutrient ? Math.round(fatNutrient.value * 100) / 100 : undefined,
-    fiber: fiberNutrient ? Math.round(fiberNutrient.value * 100) / 100 : undefined,
-    sugar: sugarNutrient ? Math.round(sugarNutrient.value * 100) / 100 : undefined,
-    sodium: sodiumNutrient ? Math.round(sodiumNutrient.value) : undefined,
+    calories: safeValue(energyNutrient),
+    protein: safeValue(proteinNutrient, 100),
+    carbs: safeValue(carbsNutrient, 100),
+    totalFat: safeValue(fatNutrient, 100),
+    fiber: safeValue(fiberNutrient, 100),
+    sugar: safeValue(sugarNutrient, 100),
+    sodium: safeValue(sodiumNutrient),
     servingSize: 100, // USDA data is typically per 100g
     servingUnit: 'g'
   };
@@ -310,7 +349,7 @@ export async function checkUSDAApiHealth(): Promise<{ healthy: boolean; message:
       healthy: true,
       message: 'USDA API service is healthy'
     };
-  } catch (error) {
+  } catch (error: any) {
     return {
       healthy: false,
       message: `USDA API service error: ${error.message}`
