@@ -31,7 +31,8 @@ import {
   UserCheck,
   Activity,
   User,
-  Calendar
+  Calendar,
+  Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSelector from "@/components/language-selector";
@@ -124,6 +125,12 @@ export default function Navigation() {
       roles: ['client']
     },
     { 
+      href: '/calorie-tracker', 
+      label: t('nav.calorieTracker'), 
+      icon: Target,
+      roles: ['client']
+    },
+    { 
       href: '/my-training-plans', 
       label: t('nav.plans'), 
       icon: Dumbbell,
@@ -194,7 +201,11 @@ export default function Navigation() {
         const isActive = location === item.href;
         
         return (
-          <Link key={item.href} href={item.href}>
+          <Link 
+            key={item.href} 
+            href={item.href}
+            data-testid={item.href === '/calorie-tracker' ? 'link-calorie-tracker' : undefined}
+          >
             <Button
               variant={isActive ? "default" : "ghost"}
               className={cn(
