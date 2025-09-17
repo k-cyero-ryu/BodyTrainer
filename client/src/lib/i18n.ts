@@ -139,6 +139,10 @@ const resources = {
       'validation.descriptionRequired': 'Description is required',
       'validation.caloriesRange': 'Calories must be between 1-5,000',
       'validation.caloriesUpdateRange': 'Calories must be between 0-5,000',
+      'validation.foodDescriptionRequired': 'Food description is required',
+      'validation.quantityRequired': 'Quantity is required',
+      'validation.activityTypeRequired': 'Activity type is required',
+      'validation.durationRequired': 'Duration is required',
       
       // Toast Messages
       'toast.calorieGoalUpdated': 'Calorie goal updated successfully',
@@ -151,6 +155,12 @@ const resources = {
       'toast.customEntryDeleteFailed': 'Failed to delete custom calorie entry',
       'toast.foodEntryUpdated': 'Food entry updated successfully',
       'toast.foodEntryUpdateFailed': 'Failed to update food entry',
+      'toast.foodEntryAdded': 'Food entry added successfully',
+      'toast.foodEntryAddFailed': 'Failed to add food entry',
+      'toast.cardioActivityAdded': 'Cardio activity added successfully',
+      'toast.cardioActivityAddFailed': 'Failed to add cardio activity',
+      'toast.foodEntryDeleted': 'Food entry deleted successfully',
+      'toast.cardioActivityDeleted': 'Cardio activity deleted successfully',
       
       // Auth
       'auth.signIn': 'Sign In',
@@ -1057,6 +1067,24 @@ const resources = {
       'calorieTracker.updateEntry': 'Actualizar Entrada',
       'calorieTracker.addEntry': 'Agregar Entrada',
       
+      // Calorie Summary Widgets
+      'calorieWidget.title': 'Calorías de Hoy',
+      'calorieWidget.goal': 'Meta',
+      'calorieWidget.consumed': 'Consumido',
+      'calorieWidget.remaining': 'Restante',
+      'calorieWidget.over': 'Exceso',
+      'calorieWidget.calories': 'calorías',
+      'calorieWidget.calSuffix': 'cal',
+      'calorieWidget.percentOfGoal': 'de la meta',
+      'calorieWidget.viewFullTracker': 'Ver Rastreador Completo',
+      'calorieWidget.setGoal': 'Establecer Meta',
+      'calorieWidget.noGoalSet': 'No hay meta de calorías establecida',
+      'calorieWidget.clickToSetGoal': 'Haz clic para establecer tu meta diaria',
+      'calorieWidget.calorieSummary': 'Resumen de Calorías',
+      'calorieWidget.onTrack': 'En el objetivo',
+      'calorieWidget.exceededGoal': 'Meta excedida',
+      'calorieWidget.goalAchieved': 'Meta alcanzada',
+      
       // Meal Types
       'mealType.breakfast': 'Desayuno',
       'mealType.lunch': 'Almuerzo',
@@ -1069,6 +1097,10 @@ const resources = {
       'validation.descriptionRequired': 'La descripción es requerida',
       'validation.caloriesRange': 'Las calorías deben estar entre 1-5,000',
       'validation.caloriesUpdateRange': 'Las calorías deben estar entre 0-5,000',
+      'validation.foodDescriptionRequired': 'La descripción de la comida es requerida',
+      'validation.quantityRequired': 'La cantidad es requerida',
+      'validation.activityTypeRequired': 'El tipo de actividad es requerido',
+      'validation.durationRequired': 'La duración es requerida',
       
       // Toast Messages
       'toast.calorieGoalUpdated': 'Meta de calorías actualizada exitosamente',
@@ -1081,6 +1113,12 @@ const resources = {
       'toast.customEntryDeleteFailed': 'Error al eliminar entrada personalizada de calorías',
       'toast.foodEntryUpdated': 'Entrada de comida actualizada exitosamente',
       'toast.foodEntryUpdateFailed': 'Error al actualizar entrada de comida',
+      'toast.foodEntryAdded': 'Entrada de comida agregada exitosamente',
+      'toast.foodEntryAddFailed': 'Error al agregar entrada de comida',
+      'toast.cardioActivityAdded': 'Actividad de cardio agregada exitosamente',
+      'toast.cardioActivityAddFailed': 'Error al agregar actividad de cardio',
+      'toast.foodEntryDeleted': 'Entrada de comida eliminada exitosamente',
+      'toast.cardioActivityDeleted': 'Actividad de cardio eliminada exitosamente',
       
       // Auth
       'auth.signIn': 'Iniciar Sesión',

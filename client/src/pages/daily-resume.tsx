@@ -32,24 +32,24 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Food Entry Form Schema
-const foodEntrySchema = z.object({
+const getFoodEntrySchema = (t: any) => z.object({
   mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
   category: z.enum(['carbs', 'proteins', 'sugar']),
-  description: z.string().min(1, "Food description is required"),
-  quantity: z.string().min(1, "Quantity is required"),
+  description: z.string().min(1, t('validation.foodDescriptionRequired')),
+  quantity: z.string().min(1, t('validation.quantityRequired')),
   notes: z.string().optional(),
 });
 
 // Cardio Activity Form Schema
-const cardioActivitySchema = z.object({
-  activityType: z.string().min(1, "Activity type is required"),
-  duration: z.string().min(1, "Duration is required"),
+const getCardioActivitySchema = (t: any) => z.object({
+  activityType: z.string().min(1, t('validation.activityTypeRequired')),
+  duration: z.string().min(1, t('validation.durationRequired')),
   distance: z.string().optional(),
   notes: z.string().optional(),
 });
 
-type FoodEntryFormData = z.infer<typeof foodEntrySchema>;
-type CardioActivityFormData = z.infer<typeof cardioActivitySchema>;
+type FoodEntryFormData = z.infer<ReturnType<typeof getFoodEntrySchema>>;
+type CardioActivityFormData = z.infer<ReturnType<typeof getCardioActivitySchema>>;
 
 export default function DailyResume() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -73,7 +73,7 @@ export default function DailyResume() {
   const [editingCardio, setEditingCardio] = useState<any>(null);
 
   const foodForm = useForm<FoodEntryFormData>({
-    resolver: zodResolver(foodEntrySchema),
+    resolver: zodResolver(getFoodEntrySchema(t)),
     defaultValues: {
       mealType: 'breakfast',
       category: 'carbs',
@@ -84,7 +84,7 @@ export default function DailyResume() {
   });
 
   const cardioForm = useForm<CardioActivityFormData>({
-    resolver: zodResolver(cardioActivitySchema),
+    resolver: zodResolver(getCardioActivitySchema(t)),
     defaultValues: {
       activityType: '',
       duration: '',
@@ -170,13 +170,13 @@ export default function DailyResume() {
       foodForm.reset();
       toast({
         title: t('common.success'),
-        description: "Food entry added successfully",
+        description: t('toast.foodEntryAdded'),
       });
     },
     onError: (error) => {
       toast({
         title: t('common.error'),
-        description: "Failed to add food entry",
+        description: t('toast.foodEntryAddFailed'),
         variant: "destructive",
       });
     },
@@ -198,13 +198,13 @@ export default function DailyResume() {
       cardioForm.reset();
       toast({
         title: t('common.success'),
-        description: "Cardio activity added successfully",
+        description: t('toast.cardioActivityAdded'),
       });
     },
     onError: (error) => {
       toast({
         title: t('common.error'),
-        description: "Failed to add cardio activity",
+        description: t('toast.cardioActivityAddFailed'),
         variant: "destructive",
       });
     },
@@ -218,7 +218,7 @@ export default function DailyResume() {
       queryClient.invalidateQueries({ queryKey: ["/api/calories/summary", { date: selectedDate }] });
       toast({
         title: t('common.success'),
-        description: "Food entry deleted successfully",
+        description: t('toast.foodEntryDeleted'),
       });
     },
   });
@@ -231,7 +231,7 @@ export default function DailyResume() {
       queryClient.invalidateQueries({ queryKey: ["/api/calories/summary", { date: selectedDate }] });
       toast({
         title: t('common.success'),
-        description: "Cardio activity deleted successfully",
+        description: t('toast.cardioActivityDeleted'),
       });
     },
   });
@@ -531,9 +531,9 @@ export default function DailyResume() {
                         name="notes"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Notes (Optional)</FormLabel>
+                            <FormLabel>{t('dailyResume.notesOptional')}</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="Any additional notes..." {...field} />
+                              <Textarea placeholder={t('dailyResume.notesPlaceholder')} {...field} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -669,9 +669,9 @@ export default function DailyResume() {
                         name="notes"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Notes (Optional)</FormLabel>
+                            <FormLabel>{t('dailyResume.notesOptional')}</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="Any additional notes..." {...field} />
+                              <Textarea placeholder={t('dailyResume.notesPlaceholder')} {...field} />
                             </FormControl>
                           </FormItem>
                         )}
