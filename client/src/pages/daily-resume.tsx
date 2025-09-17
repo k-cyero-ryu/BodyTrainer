@@ -333,19 +333,19 @@ export default function DailyResume() {
             <div className="flex justify-between items-center">
               <CardTitle className="flex items-center gap-2">
                 <Apple className="h-5 w-5" />
-                Food & Nutrition
+                {t('dailyResume.foodNutrition')}
               </CardTitle>
               {!isTrainerView && (
                 <Dialog open={isFoodDialogOpen} onOpenChange={setIsFoodDialogOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm" onClick={() => foodForm.reset()}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Food
+                      {t('dailyResume.addFood')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Add Food Entry</DialogTitle>
+                      <DialogTitle>{t('dailyResume.addFoodEntry')}</DialogTitle>
                   </DialogHeader>
                   <Form {...foodForm}>
                     <form onSubmit={foodForm.handleSubmit(onSubmitFood)} className="space-y-4">
@@ -354,7 +354,7 @@ export default function DailyResume() {
                         name="mealType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Meal Type</FormLabel>
+                            <FormLabel>{t('dailyResume.mealType')}</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
@@ -362,10 +362,10 @@ export default function DailyResume() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="breakfast">Breakfast</SelectItem>
-                                <SelectItem value="lunch">Lunch</SelectItem>
-                                <SelectItem value="dinner">Dinner</SelectItem>
-                                <SelectItem value="snack">Snack</SelectItem>
+                                <SelectItem value="breakfast">{t('dailyResume.breakfast')}</SelectItem>
+                                <SelectItem value="lunch">{t('dailyResume.lunch')}</SelectItem>
+                                <SelectItem value="dinner">{t('dailyResume.dinner')}</SelectItem>
+                                <SelectItem value="snack">{t('dailyResume.snack')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormItem>
@@ -376,9 +376,9 @@ export default function DailyResume() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Food Description</FormLabel>
+                            <FormLabel>{t('dailyResume.foodDescription')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., Grilled chicken breast" {...field} />
+                              <Input placeholder={t('dailyResume.foodPlaceholder')} {...field} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -388,9 +388,9 @@ export default function DailyResume() {
                         name="quantity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Quantity (grams)</FormLabel>
+                            <FormLabel>{t('dailyResume.quantityGrams')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 150" type="number" {...field} />
+                              <Input placeholder={t('dailyResume.quantityPlaceholder')} type="number" {...field} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -409,10 +409,10 @@ export default function DailyResume() {
                       />
                       <div className="flex justify-end space-x-2">
                         <Button type="button" variant="outline" onClick={() => setIsFoodDialogOpen(false)}>
-                          Cancel
+                          {t('dailyResume.cancel')}
                         </Button>
                         <Button type="submit" disabled={createFoodMutation.isPending}>
-                          {createFoodMutation.isPending ? 'Adding...' : 'Add Entry'}
+                          {createFoodMutation.isPending ? t('dailyResume.adding') : t('dailyResume.addEntry')}
                         </Button>
                       </div>
                     </form>
@@ -465,8 +465,8 @@ export default function DailyResume() {
             ) : (
               <div className="text-center py-8">
                 <Apple className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No food entries for this day</p>
-                <p className="text-sm text-gray-400">Add your meals to start tracking</p>
+                <p className="text-gray-500">{t('dailyResume.noFoodEntries')}</p>
+                <p className="text-sm text-gray-400">{t('dailyResume.addMealsToTrack')}</p>
               </div>
             )}
           </CardContent>
@@ -478,19 +478,19 @@ export default function DailyResume() {
             <div className="flex justify-between items-center">
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Cardio Activities
+                {t('dailyResume.cardioActivities')}
               </CardTitle>
               {!isTrainerView && (
                 <Dialog open={isCardioDialogOpen} onOpenChange={setIsCardioDialogOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm" onClick={() => cardioForm.reset()}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Activity
+                      {t('dailyResume.addActivity')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Add Cardio Activity</DialogTitle>
+                      <DialogTitle>{t('dailyResume.addCardioActivity')}</DialogTitle>
                   </DialogHeader>
                   <Form {...cardioForm}>
                     <form onSubmit={cardioForm.handleSubmit(onSubmitCardio)} className="space-y-4">
@@ -499,9 +499,9 @@ export default function DailyResume() {
                         name="activityType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Activity Type</FormLabel>
+                            <FormLabel>{t('dailyResume.activityType')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., Running, Walking, Dancing" {...field} />
+                              <Input placeholder={t('dailyResume.activityPlaceholder')} {...field} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -511,9 +511,9 @@ export default function DailyResume() {
                         name="duration"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Duration (minutes)</FormLabel>
+                            <FormLabel>{t('dailyResume.durationMinutes')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 30" type="number" {...field} />
+                              <Input placeholder={t('dailyResume.durationPlaceholder')} type="number" {...field} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -523,9 +523,9 @@ export default function DailyResume() {
                         name="distance"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Distance (km) - Optional</FormLabel>
+                            <FormLabel>{t('dailyResume.distanceOptional')}</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 5.5" type="number" step="0.1" {...field} />
+                              <Input placeholder={t('dailyResume.distancePlaceholder')} type="number" step="0.1" {...field} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -544,10 +544,10 @@ export default function DailyResume() {
                       />
                       <div className="flex justify-end space-x-2">
                         <Button type="button" variant="outline" onClick={() => setIsCardioDialogOpen(false)}>
-                          Cancel
+                          {t('dailyResume.cancel')}
                         </Button>
                         <Button type="submit" disabled={createCardioMutation.isPending}>
-                          {createCardioMutation.isPending ? 'Adding...' : 'Add Activity'}
+                          {createCardioMutation.isPending ? t('dailyResume.adding') : t('dailyResume.addActivity')}
                         </Button>
                       </div>
                     </form>
@@ -603,8 +603,8 @@ export default function DailyResume() {
             ) : (
               <div className="text-center py-8">
                 <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No cardio activities for this day</p>
-                <p className="text-sm text-gray-400">Add activities to start tracking</p>
+                <p className="text-gray-500">{t('dailyResume.noCardioActivities')}</p>
+                <p className="text-sm text-gray-400">{t('dailyResume.addActivitiesToTrack')}</p>
               </div>
             )}
           </CardContent>
