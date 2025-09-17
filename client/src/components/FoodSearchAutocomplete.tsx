@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { 
   Search, 
@@ -164,6 +164,9 @@ export function FoodSearchAutocomplete({
           <Search className="h-5 w-5" />
           {t('usda.searchFood')}
         </DialogTitle>
+        <DialogDescription>
+          Search the USDA food database to find nutritional information for your food items.
+        </DialogDescription>
       </DialogHeader>
 
       <div className="space-y-4">
@@ -207,7 +210,7 @@ export function FoodSearchAutocomplete({
               </div>
             )}
 
-            {debouncedSearchTerm.length >= 2 && !isSearching && !searchError && searchResults && searchResults.foods.length === 0 && (
+            {debouncedSearchTerm.length >= 2 && !isSearching && !searchError && searchResults && searchResults.foods && searchResults.foods.length === 0 && (
               <div className="text-center py-8 text-muted-foreground" data-testid="text-no-results">
                 <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>{t('usda.noResults')}</p>
@@ -223,12 +226,12 @@ export function FoodSearchAutocomplete({
             )}
 
             {/* Search Results */}
-            {searchResults && searchResults.foods.length > 0 && (
+            {searchResults && searchResults.foods && Array.isArray(searchResults.foods) && searchResults.foods.length > 0 && (
               <div className="space-y-2 max-h-96 overflow-y-auto" data-testid="list-search-results">
                 <p className="text-sm text-muted-foreground">
                   {t('usda.selectFood')} ({searchResults.foods.length} {searchResults.totalHits > searchResults.foods.length ? `of ${searchResults.totalHits}` : ''} results)
                 </p>
-                {searchResults.foods.map((food) => (
+                {searchResults.foods.map((food) => food && (
                   <Card
                     key={food.fdcId}
                     className="cursor-pointer hover:bg-accent transition-colors"
@@ -239,26 +242,26 @@ export function FoodSearchAutocomplete({
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <h4 className="font-medium line-clamp-2" data-testid={`text-food-name-${food.fdcId}`}>
-                            {food.description}
+                            {food?.description || 'Unknown food'}
                           </h4>
-                          {food.brandOwner && (
+                          {food?.brandOwner && (
                             <p className="text-sm text-muted-foreground mt-1" data-testid={`text-brand-${food.fdcId}`}>
                               {t('usda.brand')} {food.brandOwner}
                             </p>
                           )}
-                          {food.foodCategory && (
+                          {food?.foodCategory && (
                             <p className="text-xs text-muted-foreground" data-testid={`text-category-${food.fdcId}`}>
                               {t('usda.category')} {food.foodCategory}
                             </p>
                           )}
                         </div>
                         <Badge variant="secondary" className="ml-2" data-testid={`badge-datatype-${food.fdcId}`}>
-                          {food.dataType}
+                          {food?.dataType || 'Unknown'}
                         </Badge>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                ) || null).filter(Boolean)}
               </div>
             )}
 

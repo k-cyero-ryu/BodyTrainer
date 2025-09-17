@@ -33,6 +33,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FoodSearchAutocomplete, { type SelectedFoodData } from "@/components/FoodSearchAutocomplete";
+import AutoCalorieCalculator from "@/components/AutoCalorieCalculator";
 
 // Food Entry Form Schema
 const getFoodEntrySchema = (t: any) => z.object({
@@ -83,6 +84,8 @@ export default function DailyResume() {
   const [editingCardio, setEditingCardio] = useState<any>(null);
   const [showUSDASearch, setShowUSDASearch] = useState(false);
   const [selectedUSDAFood, setSelectedUSDAFood] = useState<SelectedFoodData | null>(null);
+  const [autoCalculatedCalories, setAutoCalculatedCalories] = useState<number | null>(null);
+  const [autoCalculatedNutrition, setAutoCalculatedNutrition] = useState<any>(null);
 
   const foodForm = useForm<FoodEntryFormData>({
     resolver: zodResolver(getFoodEntrySchema(t)),
@@ -621,6 +624,29 @@ export default function DailyResume() {
                           </FormItem>
                         )}
                       />
+                      
+                      {/* Automatic Calorie Calculator */}
+                      <AutoCalorieCalculator
+                        foodDescription={foodForm.watch('description') || ''}
+                        quantity={parseFloat(foodForm.watch('quantity')) || 0}
+                        onCaloriesCalculated={(calories, fdcId, nutritionData) => {
+                          setAutoCalculatedCalories(calories);
+                          setAutoCalculatedNutrition(nutritionData);
+                          // Update form with calculated values
+                          foodForm.setValue('calories', calories);
+                          if (fdcId) {
+                            foodForm.setValue('fdcId', fdcId);
+                            foodForm.setValue('isUSDAFood', true);
+                          }
+                          if (nutritionData) {
+                            foodForm.setValue('protein', nutritionData.protein);
+                            foodForm.setValue('carbs', nutritionData.carbs);
+                            foodForm.setValue('totalFat', nutritionData.totalFat);
+                          }
+                        }}
+                        disabled={isTrainerView} // Only allow clients to use auto-calculation
+                      />
+
                       <FormField
                         control={foodForm.control}
                         name="notes"

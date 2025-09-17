@@ -38,6 +38,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FoodSearchAutocomplete, { type SelectedFoodData } from "@/components/FoodSearchAutocomplete";
+import AutoCalorieCalculator from "@/components/AutoCalorieCalculator";
 
 // TypeScript interfaces for API responses
 interface CalorieSummary {
@@ -84,6 +85,9 @@ const getCalorieGoalSchema = (t: any) => z.object({
 // Custom Calorie Entry Form Schema
 const getCustomCalorieEntrySchema = (t: any) => z.object({
   description: z.string().min(1, t('validation.descriptionRequired')),
+  quantity: z.union([z.string(), z.number()]).transform(val => 
+    typeof val === 'string' ? parseFloat(val) : val
+  ).refine(val => val > 0 && val <= 5000, t('validation.quantityRange')).optional(),
   calories: z.union([z.string(), z.number()]).transform(val => 
     typeof val === 'string' ? parseInt(val) : val
   ).refine(val => val > 0 && val <= 5000, t('validation.caloriesRange')),
@@ -147,6 +151,8 @@ export default function CalorieTracker() {
   const [editingFoodEntry, setEditingFoodEntry] = useState<FoodEntryWithCalories | null>(null);
   const [showUSDASearch, setShowUSDASearch] = useState(false);
   const [selectedUSDAFood, setSelectedUSDAFood] = useState<SelectedFoodData | null>(null);
+  const [autoCalculatedCalories, setAutoCalculatedCalories] = useState<number | null>(null);
+  const [autoCalculatedNutrition, setAutoCalculatedNutrition] = useState<any>(null);
 
   const goalForm = useForm<CalorieGoalFormData>({
     resolver: zodResolver(getCalorieGoalSchema(t)),
@@ -157,6 +163,7 @@ export default function CalorieTracker() {
     resolver: zodResolver(getCustomCalorieEntrySchema(t)),
     defaultValues: {
       description: '',
+      quantity: 0,
       calories: 0,
       mealType: 'breakfast',
       notes: '',
@@ -933,6 +940,46 @@ export default function CalorieTracker() {
                 )}
               />
               
+              <FormField
+                control={customEntryForm.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('calorieTracker.quantityGrams')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="100"
+                        {...field}
+                        data-testid="input-custom-quantity"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Automatic Calorie Calculator */}
+              <AutoCalorieCalculator
+                foodDescription={customEntryForm.watch('description') || ''}
+                quantity={parseFloat(customEntryForm.watch('quantity')) || 0}
+                onCaloriesCalculated={(calories, fdcId, nutritionData) => {
+                  setAutoCalculatedCalories(calories);
+                  setAutoCalculatedNutrition(nutritionData);
+                  // Update form with calculated values
+                  customEntryForm.setValue('calories', calories);
+                  if (fdcId) {
+                    customEntryForm.setValue('fdcId', fdcId);
+                    customEntryForm.setValue('isUSDAFood', true);
+                  }
+                  if (nutritionData) {
+                    customEntryForm.setValue('protein', nutritionData.protein);
+                    customEntryForm.setValue('carbs', nutritionData.carbs);
+                    customEntryForm.setValue('totalFat', nutritionData.totalFat);
+                  }
+                }}
+              />
+
               <FormField
                 control={customEntryForm.control}
                 name="calories"
