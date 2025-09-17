@@ -100,7 +100,13 @@ export default function ClientDashboard() {
 
   // Fetch today's calorie summary
   const { data: calorieSummary, isLoading: loadingCalories } = useQuery({
-    queryKey: ["/api/calories/summary", { date: todayDate }],
+    queryKey: [`/api/calories/summary/${todayDate}`],
+    enabled: !!user && user.role === 'client',
+  });
+
+  // Fetch calorie goal
+  const { data: goalData } = useQuery({
+    queryKey: ['/api/calories/goal'],
     enabled: !!user && user.role === 'client',
   });
 
@@ -419,71 +425,88 @@ export default function ClientDashboard() {
             <div className="flex justify-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
             </div>
-          ) : calorieSummary && calorieSummary.goal > 0 ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('calorieWidget.goal')}</p>
-                  <p className="text-2xl font-bold text-blue-600" data-testid="calorie-goal">
-                    {calorieSummary.goal}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('calorieWidget.consumed')}</p>
-                  <p className="text-2xl font-bold text-green-600" data-testid="calorie-consumed">
-                    {calorieSummary.total}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    {calorieSummary.remaining > 0 ? t('calorieWidget.remaining') : t('calorieWidget.over')}
-                  </p>
-                  <p className={`text-2xl font-bold ${calorieSummary.remaining > 0 ? 'text-orange-600' : 'text-red-600'}`} 
-                     data-testid="calorie-remaining">
-                    {Math.abs(calorieSummary.remaining)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t('calorieWidget.calSuffix')}</p>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>{t('calorieWidget.consumed')}</span>
-                  <span>
-                    {Math.round((calorieSummary.total / calorieSummary.goal) * 100)}% {t('calorieWidget.percentOfGoal')}
-                  </span>
-                </div>
-                <Progress 
-                  value={Math.min(100, (calorieSummary.total / calorieSummary.goal) * 100)} 
-                  className="h-3"
-                  data-testid="calorie-progress-bar"
-                />
-              </div>
-              
-              <div className="flex justify-between items-center pt-2">
-                <Badge variant={calorieSummary.remaining > 0 ? "default" : "destructive"} data-testid="calorie-status">
-                  {calorieSummary.remaining > 0 ? t('calorieWidget.onTrack') : t('calorieWidget.exceededGoal')}
-                </Badge>
-                <Link href="/calorie-tracker">
-                  <Button variant="outline" size="sm" data-testid="view-full-tracker">
-                    {t('calorieWidget.viewFullTracker')}
-                  </Button>
-                </Link>
-              </div>
-            </div>
           ) : (
-            <div className="text-center py-6" data-testid="no-calorie-goal">
-              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground font-medium">{t('calorieWidget.noGoalSet')}</p>
-              <p className="text-sm text-muted-foreground mb-4">{t('calorieWidget.clickToSetGoal')}</p>
-              <Link href="/calorie-tracker">
-                <Button variant="outline" data-testid="set-calorie-goal">
-                  {t('calorieWidget.setGoal')}
-                </Button>
-              </Link>
-            </div>
+            (() => {
+              const calorieGoal = calorieSummary?.goal || goalData?.goal || 1800;
+              const caloriesConsumed = calorieSummary?.total || 0;
+              const caloriesRemaining = Math.max(0, calorieGoal - caloriesConsumed);
+              const progressPercentage = calorieGoal > 0 ? Math.min(100, (caloriesConsumed / calorieGoal) * 100) : 0;
+              const isOverGoal = caloriesConsumed > calorieGoal;
+
+              return (
+                <div className="space-y-6">
+                  {/* Main calorie display */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="col-span-1 md:col-span-2">
+                      <div className="flex items-center space-x-4 mb-4">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="calorie-consumed">
+                          {caloriesConsumed}
+                        </div>
+                        <div className="text-gray-600 dark:text-gray-400">{t('calorieWidget.of')}</div>
+                        <div className="text-xl font-semibold text-gray-700 dark:text-gray-300" data-testid="calorie-goal">
+                          {calorieGoal} {t('calorieWidget.calSuffix')}
+                        </div>
+                      </div>
+                      <Progress 
+                        value={progressPercentage} 
+                        className={`h-3 ${isOverGoal ? 'bg-red-100' : ''}`}
+                        data-testid="calorie-progress-bar"
+                      />
+                      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mt-2">
+                        <span data-testid="progress-percentage">
+                          {progressPercentage.toFixed(1)}% {t('calorieWidget.percentOfGoal')}
+                        </span>
+                        <span className={`font-semibold ${isOverGoal ? 'text-red-600' : 'text-green-600'}`} data-testid="calorie-remaining">
+                          {isOverGoal ? `+${caloriesConsumed - calorieGoal} ${t('calorieWidget.over')}` : `${caloriesRemaining} ${t('calorieWidget.remaining')}`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('calorieWidget.goal')}</p>
+                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400" data-testid="goal-display">
+                          {calorieGoal}
+                        </p>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('calorieWidget.consumed')}</p>
+                        <p className="text-lg font-bold text-green-600 dark:text-green-400" data-testid="consumed-display">
+                          {caloriesConsumed}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Breakdown section */}
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-3">{t('calorieTracker.breakdown')}</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">{t('calorieTracker.foodEntries')}</span>
+                        <span className="font-medium" data-testid="food-entries-calories">
+                          {calorieSummary?.foodEntries || 0} cal
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">{t('calorieTracker.quickEntries')}</span>
+                        <span className="font-medium" data-testid="quick-entries-calories">
+                          {calorieSummary?.customEntries || 0} cal
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action button */}
+                  <div className="flex justify-center pt-2">
+                    <Link href="/calorie-tracker">
+                      <Button variant="outline" size="sm" data-testid="view-full-tracker">
+                        {t('calorieWidget.viewFullTracker')}
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })()
           )}
         </CardContent>
       </Card>
