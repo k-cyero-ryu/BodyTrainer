@@ -90,6 +90,7 @@ export const clients = pgTable("clients", {
   paymentPlan: varchar("payment_plan"), // Legacy field for backward compatibility
   clientPaymentPlanId: varchar("client_payment_plan_id"), // New payment plan reference - will add foreign key after clientPaymentPlans is defined
   paymentStatus: varchar("payment_status").default('active'),
+  calorieGoalOverride: integer("calorie_goal_override"), // Client-specific calorie goal override
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -515,6 +516,20 @@ export const foodEntries = pgTable("food_entries", {
   category: foodCategoryEnum("category").notNull().default('carbs'), // carbs, proteins, sugar
   description: text("description").notNull(), // What food was eaten
   quantity: decimal("quantity", { precision: 8, scale: 2 }), // Quantity in grams
+  calories: integer("calories"), // Calorie content (optional)
+  isIncludedInCalories: boolean("is_included_in_calories").default(true), // Whether to count towards daily total
+  notes: text("notes"), // Optional additional notes
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Custom calorie entries table for quick calorie tracking
+export const customCalorieEntries = pgTable("custom_calorie_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  date: timestamp("date").notNull(), // Date of the entry
+  description: text("description").notNull(), // What was consumed
+  calories: integer("calories").notNull(), // Calorie content
+  mealType: mealTypeEnum("meal_type"), // Optional meal categorization
   notes: text("notes"), // Optional additional notes
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -674,6 +689,7 @@ export type SocialComment = typeof socialComments.$inferSelect;
 // Food entries and cardio activities insert schemas and types
 export const insertFoodEntrySchema = createInsertSchema(foodEntries).omit({ id: true, createdAt: true, date: true }).extend({
   quantity: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val.toString() : val),
+  calories: z.union([z.string(), z.number()]).optional().transform(val => val === undefined ? undefined : (typeof val === 'number' ? val : parseInt(val))).refine(val => val === undefined || val >= 0, "Calories must be positive"),
   date: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
 });
 export const insertCardioActivitySchema = createInsertSchema(cardioActivities).omit({ id: true, createdAt: true, date: true }).extend({
@@ -690,4 +706,16 @@ export type FoodEntry = typeof foodEntries.$inferSelect;
 export type UpdateFoodEntry = z.infer<typeof updateFoodEntrySchema>;
 export type InsertCardioActivity = z.infer<typeof insertCardioActivitySchema>;
 export type CardioActivity = typeof cardioActivities.$inferSelect;
+
+// Custom calorie entries insert schema
+export const insertCustomCalorieEntrySchema = createInsertSchema(customCalorieEntries).omit({ id: true, createdAt: true, date: true }).extend({
+  calories: z.union([z.string(), z.number()]).transform(val => typeof val === 'number' ? val : parseInt(val)).refine(val => val >= 0, "Calories must be positive"),
+  date: z.union([z.string(), z.date()]).transform(val => typeof val === 'string' ? new Date(val) : val),
+});
+// Custom calorie entry update schema
+export const updateCustomCalorieEntrySchema = insertCustomCalorieEntrySchema.omit({ clientId: true });
+
+export type InsertCustomCalorieEntry = z.infer<typeof insertCustomCalorieEntrySchema>;
+export type CustomCalorieEntry = typeof customCalorieEntries.$inferSelect;
+export type UpdateCustomCalorieEntry = z.infer<typeof updateCustomCalorieEntrySchema>;
 export type UpdateCardioActivity = z.infer<typeof updateCardioActivitySchema>;
