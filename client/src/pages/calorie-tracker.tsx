@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { 
   Target, 
   Plus,
@@ -37,8 +38,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import FoodSearchAutocomplete, { type SelectedFoodData } from "@/components/FoodSearchAutocomplete";
+import FoodDropdownSelector from "@/components/FoodDropdownSelector";
+import FoodSearchAutocomplete from "@/components/FoodSearchAutocomplete";
 import AutoCalorieCalculator from "@/components/AutoCalorieCalculator";
+import type { NutritionData } from "@shared/schema";
 
 // TypeScript interfaces for API responses
 interface CalorieSummary {
@@ -145,14 +148,20 @@ export default function CalorieTracker() {
     return `${year}-${month}-${day}`;
   });
   
+  // Two main modes for the calorie tracker
+  const [viewMode, setViewMode] = useState<'daily-resume' | 'direct-entry'>('daily-resume');
+  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
   const [isCustomEntryDialogOpen, setIsCustomEntryDialogOpen] = useState(false);
   const [editingCustomEntry, setEditingCustomEntry] = useState<CustomCalorieEntry | null>(null);
-  const [editingFoodEntry, setEditingFoodEntry] = useState<FoodEntryWithCalories | null>(null);
+  
+  // USDA food search states
+  const [selectedUSDAFood, setSelectedUSDAFood] = useState<NutritionData | null>(null);
   const [showUSDASearch, setShowUSDASearch] = useState(false);
-  const [selectedUSDAFood, setSelectedUSDAFood] = useState<SelectedFoodData | null>(null);
   const [autoCalculatedCalories, setAutoCalculatedCalories] = useState<number | null>(null);
-  const [autoCalculatedNutrition, setAutoCalculatedNutrition] = useState<any>(null);
+  const [autoCalculatedNutrition, setAutoCalculatedNutrition] = useState<NutritionData | null>(null);
 
   const goalForm = useForm<CalorieGoalFormData>({
     resolver: zodResolver(getCalorieGoalSchema(t)),
@@ -329,41 +338,50 @@ export default function CalorieTracker() {
     },
   });
 
-  // Handle USDA food selection
-  const handleUSDAFoodSelect = (foodData: SelectedFoodData) => {
-    setSelectedUSDAFood(foodData);
-    
-    // Auto-fill form with USDA data
-    customEntryForm.setValue('description', foodData.name);
-    
-    if (foodData.isUSDAFood && foodData.calories) {
-      // Calculate calories for the serving size (default to 100g if not specified)
-      const servingSize = foodData.servingSize || 100;
-      const calories = Math.round((foodData.calories * servingSize) / 100);
-      
-      customEntryForm.setValue('calories', calories);
-      customEntryForm.setValue('fdcId', foodData.fdcId);
-      customEntryForm.setValue('protein', foodData.protein);
-      customEntryForm.setValue('carbs', foodData.carbs);
-      customEntryForm.setValue('totalFat', foodData.totalFat);
-      customEntryForm.setValue('isUSDAFood', true);
-      
-      // Add nutrition info to notes
-      let nutritionInfo = '';
-      if (foodData.protein || foodData.carbs || foodData.totalFat) {
-        const parts = [];
-        if (foodData.protein) parts.push(`${t('usda.proteinLabel')}: ${foodData.protein}g`);
-        if (foodData.carbs) parts.push(`${t('usda.carbsLabel')}: ${foodData.carbs}g`);
-        if (foodData.totalFat) parts.push(`${t('usda.fatLabel')}: ${foodData.totalFat}g`);
-        nutritionInfo = `${t('usda.nutritionInfo')}: ${parts.join(', ')}`;
-      }
-      
-      const currentNotes = customEntryForm.getValues('notes') || '';
-      const updatedNotes = currentNotes ? `${currentNotes}\n${nutritionInfo}` : nutritionInfo;
-      customEntryForm.setValue('notes', updatedNotes);
-    }
-    
+  // Handle food selection from dropdown
+  const handleFoodSelect = (data: {
+    food: NutritionData;
+    quantity: number;
+    calculatedCalories: number;
+    calculatedNutrition: NutritionData;
+  }) => {
+    // Create custom calorie entry with calculated data
+    const entryData: CustomCalorieEntryFormData = {
+      description: `${data.food.name} (${data.quantity}g)`,
+      calories: data.calculatedCalories,
+      mealType: selectedMealType,
+      quantity: data.quantity,
+      fdcId: data.food.fdcId,
+      protein: data.calculatedNutrition.protein,
+      carbs: data.calculatedNutrition.carbs,
+      totalFat: data.calculatedNutrition.totalFat,
+      isUSDAFood: true,
+      notes: `Auto-calculated from USDA database. Per 100g: ${data.food.calories || 0} cal, ${data.food.protein || 0}g protein, ${data.food.carbs || 0}g carbs, ${data.food.totalFat || 0}g fat`
+    };
+
+    createCustomEntryMutation.mutate(entryData);
+  };
+
+  // Handle USDA food selection from autocomplete
+  const handleUSDAFoodSelect = (food: NutritionData) => {
+    setSelectedUSDAFood(food);
     setShowUSDASearch(false);
+    // Pre-fill the form with USDA food data
+    customEntryForm.setValue('description', food.name);
+    customEntryForm.setValue('fdcId', food.fdcId);
+    customEntryForm.setValue('isUSDAFood', true);
+    if (food.calories) {
+      customEntryForm.setValue('calories', food.calories);
+    }
+    if (food.protein) {
+      customEntryForm.setValue('protein', food.protein);
+    }
+    if (food.carbs) {
+      customEntryForm.setValue('carbs', food.carbs);
+    }
+    if (food.totalFat) {
+      customEntryForm.setValue('totalFat', food.totalFat);
+    }
   };
 
   // Update food entry calories mutation
@@ -557,6 +575,32 @@ export default function CalorieTracker() {
         </CardContent>
       </Card>
 
+      {/* View Mode Selection */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center space-x-4">
+            <Button
+              variant={viewMode === 'daily-resume' ? 'default' : 'outline'}
+              onClick={() => setViewMode('daily-resume')}
+              className="flex items-center space-x-2"
+              data-testid="button-daily-resume-mode"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span>Daily Resume</span>
+            </Button>
+            <Button
+              variant={viewMode === 'direct-entry' ? 'default' : 'outline'}
+              onClick={() => setViewMode('direct-entry')}
+              className="flex items-center space-x-2"
+              data-testid="button-direct-entry-mode"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Direct Food Entry</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Daily Overview */}
       <Card className="mb-8">
         <CardHeader>
@@ -639,7 +683,9 @@ export default function CalorieTracker() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Conditional Content Based on View Mode */}
+      {viewMode === 'daily-resume' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Food Entries Management */}
         <Card>
           <CardHeader>
@@ -821,6 +867,109 @@ export default function CalorieTracker() {
           </CardContent>
         </Card>
       </div>
+      ) : (
+        /* Direct Food Entry Mode */
+        <div className="space-y-6">
+          {/* Meal Type Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Plus className="h-5 w-5" />
+                <span>{t('calorieTracker.directFoodEntry')}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">{t('calorieTracker.selectMealType')}</Label>
+                  <Select value={selectedMealType} onValueChange={(value: 'breakfast' | 'lunch' | 'dinner' | 'snack') => setSelectedMealType(value)}>
+                    <SelectTrigger className="w-full mt-2" data-testid="select-meal-type-direct">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="breakfast">
+                        <div className="flex items-center space-x-2">
+                          <Coffee className="h-4 w-4" />
+                          <span>{t('mealType.breakfast')}</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="lunch">
+                        <div className="flex items-center space-x-2">
+                          <Sandwich className="h-4 w-4" />
+                          <span>{t('mealType.lunch')}</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="dinner">
+                        <div className="flex items-center space-x-2">
+                          <Utensils className="h-4 w-4" />
+                          <span>{t('mealType.dinner')}</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="snack">
+                        <div className="flex items-center space-x-2">
+                          <Cookie className="h-4 w-4" />
+                          <span>{t('mealType.snack')}</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mb-2">{t('calorieTracker.directEntryInstructions')}</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>{t('calorieTracker.selectFoodFromDropdown')}</li>
+                    <li>{t('calorieTracker.enterQuantityGrams')}</li>
+                    <li>{t('calorieTracker.caloriesCalculatedAutomatically')}</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Food Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Search className="h-5 w-5" />
+                <span>{t('calorieTracker.selectFood')}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Category Filter */}
+                <div>
+                  <Label className="text-sm font-medium">{t('calorieTracker.filterByCategory')}</Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-full mt-2" data-testid="select-category-filter">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('calorieTracker.allCategories')}</SelectItem>
+                      <SelectItem value="proteins">{t('foodCategories.proteins')}</SelectItem>
+                      <SelectItem value="carbohydrates">{t('foodCategories.carbohydrates')}</SelectItem>
+                      <SelectItem value="fruits">{t('foodCategories.fruits')}</SelectItem>
+                      <SelectItem value="vegetables">{t('foodCategories.vegetables')}</SelectItem>
+                      <SelectItem value="dairy">{t('foodCategories.dairy')}</SelectItem>
+                      <SelectItem value="fats">{t('foodCategories.fats')}</SelectItem>
+                      <SelectItem value="legumes">{t('foodCategories.legumes')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Food Dropdown Selector */}
+                <FoodDropdownSelector
+                  onFoodSelect={handleFoodSelect}
+                  selectedCategory={selectedCategory}
+                  onCategoryChange={setSelectedCategory}
+                  placeholder={t('calorieTracker.searchFoodPlaceholder')}
+                  data-testid="food-dropdown-selector"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Goal Setting Dialog */}
       <Dialog open={isGoalDialogOpen} onOpenChange={setIsGoalDialogOpen}>
@@ -962,10 +1111,10 @@ export default function CalorieTracker() {
               {/* Automatic Calorie Calculator */}
               <AutoCalorieCalculator
                 foodDescription={customEntryForm.watch('description') || ''}
-                quantity={parseFloat(customEntryForm.watch('quantity')) || 0}
+                quantity={Number(customEntryForm.watch('quantity')) || 0}
                 onCaloriesCalculated={(calories, fdcId, nutritionData) => {
                   setAutoCalculatedCalories(calories);
-                  setAutoCalculatedNutrition(nutritionData);
+                  setAutoCalculatedNutrition(nutritionData || null);
                   // Update form with calculated values
                   customEntryForm.setValue('calories', calories);
                   if (fdcId) {
@@ -973,9 +1122,9 @@ export default function CalorieTracker() {
                     customEntryForm.setValue('isUSDAFood', true);
                   }
                   if (nutritionData) {
-                    customEntryForm.setValue('protein', nutritionData.protein);
-                    customEntryForm.setValue('carbs', nutritionData.carbs);
-                    customEntryForm.setValue('totalFat', nutritionData.totalFat);
+                    customEntryForm.setValue('protein', nutritionData.protein || 0);
+                    customEntryForm.setValue('carbs', nutritionData.carbs || 0);
+                    customEntryForm.setValue('totalFat', nutritionData.totalFat || 0);
                   }
                 }}
               />

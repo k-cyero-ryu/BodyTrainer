@@ -32,8 +32,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import FoodSearchAutocomplete, { type SelectedFoodData } from "@/components/FoodSearchAutocomplete";
-import AutoCalorieCalculator from "@/components/AutoCalorieCalculator";
+import FoodDropdownSelector from "@/components/FoodDropdownSelector";
+import type { NutritionData } from "@shared/schema";
 
 // Food Entry Form Schema
 const getFoodEntrySchema = (t: any) => z.object({
@@ -82,10 +82,7 @@ export default function DailyResume() {
   const [isCardioDialogOpen, setIsCardioDialogOpen] = useState(false);
   const [editingFood, setEditingFood] = useState<any>(null);
   const [editingCardio, setEditingCardio] = useState<any>(null);
-  const [showUSDASearch, setShowUSDASearch] = useState(false);
-  const [selectedUSDAFood, setSelectedUSDAFood] = useState<SelectedFoodData | null>(null);
-  const [autoCalculatedCalories, setAutoCalculatedCalories] = useState<number | null>(null);
-  const [autoCalculatedNutrition, setAutoCalculatedNutrition] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const foodForm = useForm<FoodEntryFormData>({
     resolver: zodResolver(getFoodEntrySchema(t)),
@@ -291,32 +288,47 @@ export default function DailyResume() {
     createFoodMutation.mutate(data);
   };
 
-  const handleUSDAFoodSelect = (foodData: SelectedFoodData) => {
-    setSelectedUSDAFood(foodData);
+  // Handle food selection from dropdown
+  const handleFoodSelect = (data: {
+    food: NutritionData;
+    quantity: number;
+    calculatedCalories: number;
+    calculatedNutrition: NutritionData;
+  }) => {
+    // Auto-fill form with selected food data
+    foodForm.setValue('description', `${data.food.name} (${data.quantity}g)`);
+    foodForm.setValue('quantity', data.quantity.toString());
+    foodForm.setValue('fdcId', data.food.fdcId);
+    foodForm.setValue('calories', data.calculatedCalories);
+    foodForm.setValue('protein', data.calculatedNutrition.protein);
+    foodForm.setValue('carbs', data.calculatedNutrition.carbs);
+    foodForm.setValue('totalFat', data.calculatedNutrition.totalFat);
+    foodForm.setValue('isUSDAFood', true);
     
-    // Auto-fill form with USDA data
-    foodForm.setValue('description', foodData.name);
-    foodForm.setValue('quantity', foodData.servingSize?.toString() || '100');
-    
-    if (foodData.isUSDAFood) {
-      foodForm.setValue('fdcId', foodData.fdcId);
-      foodForm.setValue('calories', foodData.calories);
-      foodForm.setValue('protein', foodData.protein);
-      foodForm.setValue('carbs', foodData.carbs);
-      foodForm.setValue('totalFat', foodData.totalFat);
-      foodForm.setValue('isUSDAFood', true);
-      
-      // Auto-categorize based on macronutrients
-      if (foodData.protein && foodData.protein > 10) {
-        foodForm.setValue('category', 'proteins');
-      } else if (foodData.carbs && foodData.carbs > 10) {
-        foodForm.setValue('category', 'carbs');
-      } else {
-        foodForm.setValue('category', 'carbs'); // default
-      }
+    // Auto-categorize based on macronutrients
+    if (data.calculatedNutrition.protein && data.calculatedNutrition.protein > 10) {
+      foodForm.setValue('category', 'proteins');
+    } else if (data.calculatedNutrition.carbs && data.calculatedNutrition.carbs > 10) {
+      foodForm.setValue('category', 'carbs');
+    } else {
+      foodForm.setValue('category', 'carbs'); // default
     }
     
-    setShowUSDASearch(false);
+    setIsFoodDialogOpen(false);
+    // Submit the form automatically
+    onSubmitFood({
+      mealType: foodForm.getValues('mealType'),
+      category: foodForm.getValues('category'),
+      description: foodForm.getValues('description'),
+      quantity: foodForm.getValues('quantity'),
+      notes: foodForm.getValues('notes') || '',
+      fdcId: data.food.fdcId,
+      calories: data.calculatedCalories,
+      protein: data.calculatedNutrition.protein,
+      carbs: data.calculatedNutrition.carbs,
+      totalFat: data.calculatedNutrition.totalFat,
+      isUSDAFood: true,
+    });
   };
 
   const onSubmitCardio = (data: CardioActivityFormData) => {
@@ -507,43 +519,13 @@ export default function DailyResume() {
                       <DialogTitle>{t('dailyResume.addFoodEntry')}</DialogTitle>
                   </DialogHeader>
                   
-                  {/* USDA Food Search Integration */}
+                  {/* Food Dropdown Selection */}
                   <div className="mb-4">
-                    <FoodSearchAutocomplete
-                      onFoodSelect={handleUSDAFoodSelect}
-                      trigger={
-                        <Button 
-                          variant="outline" 
-                          className="w-full" 
-                          type="button"
-                          data-testid="button-search-usda-food"
-                        >
-                          <Search className="h-4 w-4 mr-2" />
-                          {t('usda.searchFood')}
-                        </Button>
-                      }
-                      isOpen={showUSDASearch}
-                      onOpenChange={setShowUSDASearch}
+                    <FoodDropdownSelector
+                      onFoodSelect={handleFoodSelect}
+                      placeholder={t('dailyResume.selectFood')}
+                      selectedCategory="all"
                     />
-                    
-                    {selectedUSDAFood && (
-                      <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800" data-testid="selected-usda-food-info">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                            {t('usda.usdaEntry')}
-                          </span>
-                        </div>
-                        <p className="text-sm text-green-700 dark:text-green-300" data-testid="text-selected-food-name">
-                          {selectedUSDAFood.name}
-                        </p>
-                        {selectedUSDAFood.calories && (
-                          <p className="text-xs text-green-600 dark:text-green-400" data-testid="text-selected-food-calories">
-                            {selectedUSDAFood.calories} {t('usda.caloriesPer100g')}
-                          </p>
-                        )}
-                      </div>
-                    )}
                   </div>
                   
                   <Form {...foodForm}>
@@ -624,28 +606,6 @@ export default function DailyResume() {
                           </FormItem>
                         )}
                       />
-                      
-                      {/* Automatic Calorie Calculator */}
-                      <AutoCalorieCalculator
-                        foodDescription={foodForm.watch('description') || ''}
-                        quantity={parseFloat(foodForm.watch('quantity')) || 0}
-                        onCaloriesCalculated={(calories, fdcId, nutritionData) => {
-                          setAutoCalculatedCalories(calories);
-                          setAutoCalculatedNutrition(nutritionData);
-                          // Update form with calculated values
-                          foodForm.setValue('calories', calories);
-                          if (fdcId) {
-                            foodForm.setValue('fdcId', fdcId);
-                            foodForm.setValue('isUSDAFood', true);
-                          }
-                          if (nutritionData) {
-                            foodForm.setValue('protein', nutritionData.protein);
-                            foodForm.setValue('carbs', nutritionData.carbs);
-                            foodForm.setValue('totalFat', nutritionData.totalFat);
-                          }
-                        }}
-                        disabled={isTrainerView} // Only allow clients to use auto-calculation
-                      />
 
                       <FormField
                         control={foodForm.control}
@@ -669,7 +629,6 @@ export default function DailyResume() {
                           variant="outline" 
                           onClick={() => {
                             setIsFoodDialogOpen(false);
-                            setSelectedUSDAFood(null);
                             foodForm.reset();
                           }}
                           data-testid="button-cancel-food-entry"

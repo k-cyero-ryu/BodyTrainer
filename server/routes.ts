@@ -8,7 +8,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission, ObjectAclPolicy, getObjectAclPolicy } from "./objectAcl";
 import { z } from "zod";
 import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, insertExerciseSchema, insertPostSchema, insertChatMessageSchema, insertClientPlanSchema, insertMonthlyEvaluationSchema, insertPaymentPlanSchema, insertClientPaymentPlanSchema, insertCommunityMessageSchema, insertSocialPostSchema, insertFoodEntrySchema, insertCardioActivitySchema, updateFoodEntrySchema, updateCardioActivitySchema, insertCustomCalorieEntrySchema, updateCustomCalorieEntrySchema, socialComments, paymentPlans, clientPaymentPlans, type User, type USDASearchResponse, type USDAFoodDetail, type NutritionData } from "@shared/schema";
-import { searchFoods, getFoodDetails, getFoodNutrition, checkUSDAApiHealth } from "./usdaService";
+import { searchFoods, getFoodDetails, getFoodNutrition, checkUSDAApiHealth, getCuratedFoods } from "./usdaService";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -1791,6 +1791,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Failed to perform health check',
         error: process.env.NODE_ENV === 'development' ? error.message : "Internal server error",
         timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // USDA curated foods list endpoint
+  app.get('/api/usda/curated-foods', isAuthenticated, async (req: any, res) => {
+    try {
+      console.log('[USDA API] Getting curated foods list');
+      
+      const curatedFoods = await getCuratedFoods();
+      
+      res.status(200).json({
+        success: true,
+        data: curatedFoods,
+        count: curatedFoods.length,
+        message: 'Curated foods list retrieved successfully'
+      });
+    } catch (error) {
+      console.error('Error getting curated foods:', error);
+      
+      // Handle specific USDA API errors
+      if (error.message.includes('USDA API key')) {
+        return res.status(503).json({ 
+          success: false,
+          message: "USDA API service is not configured properly",
+          error: "Missing or invalid API key"
+        });
+      }
+      
+      if (error.message.includes('USDA API request failed')) {
+        return res.status(502).json({ 
+          success: false,
+          message: "USDA API service is temporarily unavailable",
+          error: "External API error"
+        });
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get curated foods list",
+        error: process.env.NODE_ENV === 'development' ? error.message : "Internal server error"
       });
     }
   });
