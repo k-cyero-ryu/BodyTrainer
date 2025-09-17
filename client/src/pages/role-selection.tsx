@@ -13,7 +13,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function RoleSelection() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedRole, setSelectedRole] = useState<'trainer' | 'client' | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"trainer" | "client" | null>(
+    null,
+  );
   const [referralCode, setReferralCode] = useState("");
   const [trainerData, setTrainerData] = useState({
     expertise: "",
@@ -54,7 +56,7 @@ export default function RoleSelection() {
 
     const data: any = { role: selectedRole };
 
-    if (selectedRole === 'trainer') {
+    if (selectedRole === "trainer") {
       if (!trainerData.expertise || !trainerData.experience) {
         toast({
           title: "Error",
@@ -64,7 +66,7 @@ export default function RoleSelection() {
         return;
       }
       data.trainerData = trainerData;
-    } else if (selectedRole === 'client') {
+    } else if (selectedRole === "client") {
       if (referralCode) {
         data.referralCode = referralCode;
       }
@@ -78,7 +80,7 @@ export default function RoleSelection() {
       <div className="max-w-4xl w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Welcome to My Body Trainer Manager
+            Welcome to TuGymBro Manager
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Please select your role to get started
@@ -87,13 +89,13 @@ export default function RoleSelection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {/* Trainer Role */}
-          <Card 
+          <Card
             className={`cursor-pointer transition-all ${
-              selectedRole === 'trainer' 
-                ? 'ring-2 ring-primary border-primary' 
-                : 'hover:shadow-lg'
+              selectedRole === "trainer"
+                ? "ring-2 ring-primary border-primary"
+                : "hover:shadow-lg"
             }`}
-            onClick={() => setSelectedRole('trainer')}
+            onClick={() => setSelectedRole("trainer")}
           >
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -103,7 +105,8 @@ export default function RoleSelection() {
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-gray-600 mb-4">
-                Manage clients, create training plans, track progress, and grow your fitness business.
+                Manage clients, create training plans, track progress, and grow
+                your fitness business.
               </p>
               <ul className="text-sm text-gray-500 space-y-1">
                 <li>• Create custom training plans</li>
@@ -115,13 +118,13 @@ export default function RoleSelection() {
           </Card>
 
           {/* Client Role */}
-          <Card 
+          <Card
             className={`cursor-pointer transition-all ${
-              selectedRole === 'client' 
-                ? 'ring-2 ring-primary border-primary' 
-                : 'hover:shadow-lg'
+              selectedRole === "client"
+                ? "ring-2 ring-primary border-primary"
+                : "hover:shadow-lg"
             }`}
-            onClick={() => setSelectedRole('client')}
+            onClick={() => setSelectedRole("client")}
           >
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -131,7 +134,8 @@ export default function RoleSelection() {
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-gray-600 mb-4">
-                Connect with a personal trainer, follow custom plans, and track your fitness journey.
+                Connect with a personal trainer, follow custom plans, and track
+                your fitness journey.
               </p>
               <ul className="text-sm text-gray-500 space-y-1">
                 <li>• Follow personalized training plans</li>
@@ -144,7 +148,7 @@ export default function RoleSelection() {
         </div>
 
         {/* Additional Information Forms */}
-        {selectedRole === 'trainer' && (
+        {selectedRole === "trainer" && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Trainer Information</CardTitle>
@@ -156,7 +160,12 @@ export default function RoleSelection() {
                   id="expertise"
                   placeholder="e.g., Weight loss, Muscle building, Sports performance..."
                   value={trainerData.expertise}
-                  onChange={(e) => setTrainerData(prev => ({ ...prev, expertise: e.target.value }))}
+                  onChange={(e) =>
+                    setTrainerData((prev) => ({
+                      ...prev,
+                      expertise: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div>
@@ -165,21 +174,28 @@ export default function RoleSelection() {
                   id="experience"
                   placeholder="e.g., 5 years"
                   value={trainerData.experience}
-                  onChange={(e) => setTrainerData(prev => ({ ...prev, experience: e.target.value }))}
+                  onChange={(e) =>
+                    setTrainerData((prev) => ({
+                      ...prev,
+                      experience: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </CardContent>
           </Card>
         )}
 
-        {selectedRole === 'client' && (
+        {selectedRole === "client" && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Client Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="referralCode">Trainer Referral Code (Optional)</Label>
+                <Label htmlFor="referralCode">
+                  Trainer Referral Code (Optional)
+                </Label>
                 <Input
                   id="referralCode"
                   placeholder="Enter your trainer's referral code"
@@ -187,7 +203,8 @@ export default function RoleSelection() {
                   onChange={(e) => setReferralCode(e.target.value)}
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  If you have a trainer's referral code, enter it to be automatically assigned to them.
+                  If you have a trainer's referral code, enter it to be
+                  automatically assigned to them.
                 </p>
               </div>
             </CardContent>
@@ -197,13 +214,15 @@ export default function RoleSelection() {
         {/* Submit Button */}
         {selectedRole && (
           <div className="text-center">
-            <Button 
+            <Button
               onClick={handleRoleSubmit}
               disabled={roleMutation.isPending}
               size="lg"
               className="px-8"
             >
-              {roleMutation.isPending ? "Setting up..." : `Continue as ${selectedRole}`}
+              {roleMutation.isPending
+                ? "Setting up..."
+                : `Continue as ${selectedRole}`}
             </Button>
           </div>
         )}
@@ -212,10 +231,13 @@ export default function RoleSelection() {
         <div className="text-center mt-8 p-4 bg-blue-50 rounded-lg">
           <div className="flex items-center justify-center mb-2">
             <Shield className="h-5 w-5 text-blue-600 mr-2" />
-            <span className="font-medium text-blue-900">System Administrator</span>
+            <span className="font-medium text-blue-900">
+              System Administrator
+            </span>
           </div>
           <p className="text-sm text-blue-700">
-            If you're a system administrator, contact the platform admin to assign superadmin privileges.
+            If you're a system administrator, contact the platform admin to
+            assign superadmin privileges.
           </p>
         </div>
       </div>

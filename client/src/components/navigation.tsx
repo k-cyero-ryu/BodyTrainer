@@ -1,25 +1,25 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator 
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Home, 
-  Users, 
-  Dumbbell, 
-  BarChart3, 
-  MessageCircle, 
+import {
+  Home,
+  Users,
+  Dumbbell,
+  BarChart3,
+  MessageCircle,
   Settings,
   LogOut,
   Menu,
@@ -32,7 +32,7 @@ import {
   Activity,
   User,
   Calendar,
-  Target
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSelector from "@/components/language-selector";
@@ -46,152 +46,151 @@ export default function Navigation() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
-
   if (!isAuthenticated) return null;
 
-  const userRole = user?.role || 'client';
+  const userRole = user?.role || "client";
 
   const navigationItems = [
-    { 
-      href: '/', 
-      label: t('nav.dashboard'), 
+    {
+      href: "/",
+      label: t("nav.dashboard"),
       icon: Home,
-      roles: ['superadmin', 'trainer', 'client']
+      roles: ["superadmin", "trainer", "client"],
     },
-    { 
-      href: '/manage-trainers', 
-      label: t('admin.totalTrainers'), 
+    {
+      href: "/manage-trainers",
+      label: t("admin.totalTrainers"),
       icon: Users,
-      roles: ['superadmin']
+      roles: ["superadmin"],
     },
-    { 
-      href: '/admin-clients', 
-      label: t('admin.totalClients'), 
+    {
+      href: "/admin-clients",
+      label: t("admin.totalClients"),
       icon: UserCheck,
-      roles: ['superadmin']
+      roles: ["superadmin"],
     },
-    { 
-      href: '/admin-plans', 
-      label: t('plans.trainingPlans'), 
+    {
+      href: "/admin-plans",
+      label: t("plans.trainingPlans"),
       icon: Dumbbell,
-      roles: ['superadmin']
+      roles: ["superadmin"],
     },
-    { 
-      href: '/admin-exercises', 
-      label: t('exercises.library'), 
+    {
+      href: "/admin-exercises",
+      label: t("exercises.library"),
       icon: Activity,
-      roles: ['superadmin']
+      roles: ["superadmin"],
     },
-    { 
-      href: '/payment-plans', 
-      label: t('nav.paymentPlans'), 
+    {
+      href: "/payment-plans",
+      label: t("nav.paymentPlans"),
       icon: CreditCard,
-      roles: ['superadmin']
+      roles: ["superadmin"],
     },
-    { 
-      href: '/user-management', 
-      label: t('nav.userManagement'), 
+    {
+      href: "/user-management",
+      label: t("nav.userManagement"),
       icon: UserCog,
-      roles: ['superadmin']
+      roles: ["superadmin"],
     },
-    { 
-      href: '/profile', 
-      label: t('nav.profile'), 
+    {
+      href: "/profile",
+      label: t("nav.profile"),
       icon: User,
-      roles: ['trainer']
+      roles: ["trainer"],
     },
-    { 
-      href: '/clients', 
-      label: t('nav.clients'), 
+    {
+      href: "/clients",
+      label: t("nav.clients"),
       icon: Users,
-      roles: ['trainer']
+      roles: ["trainer"],
     },
-    { 
-      href: '/training-plans', 
-      label: t('nav.plans'), 
+    {
+      href: "/training-plans",
+      label: t("nav.plans"),
       icon: Dumbbell,
-      roles: ['trainer']
+      roles: ["trainer"],
     },
-    { 
-      href: '/daily-workout', 
-      label: t('nav.dailyWorkout'), 
+    {
+      href: "/daily-workout",
+      label: t("nav.dailyWorkout"),
       icon: Activity,
-      roles: ['client']
+      roles: ["client"],
     },
-    { 
-      href: '/daily-resume', 
-      label: t('nav.dailyResume'), 
+    {
+      href: "/daily-resume",
+      label: t("nav.dailyResume"),
       icon: BarChart3,
-      roles: ['client']
+      roles: ["client"],
     },
-    { 
-      href: '/calorie-tracker', 
-      label: t('nav.calorieTracker'), 
+    {
+      href: "/calorie-tracker",
+      label: t("nav.calorieTracker"),
       icon: Target,
-      roles: ['client']
+      roles: ["client"],
     },
-    { 
-      href: '/my-training-plans', 
-      label: t('nav.plans'), 
+    {
+      href: "/my-training-plans",
+      label: t("nav.plans"),
       icon: Dumbbell,
-      roles: ['client']
+      roles: ["client"],
     },
-    { 
-      href: '/monthly-evaluation', 
-      label: t('client.monthlyEvaluation'), 
+    {
+      href: "/monthly-evaluation",
+      label: t("client.monthlyEvaluation"),
       icon: Calendar,
-      roles: ['client']
+      roles: ["client"],
     },
-    { 
-      href: '/profile', 
-      label: t('nav.profile'), 
+    {
+      href: "/profile",
+      label: t("nav.profile"),
       icon: User,
-      roles: ['client']
+      roles: ["client"],
     },
-    { 
-      href: '/exercises', 
-      label: t('nav.exercises'), 
+    {
+      href: "/exercises",
+      label: t("nav.exercises"),
       icon: Dumbbell,
-      roles: ['trainer']
+      roles: ["trainer"],
     },
-    { 
-      href: '/client-payment-plans', 
-      label: t('nav.clientPaymentPlans'), 
+    {
+      href: "/client-payment-plans",
+      label: t("nav.clientPaymentPlans"),
       icon: CreditCard,
-      roles: ['trainer'] 
+      roles: ["trainer"],
     },
-    { 
-      href: '/reports', 
-      label: t('nav.reports'), 
+    {
+      href: "/reports",
+      label: t("nav.reports"),
       icon: BarChart3,
-      roles: ['trainer']
+      roles: ["trainer"],
     },
-    { 
-      href: '/community', 
-      label: t('nav.communityChat'), 
+    {
+      href: "/community",
+      label: t("nav.communityChat"),
       icon: MessageCircle,
-      roles: ['trainer', 'client']
+      roles: ["trainer", "client"],
     },
-    { 
-      href: '/social', 
-      label: t('nav.social', 'Social'), 
+    {
+      href: "/social",
+      label: t("nav.social", "Social"),
       icon: MessageCircle,
-      roles: ['superadmin', 'trainer', 'client']
-    }
-  ].filter(item => item.roles.includes(userRole));
+      roles: ["superadmin", "trainer", "client"],
+    },
+  ].filter((item) => item.roles.includes(userRole));
 
   const getUserDisplayName = () => {
     if (user?.firstName || user?.lastName) {
-      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+      return `${user.firstName || ""} ${user.lastName || ""}`.trim();
     }
-    return user?.email || 'User';
+    return user?.email || "User";
   };
 
   const getUserInitials = () => {
     if (user?.firstName || user?.lastName) {
-      return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
+      return `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase();
     }
-    return user?.email?.[0]?.toUpperCase() || 'U';
+    return user?.email?.[0]?.toUpperCase() || "U";
   };
 
   const SidebarItems = ({ collapsed = false }: { collapsed?: boolean }) => (
@@ -199,19 +198,23 @@ export default function Navigation() {
       {navigationItems.map((item) => {
         const Icon = item.icon;
         const isActive = location === item.href;
-        
+
         return (
-          <Link 
-            key={item.href} 
+          <Link
+            key={item.href}
             href={item.href}
-            data-testid={item.href === '/calorie-tracker' ? 'link-calorie-tracker' : undefined}
+            data-testid={
+              item.href === "/calorie-tracker"
+                ? "link-calorie-tracker"
+                : undefined
+            }
           >
             <Button
               variant={isActive ? "default" : "ghost"}
               className={cn(
                 "w-full justify-start h-12 px-3",
                 isActive && "bg-blue-600 text-white hover:bg-blue-700",
-                collapsed && "px-2"
+                collapsed && "px-2",
               )}
               onClick={() => setIsSidebarOpen(false)}
             >
@@ -229,17 +232,19 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className={cn(
-        "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:z-50 lg:w-72",
-        isCollapsed && "lg:w-20"
-      )}>
+      <div
+        className={cn(
+          "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:z-50 lg:w-72",
+          isCollapsed && "lg:w-20",
+        )}
+      >
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 px-6 pb-4">
           {/* Header */}
           <div className="flex h-16 shrink-0 items-center justify-between">
             {!isCollapsed && (
               <Link href="/">
                 <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                  My Body Trainer Manager
+                  TuGymBro
                 </h1>
               </Link>
             )}
@@ -260,23 +265,25 @@ export default function Navigation() {
           {/* Navigation */}
           <nav className="flex flex-1 flex-col">
             <SidebarItems collapsed={isCollapsed} />
-            
+
             {/* User Profile at Bottom */}
             <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
               {!isCollapsed && <LanguageSelector />}
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className={cn(
                       "w-full justify-start h-12 mt-2",
-                      isCollapsed && "px-2"
+                      isCollapsed && "px-2",
                     )}
                   >
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={user?.profileImageUrl || undefined} />
-                      <AvatarFallback className="text-xs">{getUserInitials()}</AvatarFallback>
+                      <AvatarFallback className="text-xs">
+                        {getUserInitials()}
+                      </AvatarFallback>
                     </Avatar>
                     {!isCollapsed && (
                       <div className="ml-3 text-left">
@@ -305,11 +312,11 @@ export default function Navigation() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
-                    {t('nav.settings')}
+                    {t("nav.settings")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    {t('nav.logout')}
+                    {t("nav.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -328,17 +335,17 @@ export default function Navigation() {
         >
           <Menu className="h-6 w-6" />
         </Button>
-        
+
         <div className="flex-1">
           <Link href="/">
             <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              My Body Trainer Manager
+              TuGymBro
             </h1>
           </Link>
         </div>
 
         <LanguageSelector />
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -363,11 +370,11 @@ export default function Navigation() {
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
-              {t('nav.settings')}
+              {t("nav.settings")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
-              {t('auth.signOut')}
+              {t("auth.signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -376,7 +383,10 @@ export default function Navigation() {
       {/* Mobile Sidebar */}
       {isSidebarOpen && (
         <div className="relative z-50 lg:hidden">
-          <div className="fixed inset-0 bg-gray-900/80" onClick={() => setIsSidebarOpen(false)} />
+          <div
+            className="fixed inset-0 bg-gray-900/80"
+            onClick={() => setIsSidebarOpen(false)}
+          />
           <div className="fixed inset-0 flex">
             <div className="relative mr-16 flex w-full max-w-xs flex-1">
               <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
@@ -393,13 +403,13 @@ export default function Navigation() {
                 <div className="flex h-16 shrink-0 items-center">
                   <Link href="/">
                     <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                      My Body Trainer Manager
+                      TuGymBro
                     </h1>
                   </Link>
                 </div>
                 <nav className="flex flex-1 flex-col">
                   <SidebarItems />
-                  
+
                   <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center">
                       <Avatar className="h-8 w-8">

@@ -2,8 +2,21 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { loginUserSchema, type LoginUser } from "@shared/schema";
@@ -26,7 +39,7 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginUser) => {
-      const response = await apiRequest('POST', '/api/auth/login', data);
+      const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
     onSuccess: () => {
@@ -37,7 +50,7 @@ export default function Login() {
       });
       // Redirect to dashboard after successful login
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = "/";
       }, 500);
     },
     onError: (error: any) => {
@@ -63,9 +76,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>
-            Sign in to your My Body Trainer Manager account
-          </CardDescription>
+          <CardDescription>Sign in to your TuGymBro account</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -77,9 +88,9 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Enter your username" 
-                        {...field} 
+                      <Input
+                        placeholder="Enter your username"
+                        {...field}
                         data-testid="input-username"
                       />
                     </FormControl>
@@ -94,10 +105,10 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Enter your password" 
-                        {...field} 
+                      <Input
+                        type="password"
+                        placeholder="Enter your password"
+                        {...field}
                         data-testid="input-password"
                       />
                     </FormControl>
@@ -105,9 +116,9 @@ export default function Login() {
                   </FormItem>
                 )}
               />
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isLoading}
                 data-testid="button-login"
               >
@@ -119,7 +130,10 @@ export default function Login() {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Don't have an account?{" "}
               <Link href="/register">
-                <a className="text-blue-600 hover:text-blue-500 font-medium" data-testid="link-register">
+                <a
+                  className="text-blue-600 hover:text-blue-500 font-medium"
+                  data-testid="link-register"
+                >
                   Sign up
                 </a>
               </Link>

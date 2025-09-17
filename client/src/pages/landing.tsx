@@ -106,8 +106,8 @@ export default function Landing() {
                 Ready to Transform Your Fitness Business?
               </h2>
               <p className="text-blue-100 mb-6">
-                Join thousands of trainers who trust My Body Trainer Manager to
-                grow their business and deliver exceptional client experiences.
+                Join thousands of trainers who trust TuGymBro to grow their
+                business and deliver exceptional client experiences.
               </p>
               <Button
                 variant="secondary"

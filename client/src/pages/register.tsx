@@ -2,10 +2,29 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { registerUserSchema, type RegisterUser } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,24 +54,25 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterUser) => {
-      const response = await apiRequest('POST', '/api/auth/register', data);
+      const response = await apiRequest("POST", "/api/auth/register", data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Registration successful",
-        description: "Welcome to My Body Trainer Manager!",
+        description: "Welcome to TuGymBro!",
       });
       // Redirect to dashboard after successful registration
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = "/";
       }, 500);
     },
     onError: (error: any) => {
       toast({
         title: "Registration failed",
-        description: error.message || "Please check your information and try again",
+        description:
+          error.message || "Please check your information and try again",
         variant: "destructive",
       });
     },
@@ -72,9 +92,7 @@ export default function Register() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>
-            Join My Body Trainer Manager today
-          </CardDescription>
+          <CardDescription>Join My Body Trainer Manager today</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -87,9 +105,9 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="John" 
-                          {...field} 
+                        <Input
+                          placeholder="John"
+                          {...field}
                           data-testid="input-firstName"
                         />
                       </FormControl>
@@ -104,9 +122,9 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Doe" 
-                          {...field} 
+                        <Input
+                          placeholder="Doe"
+                          {...field}
                           data-testid="input-lastName"
                         />
                       </FormControl>
@@ -122,9 +140,9 @@ export default function Register() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Choose a username" 
-                        {...field} 
+                      <Input
+                        placeholder="Choose a username"
+                        {...field}
                         data-testid="input-username"
                       />
                     </FormControl>
@@ -139,10 +157,10 @@ export default function Register() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="john@example.com" 
-                        {...field} 
+                      <Input
+                        type="email"
+                        placeholder="john@example.com"
+                        {...field}
                         data-testid="input-email"
                       />
                     </FormControl>
@@ -157,10 +175,10 @@ export default function Register() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Create a strong password" 
-                        {...field} 
+                      <Input
+                        type="password"
+                        placeholder="Create a strong password"
+                        {...field}
                         data-testid="input-password"
                       />
                     </FormControl>
@@ -175,10 +193,10 @@ export default function Register() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Confirm your password" 
-                        {...field} 
+                      <Input
+                        type="password"
+                        placeholder="Confirm your password"
+                        {...field}
                         data-testid="input-confirmPassword"
                       />
                     </FormControl>
@@ -192,7 +210,10 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>I am a</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger data-testid="select-role">
                           <SelectValue placeholder="Select your role" />
@@ -215,23 +236,24 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Trainer Referral Code (Optional)</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Enter trainer's referral code" 
-                          {...field} 
+                        <Input
+                          placeholder="Enter trainer's referral code"
+                          {...field}
                           data-testid="input-referralCode"
                         />
                       </FormControl>
                       <FormMessage />
                       <p className="text-sm text-gray-500">
-                        If you have a trainer's referral code, enter it to be automatically assigned to them.
+                        If you have a trainer's referral code, enter it to be
+                        automatically assigned to them.
                       </p>
                     </FormItem>
                   )}
                 />
               )}
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isLoading}
                 data-testid="button-register"
               >
@@ -243,7 +265,10 @@ export default function Register() {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{" "}
               <Link href="/login">
-                <a className="text-blue-600 hover:text-blue-500 font-medium" data-testid="link-login">
+                <a
+                  className="text-blue-600 hover:text-blue-500 font-medium"
+                  data-testid="link-login"
+                >
                   Sign in
                 </a>
               </Link>
