@@ -211,14 +211,14 @@ const CURATED_FOODS: CuratedFood[] = [
   { fdcId: 174292, name: "Beef, round, eye of round, separable lean only, trimmed to 0\" fat, choice, cooked, roasted", category: "proteins", commonNames: ["Beef", "Res", "Beef roast"] },
   { fdcId: 175167, name: "Fish, salmon, Atlantic, farmed, cooked, dry heat", category: "proteins", commonNames: ["Salmon", "Pescado", "Fish"] },
   { fdcId: 173423, name: "Pork, fresh, loin, center cut (chops), bone-in, separable lean only, cooked, broiled", category: "proteins", commonNames: ["Pork", "Cerdo", "Pork chop"] },
-  { fdcId: 321355, name: "Egg, whole, cooked, hard-boiled", category: "proteins", commonNames: ["Egg", "Huevo", "Hard boiled egg"] },
+  { fdcId: 748967, name: "Egg, whole, cooked, hard-boiled", category: "proteins", commonNames: ["Egg", "Huevo", "Hard boiled egg"] },
   { fdcId: 175177, name: "Fish, tuna, light, canned in water, drained solids", category: "proteins", commonNames: ["Tuna", "Atún", "Canned tuna"] },
   
   // Carbohydrates  
   { fdcId: 169704, name: "Rice, white, long-grain, regular, cooked", category: "carbohydrates", commonNames: ["White rice", "Arroz", "Rice"] },
   { fdcId: 168878, name: "Bread, whole-wheat, commercially prepared", category: "carbohydrates", commonNames: ["Whole wheat bread", "Pan integral", "Bread"] },
   { fdcId: 168916, name: "Pasta, cooked, enriched, without added salt", category: "carbohydrates", commonNames: ["Pasta", "Noodles", "Spaghetti"] },
-  { fdcId: 169998, name: "Potatoes, flesh and skin, raw", category: "carbohydrates", commonNames: ["Potato", "Papa", "Patata"] },
+  { fdcId: 170093, name: "Potatoes, flesh and skin, raw", category: "carbohydrates", commonNames: ["Potato", "Papa", "Patata"] },
   { fdcId: 168927, name: "Oats", category: "carbohydrates", commonNames: ["Oats", "Avena", "Oatmeal"] },
   { fdcId: 170066, name: "Sweet potato, raw", category: "carbohydrates", commonNames: ["Sweet potato", "Batata", "Camote"] },
   
