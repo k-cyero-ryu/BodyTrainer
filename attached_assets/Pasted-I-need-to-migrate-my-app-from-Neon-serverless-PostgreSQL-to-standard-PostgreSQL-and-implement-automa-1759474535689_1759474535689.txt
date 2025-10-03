@@ -1,0 +1,67 @@
+I need to migrate my app from Neon serverless PostgreSQL to standard PostgreSQL and implement automatic database migrations on startup. Please implement the following changes:
+
+## Requirements:
+
+1. **Replace Neon with Standard PostgreSQL**
+   - Uninstall: @neondatabase/serverless
+   - Install: pg and dotenv packages
+   - Update server/db.ts to use 'pg' instead of Neon:
+     * Change from: import { Pool } from '@neondatabase/serverless'
+     * Change to: import { Pool } from 'pg'
+     * Change from: import { drizzle } from 'drizzle-orm/neon-serverless'
+     * Change to: import { drizzle } from 'drizzle-orm/node-postgres'
+     * Remove all Neon-specific config (neonConfig, ws imports)
+
+2. **Implement Bootstrap Entry Point for Environment Loading**
+   - Create server/bootstrap.ts that loads .env BEFORE any other imports
+   - The bootstrap file should:
+     * Load .env (development) or .env.production (production) based on NODE_ENV
+     * Then dynamically import server/index.ts
+   - Remove any dotenv loading from server/index.ts
+   - Update all package.json scripts to use bootstrap.ts as entry point (dev, server, preview)
+   - Update .replit workflow to use: tsx server/bootstrap.ts
+   - Update deployment config to use: tsx server/bootstrap.ts
+
+3. **Create Automatic Migration Runner**
+   - Create server/utils/migrate.ts with a runMigrations() function that:
+     * Uses drizzle-orm/node-postgres/migrator (NOT neon-serverless/migrator)
+     * Reads migrations from ./migrations folder
+     * Creates its own Pool connection for migration
+     * Closes the pool after migrations complete
+   - Import and call runMigrations() in server/index.ts startServer() function
+   - Run migrations BEFORE database seeding
+   - Startup order must be: runMigrations() → seedDatabase() → app.listen()
+
+4. **Ensure Migration Infrastructure Exists**
+   - Check if migrations/meta/_journal.json exists
+   - If not, create: migrations/meta/_journal.json with content:
+     {
+       "version": "7",
+       "dialect": "postgresql",
+       "entries": []
+     }
+   - This prevents migration errors on first run
+
+5. **Environment File Security**
+   - Add to .gitignore:
+     .env
+     .env.production
+     .env.local
+     .env.*.local
+
+6. **Important Implementation Details**
+   - The bootstrap.ts pattern is CRITICAL: dotenv must load before ANY module that uses process.env.DATABASE_URL is imported
+   - Migration runner should create its own database connection (don't reuse the main app connection)
+   - Migrations run in BOTH development and production on every startup
+   - Database seeding should only run in development (check NODE_ENV)
+   - Use Express 5 catch-all route pattern: app.get('(.*)', ...) not '*' or '/*'
+
+## Expected Result:
+After implementation, the startup sequence should show:
+1. "Running database migrations..."
+2. "✓ Database migrations completed successfully"
+3. "Seeding database..." (dev only)
+4. "✓ Database seeding completed" (dev only)
+5. "Server running on port 5000"
+
+The app should work with any PostgreSQL database by simply changing DATABASE_URL in .env or .env.production files.
