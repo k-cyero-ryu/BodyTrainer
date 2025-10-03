@@ -208,6 +208,7 @@ export interface IStorage {
   getCommunityGroupByTrainer(trainerId: string): Promise<CommunityGroup | undefined>;
   updateCommunityGroup(id: string, updates: { name?: string; description?: string | null }): Promise<CommunityGroup>;
   addCommunityMember(member: InsertCommunityMember): Promise<CommunityMember>;
+  getCommunityMembers(groupId: string): Promise<string[]>;
   isCommunityMember(groupId: string, userId: string): Promise<boolean>;
   createCommunityMessage(message: InsertCommunityMessage): Promise<CommunityMessage>;
   getCommunityMessages(groupId: string): Promise<CommunityMessage[]>;
@@ -1639,6 +1640,14 @@ export class DatabaseStorage implements IStorage {
       .values(member)
       .returning();
     return created;
+  }
+
+  async getCommunityMembers(groupId: string): Promise<string[]> {
+    const members = await db
+      .select({ userId: communityMembers.userId })
+      .from(communityMembers)
+      .where(eq(communityMembers.groupId, groupId));
+    return members.map(m => m.userId);
   }
 
   async isCommunityMember(groupId: string, userId: string): Promise<boolean> {

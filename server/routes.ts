@@ -2789,15 +2789,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Get all users and filter based on role and status
-      const allUsers = await storage.getAllUsers();
+      let allowedUserIds: string[] = [];
       
-      let chatUsers = allUsers.filter((user: User) => user.id !== currentUserId); // Exclude current user
-      
-      // If current user is a pending trainer, only show superadmins
-      if (currentUser.role === 'trainer' && currentUser.status === 'pending') {
-        chatUsers = chatUsers.filter((user: User) => user.role === 'superadmin');
+      if (currentUser.role === 'superadmin') {
+        // SuperAdmin can see all users
+        const allUsers = await storage.getAllUsers();
+        allowedUserIds = allUsers
+          .filter((user: User) => user.id !== currentUserId)
+          .map((user: User) => user.id);
+      } else if (currentUser.role === 'trainer') {
+        const trainer = await storage.getTrainerByUserId(currentUserId);
+        
+        if (currentUser.status === 'pending') {
+          // Pending trainers can only see superadmins
+          const allUsers = await storage.getAllUsers();
+          allowedUserIds = allUsers
+            .filter((user: User) => user.role === 'superadmin')
+            .map((user: User) => user.id);
+        } else if (trainer) {
+          // Active trainers can see superadmin + their own clients
+          const allUsers = await storage.getAllUsers();
+          const clients = await storage.getClientsByTrainer(trainer.id);
+          
+          // Get superadmin user IDs
+          const superAdminIds = allUsers
+            .filter((user: User) => user.role === 'superadmin')
+            .map((user: User) => user.id);
+          
+          // Get client user IDs
+          const clientUserIds = clients.map((client: any) => client.userId);
+          
+          allowedUserIds = [...superAdminIds, ...clientUserIds];
+        }
+      } else if (currentUser.role === 'client') {
+        const client = await storage.getClientByUserId(currentUserId);
+        
+        if (client && client.trainerId) {
+          // Clients can see their trainer + trainer's community members
+          const trainer = await storage.getTrainer(client.trainerId);
+          
+          if (trainer) {
+            // Add trainer's user ID
+            allowedUserIds.push(trainer.userId);
+            
+            // Get community group and members
+            const communityGroup = await storage.getCommunityGroupByTrainer(client.trainerId);
+            if (communityGroup) {
+              const communityMemberIds = await storage.getCommunityMembers(communityGroup.id);
+              allowedUserIds.push(...communityMemberIds);
+            }
+          }
+        }
       }
+      
+      // Remove duplicates and current user
+      const uniqueUserIds = Array.from(new Set(allowedUserIds)).filter(id => id !== currentUserId);
+      
+      // Get user details for allowed users
+      const allUsers = await storage.getAllUsers();
+      const chatUsers = allUsers.filter((user: User) => uniqueUserIds.includes(user.id));
       
       const mappedUsers = chatUsers.map((user: User) => ({
         id: user.id,
