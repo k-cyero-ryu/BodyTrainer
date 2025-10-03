@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
+import LoginForm from "@/pages/login-form";
 import Register from "@/pages/register";
 import RoleSelection from "@/pages/role-selection";
 import SuperAdminSetup from "@/pages/superadmin-setup";
@@ -66,13 +67,14 @@ function Router() {
   if (!isAuthenticated) {
     return (
       <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="/register" component={Register} />
         <Route path="/" component={Landing} />
+        <Route path="/login" component={Landing} />
+        <Route path="/login-form" component={LoginForm} />
+        <Route path="/register" component={Register} />
         <Route path="*">
-          {/* Redirect any other path to login for unauthenticated users */}
+          {/* Redirect any other path to landing for unauthenticated users */}
           {() => { 
-            window.location.href = '/login';
+            window.location.href = '/';
             return null;
           }}
         </Route>

@@ -1,6 +1,3 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,138 +6,120 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { loginUserSchema, type LoginUser } from "@shared/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Link } from "wouter";
+import { Users, Dumbbell, TrendingUp, MessageCircle } from "lucide-react";
 
-export default function Login() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const form = useForm<LoginUser>({
-    resolver: zodResolver(loginUserSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginUser) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
-      // Redirect to dashboard after successful login
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 500);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid username or password",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = async (data: LoginUser) => {
-    setIsLoading(true);
-    try {
-      await loginMutation.mutateAsync(data);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your TuGymBro account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your username"
-                        {...field}
-                        data-testid="input-username"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter your password"
-                        {...field}
-                        data-testid="input-password"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-                data-testid="button-login"
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
-              <Link href="/register">
-                <a
-                  className="text-blue-600 hover:text-blue-500 font-medium"
-                  data-testid="link-register"
-                >
-                  Sign up
-                </a>
-              </Link>
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-16">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            TuGymBro
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            The complete fitness management platform connecting trainers with
+            clients through personalized training plans, progress tracking, and
+            real-time communication.
+          </p>
+          <div className="space-x-4">
+            <Button
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+              onClick={() => (window.location.href = "/login")}
+              data-testid="button-login"
+            >
+              Sign In
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="px-8 py-3"
+              onClick={() => (window.location.href = "/register")}
+              data-testid="button-register"
+            >
+              Sign Up
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg">
+            <CardHeader className="text-center">
+              <Users className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+              <CardTitle className="text-gray-900 dark:text-white">
+                Client Management
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Manage your clients, track their progress, and maintain strong
+                relationships
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg">
+            <CardHeader className="text-center">
+              <Dumbbell className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <CardTitle className="text-gray-900 dark:text-white">
+                Training Plans
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Create customized workout plans with detailed exercises and
+                schedules
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg">
+            <CardHeader className="text-center">
+              <TrendingUp className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+              <CardTitle className="text-gray-900 dark:text-white">
+                Progress Tracking
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Monitor client progress with detailed analytics and monthly
+                evaluations
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg">
+            <CardHeader className="text-center">
+              <MessageCircle className="w-12 h-12 text-orange-600 mx-auto mb-4" />
+              <CardTitle className="text-gray-900 dark:text-white">
+                Real-time Chat
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
+                Stay connected with clients through instant messaging and
+                support
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* CTA Section */}
+        <div className="text-center">
+          <Card className="bg-blue-600 border-0 max-w-2xl mx-auto">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-bold text-white mb-4">
+                Ready to Transform Your Fitness Business?
+              </h2>
+              <p className="text-blue-100 mb-6">
+                Join thousands of trainers who trust TuGymBro to grow their
+                business and deliver exceptional client experiences.
+              </p>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => (window.location.href = "/api/login")}
+              >
+                Start Your Journey
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

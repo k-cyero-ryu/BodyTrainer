@@ -5,6 +5,51 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 const resources = {
   en: {
     translation: {
+      // Landing Page
+      'landing.appName': 'TuGymBro',
+      'landing.tagline': 'Transform Your Fitness Journey',
+      'landing.description': 'The complete platform connecting trainers and members. Manage training plans, track progress, and build a thriving fitness community all in one place.',
+      'landing.signIn': 'Sign In',
+      'landing.signUp': 'Sign Up',
+      'landing.getStarted': 'Get Started',
+      'landing.learnMore': 'Learn More',
+      
+      // Landing Features
+      'landing.features.title': 'Everything You Need to Succeed',
+      'landing.features.forTrainers': 'For Trainers',
+      'landing.features.forMembers': 'For Members',
+      
+      'landing.features.trainer1.title': 'Client Management',
+      'landing.features.trainer1.desc': 'Organize and track all your clients in one place with powerful management tools',
+      'landing.features.trainer2.title': 'Custom Training Plans',
+      'landing.features.trainer2.desc': 'Create personalized workout plans tailored to each client\'s goals and needs',
+      'landing.features.trainer3.title': 'Progress Tracking',
+      'landing.features.trainer3.desc': 'Monitor client progress with detailed analytics and monthly evaluations',
+      'landing.features.trainer4.title': 'Community Building',
+      'landing.features.trainer4.desc': 'Foster a community among your clients with group chat and social features',
+      
+      'landing.features.member1.title': 'Personalized Workouts',
+      'landing.features.member1.desc': 'Get custom training plans designed specifically for your fitness goals',
+      'landing.features.member2.title': 'Nutrition Tracking',
+      'landing.features.member2.desc': 'Track your daily calorie intake with easy-to-use food logging tools',
+      'landing.features.member3.title': 'Progress Monitoring',
+      'landing.features.member3.desc': 'Track your progress with monthly evaluations and visual comparisons',
+      'landing.features.member4.title': 'Community Support',
+      'landing.features.member4.desc': 'Connect with fellow members and your trainer for motivation and support',
+      
+      'landing.cta.title': 'Ready to Transform Your Fitness Business?',
+      'landing.cta.subtitle': 'Join hundreds of trainers already using TuGymBro to grow their business',
+      'landing.cta.button': 'Start Free Trial',
+      
+      // Landing Footer
+      'landing.footer.company': 'Company',
+      'landing.footer.about': 'About Us',
+      'landing.footer.contact': 'Contact',
+      'landing.footer.support': 'Support',
+      'landing.footer.contactEmail': 'Email: support@tugymbro.com',
+      'landing.footer.contactPhone': 'Phone: +1 (555) 123-4567',
+      'landing.footer.rights': 'All rights reserved',
+
       // Navigation
       'nav.dashboard': 'Dashboard',
       'nav.profile': 'Profile',
@@ -1022,6 +1067,51 @@ const resources = {
   },
   es: {
     translation: {
+      // Landing Page
+      'landing.appName': 'TuGymBro',
+      'landing.tagline': 'Transforma Tu Viaje Fitness',
+      'landing.description': 'La plataforma completa que conecta entrenadores y miembros. Gestiona planes de entrenamiento, rastrea progreso y construye una comunidad fitness próspera, todo en un solo lugar.',
+      'landing.signIn': 'Iniciar Sesión',
+      'landing.signUp': 'Registrarse',
+      'landing.getStarted': 'Comenzar',
+      'landing.learnMore': 'Saber Más',
+      
+      // Landing Features
+      'landing.features.title': 'Todo Lo Que Necesitas Para Tener Éxito',
+      'landing.features.forTrainers': 'Para Entrenadores',
+      'landing.features.forMembers': 'Para Miembros',
+      
+      'landing.features.trainer1.title': 'Gestión de Clientes',
+      'landing.features.trainer1.desc': 'Organiza y rastrea todos tus clientes en un solo lugar con herramientas poderosas',
+      'landing.features.trainer2.title': 'Planes Personalizados',
+      'landing.features.trainer2.desc': 'Crea planes de entrenamiento personalizados adaptados a las metas y necesidades de cada cliente',
+      'landing.features.trainer3.title': 'Seguimiento de Progreso',
+      'landing.features.trainer3.desc': 'Monitorea el progreso del cliente con análisis detallados y evaluaciones mensuales',
+      'landing.features.trainer4.title': 'Construcción de Comunidad',
+      'landing.features.trainer4.desc': 'Fomenta una comunidad entre tus clientes con chat grupal y funciones sociales',
+      
+      'landing.features.member1.title': 'Entrenamientos Personalizados',
+      'landing.features.member1.desc': 'Obtén planes de entrenamiento personalizados diseñados específicamente para tus objetivos',
+      'landing.features.member2.title': 'Seguimiento Nutricional',
+      'landing.features.member2.desc': 'Rastrea tu ingesta diaria de calorías con herramientas de registro de alimentos fáciles de usar',
+      'landing.features.member3.title': 'Monitoreo de Progreso',
+      'landing.features.member3.desc': 'Rastrea tu progreso con evaluaciones mensuales y comparaciones visuales',
+      'landing.features.member4.title': 'Apoyo Comunitario',
+      'landing.features.member4.desc': 'Conéctate con otros miembros y tu entrenador para motivación y apoyo',
+      
+      'landing.cta.title': '¿Listo Para Transformar Tu Negocio Fitness?',
+      'landing.cta.subtitle': 'Únete a cientos de entrenadores que ya usan TuGymBro para hacer crecer su negocio',
+      'landing.cta.button': 'Comenzar Prueba Gratis',
+      
+      // Landing Footer
+      'landing.footer.company': 'Empresa',
+      'landing.footer.about': 'Acerca de',
+      'landing.footer.contact': 'Contacto',
+      'landing.footer.support': 'Soporte',
+      'landing.footer.contactEmail': 'Correo: support@tugymbro.com',
+      'landing.footer.contactPhone': 'Teléfono: +1 (555) 123-4567',
+      'landing.footer.rights': 'Todos los derechos reservados',
+
       // Navigation
       'nav.dashboard': 'Panel',
       'nav.profile': 'Perfil',
@@ -2011,6 +2101,51 @@ const resources = {
   },
   fr: {
     translation: {
+      // Landing Page
+      'landing.appName': 'TuGymBro',
+      'landing.tagline': 'Transformez Votre Parcours Fitness',
+      'landing.description': 'La plateforme complète qui connecte les entraîneurs et les membres. Gérez les plans d\'entraînement, suivez les progrès et construisez une communauté fitness florissante, le tout en un seul endroit.',
+      'landing.signIn': 'Se Connecter',
+      'landing.signUp': 'S\'inscrire',
+      'landing.getStarted': 'Commencer',
+      'landing.learnMore': 'En Savoir Plus',
+      
+      // Landing Features
+      'landing.features.title': 'Tout Ce Dont Vous Avez Besoin Pour Réussir',
+      'landing.features.forTrainers': 'Pour Les Entraîneurs',
+      'landing.features.forMembers': 'Pour Les Membres',
+      
+      'landing.features.trainer1.title': 'Gestion Des Clients',
+      'landing.features.trainer1.desc': 'Organisez et suivez tous vos clients en un seul endroit avec des outils puissants',
+      'landing.features.trainer2.title': 'Plans Personnalisés',
+      'landing.features.trainer2.desc': 'Créez des plans d\'entraînement personnalisés adaptés aux objectifs et besoins de chaque client',
+      'landing.features.trainer3.title': 'Suivi Des Progrès',
+      'landing.features.trainer3.desc': 'Surveillez les progrès des clients avec des analyses détaillées et des évaluations mensuelles',
+      'landing.features.trainer4.title': 'Construction De Communauté',
+      'landing.features.trainer4.desc': 'Favorisez une communauté parmi vos clients avec chat de groupe et fonctionnalités sociales',
+      
+      'landing.features.member1.title': 'Entraînements Personnalisés',
+      'landing.features.member1.desc': 'Obtenez des plans d\'entraînement personnalisés conçus spécifiquement pour vos objectifs',
+      'landing.features.member2.title': 'Suivi Nutritionnel',
+      'landing.features.member2.desc': 'Suivez votre apport calorique quotidien avec des outils de journalisation alimentaire faciles à utiliser',
+      'landing.features.member3.title': 'Surveillance Des Progrès',
+      'landing.features.member3.desc': 'Suivez vos progrès avec des évaluations mensuelles et des comparaisons visuelles',
+      'landing.features.member4.title': 'Soutien Communautaire',
+      'landing.features.member4.desc': 'Connectez-vous avec d\'autres membres et votre entraîneur pour motivation et soutien',
+      
+      'landing.cta.title': 'Prêt À Transformer Votre Entreprise Fitness?',
+      'landing.cta.subtitle': 'Rejoignez des centaines d\'entraîneurs utilisant déjà TuGymBro pour développer leur entreprise',
+      'landing.cta.button': 'Commencer L\'essai Gratuit',
+      
+      // Landing Footer
+      'landing.footer.company': 'Entreprise',
+      'landing.footer.about': 'À Propos',
+      'landing.footer.contact': 'Contact',
+      'landing.footer.support': 'Soutien',
+      'landing.footer.contactEmail': 'Email: support@tugymbro.com',
+      'landing.footer.contactPhone': 'Téléphone: +1 (555) 123-4567',
+      'landing.footer.rights': 'Tous droits réservés',
+
       // Navigation
       'nav.dashboard': 'Tableau de Bord',
       'nav.clients': 'Clients',
@@ -2064,6 +2199,51 @@ const resources = {
   },
   pt: {
     translation: {
+      // Landing Page
+      'landing.appName': 'TuGymBro',
+      'landing.tagline': 'Transforme Sua Jornada Fitness',
+      'landing.description': 'A plataforma completa que conecta treinadores e membros. Gerencie planos de treino, acompanhe progresso e construa uma comunidade fitness próspera, tudo em um só lugar.',
+      'landing.signIn': 'Entrar',
+      'landing.signUp': 'Cadastrar',
+      'landing.getStarted': 'Começar',
+      'landing.learnMore': 'Saiba Mais',
+      
+      // Landing Features
+      'landing.features.title': 'Tudo O Que Você Precisa Para Ter Sucesso',
+      'landing.features.forTrainers': 'Para Treinadores',
+      'landing.features.forMembers': 'Para Membros',
+      
+      'landing.features.trainer1.title': 'Gestão De Clientes',
+      'landing.features.trainer1.desc': 'Organize e acompanhe todos os seus clientes em um só lugar com ferramentas poderosas',
+      'landing.features.trainer2.title': 'Planos Personalizados',
+      'landing.features.trainer2.desc': 'Crie planos de treino personalizados adaptados às metas e necessidades de cada cliente',
+      'landing.features.trainer3.title': 'Acompanhamento De Progresso',
+      'landing.features.trainer3.desc': 'Monitore o progresso do cliente com análises detalhadas e avaliações mensais',
+      'landing.features.trainer4.title': 'Construção De Comunidade',
+      'landing.features.trainer4.desc': 'Promova uma comunidade entre seus clientes com chat em grupo e recursos sociais',
+      
+      'landing.features.member1.title': 'Treinos Personalizados',
+      'landing.features.member1.desc': 'Receba planos de treino personalizados projetados especificamente para seus objetivos',
+      'landing.features.member2.title': 'Acompanhamento Nutricional',
+      'landing.features.member2.desc': 'Acompanhe sua ingestão diária de calorias com ferramentas de registro alimentar fáceis de usar',
+      'landing.features.member3.title': 'Monitoramento De Progresso',
+      'landing.features.member3.desc': 'Acompanhe seu progresso com avaliações mensais e comparações visuais',
+      'landing.features.member4.title': 'Apoio Comunitário',
+      'landing.features.member4.desc': 'Conecte-se com outros membros e seu treinador para motivação e apoio',
+      
+      'landing.cta.title': 'Pronto Para Transformar Seu Negócio Fitness?',
+      'landing.cta.subtitle': 'Junte-se a centenas de treinadores que já usam TuGymBro para expandir seus negócios',
+      'landing.cta.button': 'Iniciar Teste Grátis',
+      
+      // Landing Footer
+      'landing.footer.company': 'Empresa',
+      'landing.footer.about': 'Sobre Nós',
+      'landing.footer.contact': 'Contato',
+      'landing.footer.support': 'Suporte',
+      'landing.footer.contactEmail': 'Email: support@tugymbro.com',
+      'landing.footer.contactPhone': 'Telefone: +1 (555) 123-4567',
+      'landing.footer.rights': 'Todos os direitos reservados',
+
       // Navigation
       'nav.dashboard': 'Painel',
       'nav.clients': 'Clientes',
