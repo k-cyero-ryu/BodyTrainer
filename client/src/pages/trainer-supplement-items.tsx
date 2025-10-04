@@ -192,7 +192,7 @@ export default function TrainerSupplementItems() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setLocation("/trainer/supplements")}
+            onClick={() => setLocation("/trainer-supplements")}
             data-testid="button-back-to-plans"
           >
             <ArrowLeft className="w-5 h-5" />
