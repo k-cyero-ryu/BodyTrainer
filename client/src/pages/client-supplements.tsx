@@ -18,7 +18,7 @@ export default function ClientSupplements() {
   const { t } = useTranslation();
 
   const { data: activeSupplementPlan, isLoading } = useQuery<SupplementPlanWithItems>({
-    queryKey: ["/api/nutrition/clients", user?.client?.id, "supplement-plans/active"],
+    queryKey: [`/api/nutrition/clients/${user?.client?.id}/supplement-plan-assignments/active`],
     enabled: !!user?.client?.id,
   });
 

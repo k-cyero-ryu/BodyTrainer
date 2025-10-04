@@ -39,7 +39,7 @@ export default function ClientMealPlans() {
   const { t } = useTranslation();
 
   const { data: activeAssignment, isLoading } = useQuery<MealPlanAssignment>({
-    queryKey: ["/api/nutrition/clients", user?.client?.id, "active-meal-plan-assignment"],
+    queryKey: [`/api/nutrition/clients/${user?.client?.id}/meal-plan-assignments/active`],
     enabled: !!user?.client?.id,
   });
 
