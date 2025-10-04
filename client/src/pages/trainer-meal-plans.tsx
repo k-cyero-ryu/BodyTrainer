@@ -18,7 +18,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FoodSearchAutocomplete, type SelectedFoodData } from "@/components/FoodSearchAutocomplete";
+import { FoodDropdownSelector } from "@/components/FoodDropdownSelector";
+import type { NutritionData } from "@shared/schema";
 import { 
   UtensilsCrossed, 
   Plus, 
@@ -79,6 +80,7 @@ const MEAL_TYPES = [
   { value: "snack", label: "Snack" },
   { value: "pre-workout", label: "Pre-Workout" },
   { value: "post-workout", label: "Post-Workout" },
+  { value: "intra-workout", label: "Intra-Workout" },
 ];
 
 const GOAL_OPTIONS = [
@@ -272,16 +274,21 @@ export default function TrainerMealPlans() {
     );
   };
 
-  const addFoodToMeal = (dayNumber: number, mealId: string, food: SelectedFoodData) => {
+  const addFoodToMeal = (dayNumber: number, mealId: string, data: {
+    food: NutritionData;
+    quantity: number;
+    calculatedCalories: number;
+    calculatedNutrition: NutritionData;
+  }) => {
     const newItem: MealItemData = {
       id: `item-${Date.now()}`,
-      foodName: food.name,
-      fdcId: food.fdcId.toString(),
-      quantity: 100,
-      calories: food.calories,
-      protein: food.protein,
-      carbs: food.carbs,
-      fat: food.totalFat,
+      foodName: data.food.description,
+      fdcId: data.food.fdcId.toString(),
+      quantity: data.quantity,
+      calories: data.calculatedCalories,
+      protein: data.calculatedNutrition.protein,
+      carbs: data.calculatedNutrition.carbs,
+      fat: data.calculatedNutrition.totalFat,
     };
 
     setDaysData((prev) =>
@@ -666,21 +673,14 @@ export default function TrainerMealPlans() {
                                       </Button>
                                     </div>
                                   ))}
-                                  <FoodSearchAutocomplete
-                                    onFoodSelect={(food) => addFoodToMeal(day.dayNumber, meal.id, food)}
-                                    trigger={
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full"
-                                        data-testid={`button-add-food-${meal.id}`}
-                                      >
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Add Food
-                                      </Button>
-                                    }
-                                  />
+                                  <div className="border-t pt-4">
+                                    <FoodDropdownSelector
+                                      onFoodSelect={(data) => {
+                                        addFoodToMeal(day.dayNumber, meal.id, data);
+                                      }}
+                                      hideTitle={true}
+                                    />
+                                  </div>
                                 </CardContent>
                               </Card>
                             ))}
