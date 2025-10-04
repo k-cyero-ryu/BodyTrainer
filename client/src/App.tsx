@@ -46,6 +46,10 @@ import ClientEvaluationDetail from "@/pages/client-evaluation-detail";
 import ClientEvaluationsList from "@/pages/client-evaluations-list";
 import ClientEvaluationsCompare from "@/pages/client-evaluations-compare";
 import TrainerProfile from "@/pages/trainer-profile";
+import TrainerMealPlans from "@/pages/trainer-meal-plans";
+import TrainerSupplements from "@/pages/trainer-supplements";
+import ClientMealPlans from "@/pages/client-meal-plans";
+import ClientSupplements from "@/pages/client-supplements";
 import Community from "@/pages/community";
 import Social from "@/pages/social";
 import Navigation from "@/components/navigation";
@@ -214,6 +218,8 @@ function Router() {
                   <Route path="/training-plans" component={TrainingPlans} />
                   <Route path="/training-plans/:planId" component={TrainingPlanDetail} />
                   <Route path="/exercises" component={Exercises} />
+                  <Route path="/trainer-meal-plans" component={TrainerMealPlans} />
+                  <Route path="/trainer-supplements" component={TrainerSupplements} />
                   <Route path="/client-payment-plans" component={ClientPaymentPlansPage} />
                   <Route path="/reports" component={Reports} />
                   <Route path="/community" component={Community} />
@@ -228,6 +234,8 @@ function Router() {
                   <Route path="/daily-workout" component={DailyWorkout} />
                   <Route path="/daily-resume" component={DailyResume} />
                   <Route path="/calorie-tracker" component={CalorieTracker} />
+                  <Route path="/client-meal-plans" component={ClientMealPlans} />
+                  <Route path="/client-supplements" component={ClientSupplements} />
                   <Route path="/monthly-evaluation" component={MonthlyEvaluation} />
                   <Route path="/monthly-evaluation-comparison" component={MonthlyEvaluationComparison} />
                   <Route path="/profile" component={ClientProfile} />

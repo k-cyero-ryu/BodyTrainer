@@ -124,6 +124,7 @@ export default function ClientProfile() {
       currentWeight: parseFloat(formData.get('currentWeight') as string) || 0,
       targetWeight: parseFloat(formData.get('targetWeight') as string) || 0,
       height: parseFloat(formData.get('height') as string) || 0,
+      gender: formData.get('gender'),
       activityLevel: formData.get('activityLevel'),
       medicalConditions: formData.get('medicalConditions'),
       dietaryRestrictions: formData.get('dietaryRestrictions'),
@@ -347,23 +348,40 @@ export default function ClientProfile() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="activityLevel" className="flex items-center gap-1">
-                <Activity className="h-4 w-4" />
-                {t('profile.activityLevel')}
-              </Label>
-              <Select name="activityLevel" defaultValue={clientProfile.activityLevel || 'moderate'} disabled={!isEditing}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('clientProfile.selectActivityLevel')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sedentary">{t('clientProfile.activitySedentary')}</SelectItem>
-                  <SelectItem value="light">{t('clientProfile.activityLight')}</SelectItem>
-                  <SelectItem value="moderate">{t('clientProfile.activityModerate')}</SelectItem>
-                  <SelectItem value="active">{t('clientProfile.activityActive')}</SelectItem>
-                  <SelectItem value="very_active">{t('clientProfile.activityVeryActive')}</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="gender" className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  {t('profile.gender')}
+                </Label>
+                <Select name="gender" defaultValue={clientProfile.gender || ''} disabled={!isEditing}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('profile.selectGender')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">{t('profile.male')}</SelectItem>
+                    <SelectItem value="female">{t('profile.female')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="activityLevel" className="flex items-center gap-1">
+                  <Activity className="h-4 w-4" />
+                  {t('profile.activityLevel')}
+                </Label>
+                <Select name="activityLevel" defaultValue={clientProfile.activityLevel || 'moderate'} disabled={!isEditing}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('clientProfile.selectActivityLevel')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sedentary">{t('clientProfile.activitySedentary')}</SelectItem>
+                    <SelectItem value="light">{t('clientProfile.activityLight')}</SelectItem>
+                    <SelectItem value="moderate">{t('clientProfile.activityModerate')}</SelectItem>
+                    <SelectItem value="active">{t('clientProfile.activityActive')}</SelectItem>
+                    <SelectItem value="very_active">{t('clientProfile.activityVeryActive')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -33,6 +33,8 @@ import {
   User,
   Calendar,
   Target,
+  Utensils,
+  Pill,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LanguageSelector from "@/components/language-selector";
@@ -112,6 +114,18 @@ export default function Navigation() {
       roles: ["trainer"],
     },
     {
+      href: "/trainer-meal-plans",
+      label: t("nav.mealPlans"),
+      icon: Utensils,
+      roles: ["trainer"],
+    },
+    {
+      href: "/trainer-supplements",
+      label: t("nav.supplements"),
+      icon: Pill,
+      roles: ["trainer"],
+    },
+    {
       href: "/daily-workout",
       label: t("nav.dailyWorkout"),
       icon: Activity,
@@ -133,6 +147,18 @@ export default function Navigation() {
       href: "/my-training-plans",
       label: t("nav.plans"),
       icon: Dumbbell,
+      roles: ["client"],
+    },
+    {
+      href: "/client-meal-plans",
+      label: t("nav.mealPlans"),
+      icon: Utensils,
+      roles: ["client"],
+    },
+    {
+      href: "/client-supplements",
+      label: t("nav.supplements"),
+      icon: Pill,
       roles: ["client"],
     },
     {

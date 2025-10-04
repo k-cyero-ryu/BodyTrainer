@@ -16,8 +16,9 @@ Preferred communication style: Simple, everyday language.
 - **Internationalization**: i18next for multi-language support (English, Spanish, French, Portuguese).
 - **File Uploads**: Uppy for media file handling.
 
-### Recent Changes (August 2025)
-- **Media System**: Exercise videos/photos and T-pose evaluation photos both use `/objects/` route for public file serving without authentication. System stabilized after resolving path inconsistencies between `/objects/` and `/public-objects/` routes.
+### Recent Changes
+- **October 2025 - Nutrition & Supplement Planning Module**: Implemented comprehensive nutrition module with BMR/TDEE calculations using Mifflin-St Jeor formula, 7-day meal planning with USDA food database integration, supplement management with timing tracking, and client gender field for accurate calorie calculations.
+- **August 2025 - Media System**: Exercise videos/photos and T-pose evaluation photos both use `/objects/` route for public file serving without authentication. System stabilized after resolving path inconsistencies between `/objects/` and `/public-objects/` routes.
 
 ### Backend
 - **Runtime**: Node.js with Express.js (TypeScript, ESM modules).
@@ -30,7 +31,7 @@ Preferred communication style: Simple, everyday language.
 - **ORM**: Drizzle ORM for type-safe database operations.
 - **Session Storage**: PostgreSQL-based session store (connect-pg-simple).
 - **File Storage**: Google Cloud Storage with custom ACL system.
-- **Schema**: Comprehensive schema covering users, trainers, clients, training plans, exercises, evaluations, chat, and progress.
+- **Schema**: Comprehensive schema covering users, trainers, clients, training plans, exercises, evaluations, chat, progress, meal plans, and supplements.
 
 ### Authentication and Authorization
 - **Authentication**: Username/Password authentication with bcrypt hashing and secure session management.
@@ -53,3 +54,4 @@ Preferred communication style: Simple, everyday language.
 - **Development Tools**: Vite
 - **File Upload**: Uppy (with AWS S3 multipart upload for compatibility, though Google Cloud Storage is the primary storage)
 - **Real-time Communication**: WebSocket implementation
+- **External APIs**: USDA FoodData Central API for food nutrition data (with local caching)

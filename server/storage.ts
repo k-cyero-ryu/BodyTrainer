@@ -21,6 +21,13 @@ import {
   foodEntries,
   cardioActivities,
   customCalorieEntries,
+  usdaFoodsCache,
+  mealPlans,
+  mealDays,
+  meals,
+  mealItems,
+  supplementPlans,
+  supplementItems,
   type User,
   type UpsertUser,
   type Trainer,
@@ -68,6 +75,20 @@ import {
   type CustomCalorieEntry,
   type InsertCustomCalorieEntry,
   type UpdateCustomCalorieEntry,
+  type UsdaFoodCache,
+  type InsertUsdaFoodCache,
+  type MealPlan,
+  type InsertMealPlan,
+  type MealDay,
+  type InsertMealDay,
+  type Meal,
+  type InsertMeal,
+  type MealItem,
+  type InsertMealItem,
+  type SupplementPlan,
+  type InsertSupplementPlan,
+  type SupplementItem,
+  type InsertSupplementItem,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql, gte, lte } from "drizzle-orm";
@@ -185,6 +206,53 @@ export interface IStorage {
   }>;
   getCalorieGoal(clientId: string): Promise<number>;
   setCalorieGoal(clientId: string, goal: number): Promise<void>;
+
+  // USDA Food Cache operations
+  cacheUsdaFood(food: InsertUsdaFoodCache): Promise<UsdaFoodCache>;
+  getUsdaFoodByFdcId(fdcId: string): Promise<UsdaFoodCache | undefined>;
+  updateUsdaFoodLastUsed(fdcId: string): Promise<void>;
+
+  // Meal Plan operations
+  createMealPlan(plan: InsertMealPlan): Promise<MealPlan>;
+  getMealPlan(id: string): Promise<MealPlan | undefined>;
+  getMealPlansByClient(clientId: string): Promise<MealPlan[]>;
+  getMealPlansByTrainer(trainerId: string): Promise<MealPlan[]>;
+  getActiveMealPlan(clientId: string): Promise<MealPlan | undefined>;
+  updateMealPlan(id: string, plan: Partial<InsertMealPlan>): Promise<MealPlan>;
+  deleteMealPlan(id: string): Promise<void>;
+
+  // Meal Day operations
+  createMealDay(day: InsertMealDay): Promise<MealDay>;
+  getMealDaysByPlan(planId: string): Promise<MealDay[]>;
+  updateMealDay(id: string, day: Partial<InsertMealDay>): Promise<MealDay>;
+  deleteMealDay(id: string): Promise<void>;
+
+  // Meal operations
+  createMeal(meal: InsertMeal): Promise<Meal>;
+  getMealsByDay(dayId: string): Promise<Meal[]>;
+  updateMeal(id: string, meal: Partial<InsertMeal>): Promise<Meal>;
+  deleteMeal(id: string): Promise<void>;
+
+  // Meal Item operations
+  createMealItem(item: InsertMealItem): Promise<MealItem>;
+  getMealItemsByMeal(mealId: string): Promise<MealItem[]>;
+  updateMealItem(id: string, item: Partial<InsertMealItem>): Promise<MealItem>;
+  deleteMealItem(id: string): Promise<void>;
+
+  // Supplement Plan operations
+  createSupplementPlan(plan: InsertSupplementPlan): Promise<SupplementPlan>;
+  getSupplementPlan(id: string): Promise<SupplementPlan | undefined>;
+  getSupplementPlansByClient(clientId: string): Promise<SupplementPlan[]>;
+  getSupplementPlansByTrainer(trainerId: string): Promise<SupplementPlan[]>;
+  getActiveSupplementPlan(clientId: string): Promise<SupplementPlan | undefined>;
+  updateSupplementPlan(id: string, plan: Partial<InsertSupplementPlan>): Promise<SupplementPlan>;
+  deleteSupplementPlan(id: string): Promise<void>;
+
+  // Supplement Item operations
+  createSupplementItem(item: InsertSupplementItem): Promise<SupplementItem>;
+  getSupplementItemsByPlan(planId: string): Promise<SupplementItem[]>;
+  updateSupplementItem(id: string, item: Partial<InsertSupplementItem>): Promise<SupplementItem>;
+  deleteSupplementItem(id: string): Promise<void>;
 
   // Monthly evaluation operations
   createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation>;
@@ -1072,6 +1140,229 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(clients.id, clientId));
+  }
+
+  // USDA Food Cache operations
+  async cacheUsdaFood(food: InsertUsdaFoodCache): Promise<UsdaFoodCache> {
+    const [cached] = await db.insert(usdaFoodsCache).values(food).returning();
+    return cached;
+  }
+
+  async getUsdaFoodByFdcId(fdcId: string): Promise<UsdaFoodCache | undefined> {
+    const [food] = await db.select().from(usdaFoodsCache).where(eq(usdaFoodsCache.fdcId, fdcId));
+    return food;
+  }
+
+  async updateUsdaFoodLastUsed(fdcId: string): Promise<void> {
+    await db
+      .update(usdaFoodsCache)
+      .set({ lastUsed: new Date(), refreshedAt: new Date() })
+      .where(eq(usdaFoodsCache.fdcId, fdcId));
+  }
+
+  // Meal Plan operations
+  async createMealPlan(plan: InsertMealPlan): Promise<MealPlan> {
+    const [created] = await db.insert(mealPlans).values(plan).returning();
+    return created;
+  }
+
+  async getMealPlan(id: string): Promise<MealPlan | undefined> {
+    const [plan] = await db.select().from(mealPlans).where(eq(mealPlans.id, id));
+    return plan;
+  }
+
+  async getMealPlansByClient(clientId: string): Promise<MealPlan[]> {
+    return await db
+      .select()
+      .from(mealPlans)
+      .where(eq(mealPlans.clientId, clientId))
+      .orderBy(desc(mealPlans.createdAt));
+  }
+
+  async getMealPlansByTrainer(trainerId: string): Promise<MealPlan[]> {
+    return await db
+      .select()
+      .from(mealPlans)
+      .where(eq(mealPlans.trainerId, trainerId))
+      .orderBy(desc(mealPlans.createdAt));
+  }
+
+  async getActiveMealPlan(clientId: string): Promise<MealPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(mealPlans)
+      .where(and(eq(mealPlans.clientId, clientId), eq(mealPlans.isActive, true)))
+      .orderBy(desc(mealPlans.createdAt))
+      .limit(1);
+    return plan;
+  }
+
+  async updateMealPlan(id: string, plan: Partial<InsertMealPlan>): Promise<MealPlan> {
+    const [updated] = await db
+      .update(mealPlans)
+      .set({ ...plan, updatedAt: new Date() })
+      .where(eq(mealPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMealPlan(id: string): Promise<void> {
+    await db.delete(mealPlans).where(eq(mealPlans.id, id));
+  }
+
+  // Meal Day operations
+  async createMealDay(day: InsertMealDay): Promise<MealDay> {
+    const [created] = await db.insert(mealDays).values(day).returning();
+    return created;
+  }
+
+  async getMealDaysByPlan(planId: string): Promise<MealDay[]> {
+    return await db
+      .select()
+      .from(mealDays)
+      .where(eq(mealDays.mealPlanId, planId))
+      .orderBy(mealDays.dayNumber);
+  }
+
+  async updateMealDay(id: string, day: Partial<InsertMealDay>): Promise<MealDay> {
+    const [updated] = await db
+      .update(mealDays)
+      .set(day)
+      .where(eq(mealDays.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMealDay(id: string): Promise<void> {
+    await db.delete(mealDays).where(eq(mealDays.id, id));
+  }
+
+  // Meal operations
+  async createMeal(meal: InsertMeal): Promise<Meal> {
+    const [created] = await db.insert(meals).values(meal).returning();
+    return created;
+  }
+
+  async getMealsByDay(dayId: string): Promise<Meal[]> {
+    return await db
+      .select()
+      .from(meals)
+      .where(eq(meals.mealDayId, dayId));
+  }
+
+  async updateMeal(id: string, meal: Partial<InsertMeal>): Promise<Meal> {
+    const [updated] = await db
+      .update(meals)
+      .set(meal)
+      .where(eq(meals.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMeal(id: string): Promise<void> {
+    await db.delete(meals).where(eq(meals.id, id));
+  }
+
+  // Meal Item operations
+  async createMealItem(item: InsertMealItem): Promise<MealItem> {
+    const [created] = await db.insert(mealItems).values(item).returning();
+    return created;
+  }
+
+  async getMealItemsByMeal(mealId: string): Promise<MealItem[]> {
+    return await db
+      .select()
+      .from(mealItems)
+      .where(eq(mealItems.mealId, mealId));
+  }
+
+  async updateMealItem(id: string, item: Partial<InsertMealItem>): Promise<MealItem> {
+    const [updated] = await db
+      .update(mealItems)
+      .set(item)
+      .where(eq(mealItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMealItem(id: string): Promise<void> {
+    await db.delete(mealItems).where(eq(mealItems.id, id));
+  }
+
+  // Supplement Plan operations
+  async createSupplementPlan(plan: InsertSupplementPlan): Promise<SupplementPlan> {
+    const [created] = await db.insert(supplementPlans).values(plan).returning();
+    return created;
+  }
+
+  async getSupplementPlan(id: string): Promise<SupplementPlan | undefined> {
+    const [plan] = await db.select().from(supplementPlans).where(eq(supplementPlans.id, id));
+    return plan;
+  }
+
+  async getSupplementPlansByClient(clientId: string): Promise<SupplementPlan[]> {
+    return await db
+      .select()
+      .from(supplementPlans)
+      .where(eq(supplementPlans.clientId, clientId))
+      .orderBy(desc(supplementPlans.createdAt));
+  }
+
+  async getSupplementPlansByTrainer(trainerId: string): Promise<SupplementPlan[]> {
+    return await db
+      .select()
+      .from(supplementPlans)
+      .where(eq(supplementPlans.trainerId, trainerId))
+      .orderBy(desc(supplementPlans.createdAt));
+  }
+
+  async getActiveSupplementPlan(clientId: string): Promise<SupplementPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(supplementPlans)
+      .where(and(eq(supplementPlans.clientId, clientId), eq(supplementPlans.isActive, true)))
+      .orderBy(desc(supplementPlans.createdAt))
+      .limit(1);
+    return plan;
+  }
+
+  async updateSupplementPlan(id: string, plan: Partial<InsertSupplementPlan>): Promise<SupplementPlan> {
+    const [updated] = await db
+      .update(supplementPlans)
+      .set({ ...plan, updatedAt: new Date() })
+      .where(eq(supplementPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSupplementPlan(id: string): Promise<void> {
+    await db.delete(supplementPlans).where(eq(supplementPlans.id, id));
+  }
+
+  // Supplement Item operations
+  async createSupplementItem(item: InsertSupplementItem): Promise<SupplementItem> {
+    const [created] = await db.insert(supplementItems).values(item).returning();
+    return created;
+  }
+
+  async getSupplementItemsByPlan(planId: string): Promise<SupplementItem[]> {
+    return await db
+      .select()
+      .from(supplementItems)
+      .where(eq(supplementItems.supplementPlanId, planId));
+  }
+
+  async updateSupplementItem(id: string, item: Partial<InsertSupplementItem>): Promise<SupplementItem> {
+    const [updated] = await db
+      .update(supplementItems)
+      .set(item)
+      .where(eq(supplementItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSupplementItem(id: string): Promise<void> {
+    await db.delete(supplementItems).where(eq(supplementItems.id, id));
   }
 
   // Monthly evaluation operations

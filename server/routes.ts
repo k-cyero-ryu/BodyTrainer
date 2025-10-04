@@ -11,6 +11,7 @@ import { insertTrainerSchema, insertClientSchema, insertTrainingPlanSchema, inse
 import { searchFoods, getFoodDetails, getFoodNutrition, checkUSDAApiHealth, getCuratedFoods } from "./usdaService";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { nutritionRouter } from "./nutritionRoutes";
 
 // Extend WebSocket type to include authenticated userId and community groups
 interface ExtendedWebSocket extends WebSocket {
@@ -22,6 +23,9 @@ interface ExtendedWebSocket extends WebSocket {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Mount nutrition router
+  app.use('/api/nutrition', nutritionRouter);
 
   // Auth routes are now handled in setupAuth
 
