@@ -29,6 +29,8 @@ import {
   mealItems,
   supplementPlans,
   supplementItems,
+  supplementPlanItems,
+  supplementPlanAssignments,
   type User,
   type UpsertUser,
   type Trainer,
@@ -92,6 +94,10 @@ import {
   type InsertSupplementPlan,
   type SupplementItem,
   type InsertSupplementItem,
+  type SupplementPlanItem,
+  type InsertSupplementPlanItem,
+  type SupplementPlanAssignment,
+  type InsertSupplementPlanAssignment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql, gte, lte } from "drizzle-orm";
@@ -249,20 +255,34 @@ export interface IStorage {
   updateMealItem(id: string, item: Partial<InsertMealItem>): Promise<MealItem>;
   deleteMealItem(id: string): Promise<void>;
 
-  // Supplement Plan operations
+  // Supplement Item Library operations (trainer-owned reusable items)
+  createSupplementItem(item: InsertSupplementItem): Promise<SupplementItem>;
+  getSupplementItem(id: string): Promise<SupplementItem | undefined>;
+  getSupplementItemsByTrainer(trainerId: string): Promise<SupplementItem[]>;
+  updateSupplementItem(id: string, item: Partial<InsertSupplementItem>): Promise<SupplementItem>;
+  deleteSupplementItem(id: string): Promise<void>;
+
+  // Supplement Plan Template operations (templates can be assigned to multiple clients)
   createSupplementPlan(plan: InsertSupplementPlan): Promise<SupplementPlan>;
   getSupplementPlan(id: string): Promise<SupplementPlan | undefined>;
-  getSupplementPlansByClient(clientId: string): Promise<SupplementPlan[]>;
   getSupplementPlansByTrainer(trainerId: string): Promise<SupplementPlan[]>;
-  getActiveSupplementPlan(clientId: string): Promise<SupplementPlan | undefined>;
   updateSupplementPlan(id: string, plan: Partial<InsertSupplementPlan>): Promise<SupplementPlan>;
   deleteSupplementPlan(id: string): Promise<void>;
 
-  // Supplement Item operations
-  createSupplementItem(item: InsertSupplementItem): Promise<SupplementItem>;
-  getSupplementItemsByPlan(planId: string): Promise<SupplementItem[]>;
-  updateSupplementItem(id: string, item: Partial<InsertSupplementItem>): Promise<SupplementItem>;
-  deleteSupplementItem(id: string): Promise<void>;
+  // Supplement Plan Item operations (junction table)
+  createSupplementPlanItem(item: InsertSupplementPlanItem): Promise<SupplementPlanItem>;
+  getSupplementPlanItemsByPlan(planId: string): Promise<SupplementPlanItem[]>;
+  updateSupplementPlanItem(id: string, item: Partial<InsertSupplementPlanItem>): Promise<SupplementPlanItem>;
+  deleteSupplementPlanItem(id: string): Promise<void>;
+
+  // Supplement Plan Assignment operations (links templates to clients)
+  createSupplementPlanAssignment(assignment: InsertSupplementPlanAssignment): Promise<SupplementPlanAssignment>;
+  getSupplementPlanAssignment(id: string): Promise<SupplementPlanAssignment | undefined>;
+  getSupplementPlanAssignmentsByClient(clientId: string): Promise<SupplementPlanAssignment[]>;
+  getSupplementPlanAssignmentsByPlan(planId: string): Promise<SupplementPlanAssignment[]>;
+  getActiveSupplementPlanAssignment(clientId: string): Promise<SupplementPlanAssignment | undefined>;
+  updateSupplementPlanAssignment(id: string, assignment: Partial<InsertSupplementPlanAssignment>): Promise<SupplementPlanAssignment>;
+  deleteSupplementPlanAssignment(id: string): Promise<void>;
 
   // Monthly evaluation operations
   createMonthlyEvaluation(evaluation: InsertMonthlyEvaluation): Promise<MonthlyEvaluation>;
@@ -1331,7 +1351,39 @@ export class DatabaseStorage implements IStorage {
     await db.delete(mealItems).where(eq(mealItems.id, id));
   }
 
-  // Supplement Plan operations
+  // Supplement Item Library operations (trainer-owned reusable items)
+  async createSupplementItem(item: InsertSupplementItem): Promise<SupplementItem> {
+    const [created] = await db.insert(supplementItems).values(item).returning();
+    return created;
+  }
+
+  async getSupplementItem(id: string): Promise<SupplementItem | undefined> {
+    const [item] = await db.select().from(supplementItems).where(eq(supplementItems.id, id));
+    return item;
+  }
+
+  async getSupplementItemsByTrainer(trainerId: string): Promise<SupplementItem[]> {
+    return await db
+      .select()
+      .from(supplementItems)
+      .where(eq(supplementItems.trainerId, trainerId))
+      .orderBy(desc(supplementItems.createdAt));
+  }
+
+  async updateSupplementItem(id: string, item: Partial<InsertSupplementItem>): Promise<SupplementItem> {
+    const [updated] = await db
+      .update(supplementItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(supplementItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSupplementItem(id: string): Promise<void> {
+    await db.delete(supplementItems).where(eq(supplementItems.id, id));
+  }
+
+  // Supplement Plan Template operations (templates can be assigned to multiple clients)
   async createSupplementPlan(plan: InsertSupplementPlan): Promise<SupplementPlan> {
     const [created] = await db.insert(supplementPlans).values(plan).returning();
     return created;
@@ -1342,30 +1394,12 @@ export class DatabaseStorage implements IStorage {
     return plan;
   }
 
-  async getSupplementPlansByClient(clientId: string): Promise<SupplementPlan[]> {
-    return await db
-      .select()
-      .from(supplementPlans)
-      .where(eq(supplementPlans.clientId, clientId))
-      .orderBy(desc(supplementPlans.createdAt));
-  }
-
   async getSupplementPlansByTrainer(trainerId: string): Promise<SupplementPlan[]> {
     return await db
       .select()
       .from(supplementPlans)
       .where(eq(supplementPlans.trainerId, trainerId))
       .orderBy(desc(supplementPlans.createdAt));
-  }
-
-  async getActiveSupplementPlan(clientId: string): Promise<SupplementPlan | undefined> {
-    const [plan] = await db
-      .select()
-      .from(supplementPlans)
-      .where(and(eq(supplementPlans.clientId, clientId), eq(supplementPlans.isActive, true)))
-      .orderBy(desc(supplementPlans.createdAt))
-      .limit(1);
-    return plan;
   }
 
   async updateSupplementPlan(id: string, plan: Partial<InsertSupplementPlan>): Promise<SupplementPlan> {
@@ -1381,30 +1415,80 @@ export class DatabaseStorage implements IStorage {
     await db.delete(supplementPlans).where(eq(supplementPlans.id, id));
   }
 
-  // Supplement Item operations
-  async createSupplementItem(item: InsertSupplementItem): Promise<SupplementItem> {
-    const [created] = await db.insert(supplementItems).values(item).returning();
+  // Supplement Plan Item operations (junction table)
+  async createSupplementPlanItem(item: InsertSupplementPlanItem): Promise<SupplementPlanItem> {
+    const [created] = await db.insert(supplementPlanItems).values(item).returning();
     return created;
   }
 
-  async getSupplementItemsByPlan(planId: string): Promise<SupplementItem[]> {
+  async getSupplementPlanItemsByPlan(planId: string): Promise<SupplementPlanItem[]> {
     return await db
       .select()
-      .from(supplementItems)
-      .where(eq(supplementItems.supplementPlanId, planId));
+      .from(supplementPlanItems)
+      .where(eq(supplementPlanItems.supplementPlanId, planId));
   }
 
-  async updateSupplementItem(id: string, item: Partial<InsertSupplementItem>): Promise<SupplementItem> {
+  async updateSupplementPlanItem(id: string, item: Partial<InsertSupplementPlanItem>): Promise<SupplementPlanItem> {
     const [updated] = await db
-      .update(supplementItems)
+      .update(supplementPlanItems)
       .set(item)
-      .where(eq(supplementItems.id, id))
+      .where(eq(supplementPlanItems.id, id))
       .returning();
     return updated;
   }
 
-  async deleteSupplementItem(id: string): Promise<void> {
-    await db.delete(supplementItems).where(eq(supplementItems.id, id));
+  async deleteSupplementPlanItem(id: string): Promise<void> {
+    await db.delete(supplementPlanItems).where(eq(supplementPlanItems.id, id));
+  }
+
+  // Supplement Plan Assignment operations (links templates to clients)
+  async createSupplementPlanAssignment(assignment: InsertSupplementPlanAssignment): Promise<SupplementPlanAssignment> {
+    const [created] = await db.insert(supplementPlanAssignments).values(assignment).returning();
+    return created;
+  }
+
+  async getSupplementPlanAssignment(id: string): Promise<SupplementPlanAssignment | undefined> {
+    const [assignment] = await db.select().from(supplementPlanAssignments).where(eq(supplementPlanAssignments.id, id));
+    return assignment;
+  }
+
+  async getSupplementPlanAssignmentsByClient(clientId: string): Promise<SupplementPlanAssignment[]> {
+    return await db
+      .select()
+      .from(supplementPlanAssignments)
+      .where(eq(supplementPlanAssignments.clientId, clientId))
+      .orderBy(desc(supplementPlanAssignments.createdAt));
+  }
+
+  async getSupplementPlanAssignmentsByPlan(planId: string): Promise<SupplementPlanAssignment[]> {
+    return await db
+      .select()
+      .from(supplementPlanAssignments)
+      .where(eq(supplementPlanAssignments.supplementPlanId, planId))
+      .orderBy(desc(supplementPlanAssignments.createdAt));
+  }
+
+  async getActiveSupplementPlanAssignment(clientId: string): Promise<SupplementPlanAssignment | undefined> {
+    const [assignment] = await db
+      .select()
+      .from(supplementPlanAssignments)
+      .where(and(eq(supplementPlanAssignments.clientId, clientId), eq(supplementPlanAssignments.isActive, true)))
+      .orderBy(desc(supplementPlanAssignments.createdAt))
+      .limit(1);
+    return assignment;
+  }
+
+  async updateSupplementPlanAssignment(id: string, assignment: Partial<InsertSupplementPlanAssignment>): Promise<SupplementPlanAssignment> {
+    const [updated] = await db
+      .update(supplementPlanAssignments)
+      .set({ ...assignment, updatedAt: new Date() })
+      .where(eq(supplementPlanAssignments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSupplementPlanAssignment(id: string): Promise<void> {
+    await db.delete(supplementPlanAssignments).where(eq(supplementPlanAssignments.id, id));
   }
 
   // Monthly evaluation operations
