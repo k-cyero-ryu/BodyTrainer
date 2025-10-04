@@ -112,7 +112,13 @@ nutritionRouter.get('/trainers/:trainerId/meal-plans', async (req, res) => {
 // Create meal plan assignment (assign template to client)
 nutritionRouter.post('/meal-plan-assignments', async (req, res) => {
   try {
-    const assignmentData = insertMealPlanAssignmentSchema.parse(req.body);
+    // Convert date strings to Date objects before validation
+    const body = {
+      ...req.body,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+    };
+    const assignmentData = insertMealPlanAssignmentSchema.parse(body);
     const assignment = await storage.createMealPlanAssignment(assignmentData);
     res.json(assignment);
   } catch (error: any) {
@@ -500,7 +506,13 @@ nutritionRouter.delete('/supplement-plan-items/:id', async (req, res) => {
 // Assign supplement plan to client
 nutritionRouter.post('/supplement-plan-assignments', async (req, res) => {
   try {
-    const assignmentData = insertSupplementPlanAssignmentSchema.parse(req.body);
+    // Convert date strings to Date objects before validation
+    const body = {
+      ...req.body,
+      startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+      endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+    };
+    const assignmentData = insertSupplementPlanAssignmentSchema.parse(body);
     const assignment = await storage.createSupplementPlanAssignment(assignmentData);
     res.json(assignment);
   } catch (error: any) {

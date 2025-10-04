@@ -1192,7 +1192,7 @@ export default function ClientDetail() {
                 assignMealPlanMutation.mutate({
                   mealPlanId: planId,
                   clientId: clientId!,
-                  startDate: new Date(startDate),
+                  startDate,
                   isActive: true,
                 });
               } else if (planAssignmentType === 'supplement') {
@@ -1201,7 +1201,7 @@ export default function ClientDetail() {
                   supplementPlanId: planId,
                   clientId: clientId!,
                   trainerId: user?.trainer?.id!,
-                  startDate: new Date(startDate),
+                  startDate,
                   isActive: true,
                 });
               }
