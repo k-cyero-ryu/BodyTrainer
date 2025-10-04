@@ -75,7 +75,7 @@ export default function TrainerSupplementItems() {
   });
 
   const { data: supplementItems = [], isLoading } = useQuery<SupplementItem[]>({
-    queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-items"],
+    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-items`],
     enabled: !!user?.trainer?.id,
   });
 
@@ -87,7 +87,7 @@ export default function TrainerSupplementItems() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-items"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-items`] });
       toast({
         title: t("Success"),
         description: "Supplement item created successfully",
@@ -109,7 +109,7 @@ export default function TrainerSupplementItems() {
       return await apiRequest("PATCH", `/api/nutrition/supplement-items/${data.id}`, data.updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-items"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-items`] });
       toast({
         title: t("Success"),
         description: "Supplement item updated successfully",
@@ -132,7 +132,7 @@ export default function TrainerSupplementItems() {
       return await apiRequest("DELETE", `/api/nutrition/supplement-items/${id}`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-items"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-items`] });
       toast({
         title: t("Success"),
         description: "Supplement item deleted successfully",

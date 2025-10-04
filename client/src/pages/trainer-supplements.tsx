@@ -97,12 +97,12 @@ export default function TrainerSupplements() {
   });
 
   const { data: supplementItems = [] } = useQuery<SupplementItem[]>({
-    queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-items"],
+    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-items`],
     enabled: !!user?.trainer?.id,
   });
 
   const { data: supplementPlans = [] } = useQuery<SupplementPlan[]>({
-    queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-plans"],
+    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`],
     enabled: !!user?.trainer?.id,
   });
 
@@ -127,7 +127,7 @@ export default function TrainerSupplements() {
       return planResponse;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-plans"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`] });
       toast({
         title: t("Success"),
         description: "Supplement plan template created successfully",
@@ -151,7 +151,7 @@ export default function TrainerSupplements() {
       return await apiRequest("DELETE", `/api/nutrition/supplement-plans/${planId}`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-plans"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`] });
       toast({
         title: t("Success"),
         description: "Supplement plan deleted successfully",
