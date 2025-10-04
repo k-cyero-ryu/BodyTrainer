@@ -108,6 +108,7 @@ export default function TrainerMealPlans() {
   );
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([1]));
   const [activeDay, setActiveDay] = useState<number>(1);
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
 
   const form = useForm<MealPlanFormData>({
     resolver: zodResolver(mealPlanFormSchema),
@@ -137,14 +138,15 @@ export default function TrainerMealPlans() {
 
   const createMealPlanMutation = useMutation({
     mutationFn: async (data: { plan: MealPlanFormData; days: DayData[] }) => {
-      const planResponse = await apiRequest(`/api/nutrition/meal-plans`, "POST", {
+      const planResponseRaw = await apiRequest("POST", `/api/nutrition/meal-plans`, {
         ...data.plan,
         trainerId: user?.trainer?.id,
         isTemplate: true,
       });
+      const planResponse = await planResponseRaw.json();
 
       for (const day of data.days) {
-        const dayResponse = await apiRequest(`/api/nutrition/meal-days`, "POST", {
+        const dayResponseRaw = await apiRequest("POST", `/api/nutrition/meal-days`, {
           mealPlanId: planResponse.id,
           dayNumber: day.dayNumber,
           dayName: day.dayName,
@@ -154,9 +156,10 @@ export default function TrainerMealPlans() {
           totalCarbs: "0",
           totalFat: "0",
         });
+        const dayResponse = await dayResponseRaw.json();
 
         for (const meal of day.meals) {
-          const mealResponse = await apiRequest(`/api/nutrition/meals`, "POST", {
+          const mealResponseRaw = await apiRequest("POST", `/api/nutrition/meals`, {
             mealDayId: dayResponse.id,
             mealType: meal.mealType,
             name: meal.name,
@@ -167,9 +170,10 @@ export default function TrainerMealPlans() {
             totalCarbs: "0",
             totalFat: "0",
           });
+          const mealResponse = await mealResponseRaw.json();
 
           for (const item of meal.items) {
-            await apiRequest(`/api/nutrition/meal-items`, "POST", {
+            await apiRequest("POST", `/api/nutrition/meal-items`, {
               mealId: mealResponse.id,
               foodName: item.foodName,
               fdcId: item.fdcId,
@@ -282,7 +286,7 @@ export default function TrainerMealPlans() {
   }) => {
     const newItem: MealItemData = {
       id: `item-${Date.now()}`,
-      foodName: data.food.description,
+      foodName: data.food.name,
       fdcId: data.food.fdcId.toString(),
       quantity: data.quantity,
       calories: data.calculatedCalories,
@@ -678,6 +682,8 @@ export default function TrainerMealPlans() {
                                       onFoodSelect={(data) => {
                                         addFoodToMeal(day.dayNumber, meal.id, data);
                                       }}
+                                      selectedCategory={selectedFoodCategory}
+                                      onCategoryChange={setSelectedFoodCategory}
                                       hideTitle={true}
                                     />
                                   </div>
