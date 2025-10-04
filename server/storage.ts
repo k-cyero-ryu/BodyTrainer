@@ -162,6 +162,7 @@ export interface IStorage {
   assignPlanToClient(clientPlan: InsertClientPlan): Promise<ClientPlan>;
   getClientPlans(clientId: string): Promise<ClientPlan[]>;
   getActiveClientPlan(clientId: string): Promise<ClientPlan | undefined>;
+  updateClientPlan(id: string, updates: Partial<InsertClientPlan>): Promise<ClientPlan>;
 
   // Workout log operations
   createWorkoutLog(log: InsertWorkoutLog): Promise<WorkoutLog>;
@@ -798,6 +799,15 @@ export class DatabaseStorage implements IStorage {
       .from(clientPlans)
       .where(and(eq(clientPlans.clientId, clientId), eq(clientPlans.isActive, true)));
     return plan;
+  }
+
+  async updateClientPlan(id: string, updates: Partial<InsertClientPlan>): Promise<ClientPlan> {
+    const [updated] = await db
+      .update(clientPlans)
+      .set(updates)
+      .where(eq(clientPlans.id, id))
+      .returning();
+    return updated;
   }
 
   // Workout log operations
