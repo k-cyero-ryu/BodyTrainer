@@ -132,7 +132,7 @@ export default function TrainerMealPlans() {
   const clients = clientsData?.clients || [];
 
   const { data: mealPlans = [] } = useQuery<MealPlan[]>({
-    queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "meal-plans"],
+    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`],
     enabled: !!user?.trainer?.id,
   });
 
@@ -196,7 +196,7 @@ export default function TrainerMealPlans() {
         title: "Success",
         description: "Meal plan created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`] });
       setShowCreateDialog(false);
       form.reset();
       setDaysData(
