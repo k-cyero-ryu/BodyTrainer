@@ -7,13 +7,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,10 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
-  Users
+  Users,
+  Eye,
+  Edit,
+  Trash
 } from "lucide-react";
 import type { MealPlan, Client, InsertMealPlan } from "@shared/schema";
 
@@ -109,6 +113,10 @@ export default function TrainerMealPlans() {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([1]));
   const [activeDay, setActiveDay] = useState<number>(1);
   const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
+  const [viewMealPlan, setViewMealPlan] = useState<MealPlan | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [deleteMealPlanId, setDeleteMealPlanId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const form = useForm<MealPlanFormData>({
     resolver: zodResolver(mealPlanFormSchema),
@@ -217,6 +225,46 @@ export default function TrainerMealPlans() {
     },
   });
 
+  const deleteMealPlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      await apiRequest("DELETE", `/api/nutrition/meal-plans/${planId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Meal plan deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`] });
+      setShowDeleteDialog(false);
+      setDeleteMealPlanId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete meal plan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleViewMealPlan = async (planId: string) => {
+    const plan = mealPlans.find(p => p.id === planId);
+    if (plan) {
+      setViewMealPlan(plan);
+      setShowViewDialog(true);
+    }
+  };
+
+  const handleDeleteClick = (planId: string) => {
+    setDeleteMealPlanId(planId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteMealPlanId) {
+      deleteMealPlanMutation.mutate(deleteMealPlanId);
+    }
+  };
 
   const toggleDay = (dayNumber: number) => {
     setExpandedDays((prev) => {
@@ -792,10 +840,112 @@ export default function TrainerMealPlans() {
                   )}
                 </div>
               </CardContent>
+              <CardFooter className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewMealPlan(plan.id)}
+                  className="flex-1"
+                  data-testid={`button-view-plan-${plan.id}`}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeleteClick(plan.id)}
+                  className="flex-1"
+                  data-testid={`button-delete-plan-${plan.id}`}
+                >
+                  <Trash className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </CardFooter>
             </Card>
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this meal plan template. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* View Details Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{viewMealPlan?.name}</DialogTitle>
+          </DialogHeader>
+          {viewMealPlan && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Daily Calories</Label>
+                  <p className="text-lg font-semibold">{viewMealPlan.dailyCalories} cal</p>
+                </div>
+                {viewMealPlan.targetProtein && (
+                  <div>
+                    <Label>Protein Target</Label>
+                    <p className="text-lg font-semibold">{viewMealPlan.targetProtein}g</p>
+                  </div>
+                )}
+                {viewMealPlan.targetCarbs && (
+                  <div>
+                    <Label>Carbs Target</Label>
+                    <p className="text-lg font-semibold">{viewMealPlan.targetCarbs}g</p>
+                  </div>
+                )}
+                {viewMealPlan.targetFat && (
+                  <div>
+                    <Label>Fat Target</Label>
+                    <p className="text-lg font-semibold">{viewMealPlan.targetFat}g</p>
+                  </div>
+                )}
+              </div>
+              {viewMealPlan.goal && (
+                <div>
+                  <Label>Goal</Label>
+                  <Badge variant="outline" className="mt-1">{viewMealPlan.goal}</Badge>
+                </div>
+              )}
+              {viewMealPlan.description && (
+                <div>
+                  <Label>Description</Label>
+                  <p className="text-sm text-muted-foreground">{viewMealPlan.description}</p>
+                </div>
+              )}
+              {viewMealPlan.notes && (
+                <div>
+                  <Label>Notes</Label>
+                  <p className="text-sm text-muted-foreground">{viewMealPlan.notes}</p>
+                </div>
+              )}
+              <div className="text-sm text-muted-foreground">
+                <p>To view the complete 7-day meal schedule with all meals and food items, this feature is coming soon.</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
