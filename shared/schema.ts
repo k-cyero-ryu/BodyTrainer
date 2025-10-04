@@ -575,16 +575,13 @@ export const usdaFoodsCache = pgTable("usda_foods_cache", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Meal Plans - Main structured nutrition plan for a client
+// Meal Plans - Reusable meal plan templates created by trainers
 export const mealPlans = pgTable("meal_plans", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
   trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
   name: varchar("name").notNull(), // e.g., "Weight Loss Plan - Week 1"
   description: text("description"),
   goal: varchar("goal"), // e.g., "weight_loss", "muscle_gain", "maintenance"
-  startDate: timestamp("start_date"),
-  endDate: timestamp("end_date"),
   // Nutrition targets
   dailyCalories: integer("daily_calories").notNull(),
   targetProtein: integer("target_protein"), // grams
@@ -592,10 +589,22 @@ export const mealPlans = pgTable("meal_plans", {
   targetFat: integer("target_fat"), // grams
   // Plan metadata
   weekCycle: integer("week_cycle").default(1), // How many weeks of unique meal patterns
-  isActive: boolean("is_active").default(true),
-  notes: text("notes"), // Trainer notes for the client
+  isTemplate: boolean("is_template").default(true), // Template meal plans can be assigned to multiple clients
+  notes: text("notes"), // Trainer notes
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Meal Plan Assignments - Links meal plan templates to clients
+export const mealPlanAssignments = pgTable("meal_plan_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mealPlanId: varchar("meal_plan_id").notNull().references(() => mealPlans.id, { onDelete: 'cascade' }),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"), // Assignment-specific notes
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Meal Days - Represents specific days in the meal plan (e.g., Day 1 - Monday)
@@ -803,15 +812,23 @@ export const cardioActivitiesRelations = relations(cardioActivities, ({ one }) =
 
 // Meal Planning Relations
 export const mealPlansRelations = relations(mealPlans, ({ one, many }) => ({
-  client: one(clients, {
-    fields: [mealPlans.clientId],
-    references: [clients.id],
-  }),
   trainer: one(trainers, {
     fields: [mealPlans.trainerId],
     references: [trainers.id],
   }),
   mealDays: many(mealDays),
+  assignments: many(mealPlanAssignments),
+}));
+
+export const mealPlanAssignmentsRelations = relations(mealPlanAssignments, ({ one }) => ({
+  mealPlan: one(mealPlans, {
+    fields: [mealPlanAssignments.mealPlanId],
+    references: [mealPlans.id],
+  }),
+  client: one(clients, {
+    fields: [mealPlanAssignments.clientId],
+    references: [clients.id],
+  }),
 }));
 
 export const mealDaysRelations = relations(mealDays, ({ one, many }) => ({
@@ -913,6 +930,7 @@ export type CardioActivity = typeof cardioActivities.$inferSelect;
 // Meal Planning insert schemas and types
 export const insertUsdaFoodCacheSchema = createInsertSchema(usdaFoodsCache).omit({ id: true, createdAt: true, lastUsed: true, refreshedAt: true });
 export const insertMealPlanSchema = createInsertSchema(mealPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMealPlanAssignmentSchema = createInsertSchema(mealPlanAssignments).omit({ id: true, createdAt: true });
 export const insertMealDaySchema = createInsertSchema(mealDays).omit({ id: true, createdAt: true });
 export const insertMealSchema = createInsertSchema(meals).omit({ id: true, createdAt: true });
 export const insertMealItemSchema = createInsertSchema(mealItems).omit({ id: true, createdAt: true });
@@ -921,6 +939,8 @@ export type InsertUsdaFoodCache = z.infer<typeof insertUsdaFoodCacheSchema>;
 export type UsdaFoodCache = typeof usdaFoodsCache.$inferSelect;
 export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
 export type MealPlan = typeof mealPlans.$inferSelect;
+export type InsertMealPlanAssignment = z.infer<typeof insertMealPlanAssignmentSchema>;
+export type MealPlanAssignment = typeof mealPlanAssignments.$inferSelect;
 export type InsertMealDay = z.infer<typeof insertMealDaySchema>;
 export type MealDay = typeof mealDays.$inferSelect;
 export type InsertMeal = z.infer<typeof insertMealSchema>;
