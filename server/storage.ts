@@ -23,6 +23,7 @@ import {
   customCalorieEntries,
   usdaFoodsCache,
   mealPlans,
+  mealPlanAssignments,
   mealDays,
   meals,
   mealItems,
@@ -79,6 +80,8 @@ import {
   type InsertUsdaFoodCache,
   type MealPlan,
   type InsertMealPlan,
+  type MealPlanAssignment,
+  type InsertMealPlanAssignment,
   type MealDay,
   type InsertMealDay,
   type Meal,
@@ -212,14 +215,21 @@ export interface IStorage {
   getUsdaFoodByFdcId(fdcId: string): Promise<UsdaFoodCache | undefined>;
   updateUsdaFoodLastUsed(fdcId: string): Promise<void>;
 
-  // Meal Plan operations
+  // Meal Plan Template operations (templates can be assigned to multiple clients)
   createMealPlan(plan: InsertMealPlan): Promise<MealPlan>;
   getMealPlan(id: string): Promise<MealPlan | undefined>;
-  getMealPlansByClient(clientId: string): Promise<MealPlan[]>;
   getMealPlansByTrainer(trainerId: string): Promise<MealPlan[]>;
-  getActiveMealPlan(clientId: string): Promise<MealPlan | undefined>;
   updateMealPlan(id: string, plan: Partial<InsertMealPlan>): Promise<MealPlan>;
   deleteMealPlan(id: string): Promise<void>;
+
+  // Meal Plan Assignment operations (links templates to clients)
+  createMealPlanAssignment(assignment: InsertMealPlanAssignment): Promise<MealPlanAssignment>;
+  getMealPlanAssignment(id: string): Promise<MealPlanAssignment | undefined>;
+  getMealPlanAssignmentsByClient(clientId: string): Promise<MealPlanAssignment[]>;
+  getMealPlanAssignmentsByPlan(planId: string): Promise<MealPlanAssignment[]>;
+  getActiveMealPlanAssignment(clientId: string): Promise<MealPlanAssignment | undefined>;
+  updateMealPlanAssignment(id: string, assignment: Partial<InsertMealPlanAssignment>): Promise<MealPlanAssignment>;
+  deleteMealPlanAssignment(id: string): Promise<void>;
 
   // Meal Day operations
   createMealDay(day: InsertMealDay): Promise<MealDay>;
@@ -1171,30 +1181,12 @@ export class DatabaseStorage implements IStorage {
     return plan;
   }
 
-  async getMealPlansByClient(clientId: string): Promise<MealPlan[]> {
-    return await db
-      .select()
-      .from(mealPlans)
-      .where(eq(mealPlans.clientId, clientId))
-      .orderBy(desc(mealPlans.createdAt));
-  }
-
   async getMealPlansByTrainer(trainerId: string): Promise<MealPlan[]> {
     return await db
       .select()
       .from(mealPlans)
       .where(eq(mealPlans.trainerId, trainerId))
       .orderBy(desc(mealPlans.createdAt));
-  }
-
-  async getActiveMealPlan(clientId: string): Promise<MealPlan | undefined> {
-    const [plan] = await db
-      .select()
-      .from(mealPlans)
-      .where(and(eq(mealPlans.clientId, clientId), eq(mealPlans.isActive, true)))
-      .orderBy(desc(mealPlans.createdAt))
-      .limit(1);
-    return plan;
   }
 
   async updateMealPlan(id: string, plan: Partial<InsertMealPlan>): Promise<MealPlan> {
@@ -1208,6 +1200,56 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMealPlan(id: string): Promise<void> {
     await db.delete(mealPlans).where(eq(mealPlans.id, id));
+  }
+
+  // Meal Plan Assignment operations
+  async createMealPlanAssignment(assignment: InsertMealPlanAssignment): Promise<MealPlanAssignment> {
+    const [created] = await db.insert(mealPlanAssignments).values(assignment).returning();
+    return created;
+  }
+
+  async getMealPlanAssignment(id: string): Promise<MealPlanAssignment | undefined> {
+    const [assignment] = await db.select().from(mealPlanAssignments).where(eq(mealPlanAssignments.id, id));
+    return assignment;
+  }
+
+  async getMealPlanAssignmentsByClient(clientId: string): Promise<MealPlanAssignment[]> {
+    return await db
+      .select()
+      .from(mealPlanAssignments)
+      .where(eq(mealPlanAssignments.clientId, clientId))
+      .orderBy(desc(mealPlanAssignments.createdAt));
+  }
+
+  async getMealPlanAssignmentsByPlan(planId: string): Promise<MealPlanAssignment[]> {
+    return await db
+      .select()
+      .from(mealPlanAssignments)
+      .where(eq(mealPlanAssignments.mealPlanId, planId))
+      .orderBy(desc(mealPlanAssignments.createdAt));
+  }
+
+  async getActiveMealPlanAssignment(clientId: string): Promise<MealPlanAssignment | undefined> {
+    const [assignment] = await db
+      .select()
+      .from(mealPlanAssignments)
+      .where(and(eq(mealPlanAssignments.clientId, clientId), eq(mealPlanAssignments.isActive, true)))
+      .orderBy(desc(mealPlanAssignments.createdAt))
+      .limit(1);
+    return assignment;
+  }
+
+  async updateMealPlanAssignment(id: string, assignment: Partial<InsertMealPlanAssignment>): Promise<MealPlanAssignment> {
+    const [updated] = await db
+      .update(mealPlanAssignments)
+      .set(assignment)
+      .where(eq(mealPlanAssignments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMealPlanAssignment(id: string): Promise<void> {
+    await db.delete(mealPlanAssignments).where(eq(mealPlanAssignments.id, id));
   }
 
   // Meal Day operations
