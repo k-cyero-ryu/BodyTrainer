@@ -31,6 +31,9 @@ export const userRoleEnum = pgEnum('user_role', ['superadmin', 'trainer', 'clien
 // User status enum
 export const userStatusEnum = pgEnum('user_status', ['active', 'inactive', 'pending']);
 
+// Gender enum
+export const genderEnum = pgEnum('gender', ['male', 'female']);
+
 // Users table (with username/password authentication)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -75,6 +78,7 @@ export const clients = pgTable("clients", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
   phone: varchar("phone"),
+  gender: genderEnum("gender"), // For BMR/TDEE calculation
   dateOfBirth: timestamp("date_of_birth"),
   age: integer("age"),
   height: decimal("height", { precision: 5, scale: 2 }),
@@ -502,7 +506,7 @@ export const communityMessages = pgTable("community_messages", {
 });
 
 // Meal type enum for food entries
-export const mealTypeEnum = pgEnum('meal_type', ['breakfast', 'lunch', 'dinner', 'snack']);
+export const mealTypeEnum = pgEnum('meal_type', ['breakfast', 'lunch', 'dinner', 'snack', 'pre-workout', 'post-workout', 'intra-workout']);
 
 // Food category enum for food entries
 export const foodCategoryEnum = pgEnum('food_category', ['carbs', 'proteins', 'sugar']);
