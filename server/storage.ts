@@ -160,6 +160,7 @@ export interface IStorage {
 
   // Client plan operations
   assignPlanToClient(clientPlan: InsertClientPlan): Promise<ClientPlan>;
+  replaceClientPlanAssignment(clientPlan: InsertClientPlan): Promise<ClientPlan>;
   getClientPlans(clientId: string): Promise<ClientPlan[]>;
   getActiveClientPlan(clientId: string): Promise<ClientPlan | undefined>;
   updateClientPlan(id: string, updates: Partial<InsertClientPlan>): Promise<ClientPlan>;
@@ -231,6 +232,7 @@ export interface IStorage {
 
   // Meal Plan Assignment operations (links templates to clients)
   createMealPlanAssignment(assignment: InsertMealPlanAssignment): Promise<MealPlanAssignment>;
+  replaceMealPlanAssignment(assignment: InsertMealPlanAssignment): Promise<MealPlanAssignment>;
   getMealPlanAssignment(id: string): Promise<MealPlanAssignment | undefined>;
   getMealPlanAssignmentsByClient(clientId: string): Promise<MealPlanAssignment[]>;
   getMealPlanAssignmentsByPlan(planId: string): Promise<MealPlanAssignment[]>;
@@ -278,6 +280,7 @@ export interface IStorage {
 
   // Supplement Plan Assignment operations (links templates to clients)
   createSupplementPlanAssignment(assignment: InsertSupplementPlanAssignment): Promise<SupplementPlanAssignment>;
+  replaceSupplementPlanAssignment(assignment: InsertSupplementPlanAssignment): Promise<SupplementPlanAssignment>;
   getSupplementPlanAssignment(id: string): Promise<SupplementPlanAssignment | undefined>;
   getSupplementPlanAssignmentsByClient(clientId: string): Promise<SupplementPlanAssignment[]>;
   getSupplementPlanAssignmentsByPlan(planId: string): Promise<SupplementPlanAssignment[]>;
@@ -789,6 +792,14 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  async replaceClientPlanAssignment(clientPlan: InsertClientPlan): Promise<ClientPlan> {
+    return await db.transaction(async (tx) => {
+      await tx.delete(clientPlans).where(eq(clientPlans.clientId, clientPlan.clientId));
+      const [created] = await tx.insert(clientPlans).values(clientPlan).returning();
+      return created;
+    });
+  }
+
   async getClientPlans(clientId: string): Promise<ClientPlan[]> {
     return await db.select().from(clientPlans).where(eq(clientPlans.clientId, clientId));
   }
@@ -1238,6 +1249,14 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  async replaceMealPlanAssignment(assignment: InsertMealPlanAssignment): Promise<MealPlanAssignment> {
+    return await db.transaction(async (tx) => {
+      await tx.delete(mealPlanAssignments).where(eq(mealPlanAssignments.clientId, assignment.clientId));
+      const [created] = await tx.insert(mealPlanAssignments).values(assignment).returning();
+      return created;
+    });
+  }
+
   async getMealPlanAssignment(id: string): Promise<MealPlanAssignment | undefined> {
     const [assignment] = await db.select().from(mealPlanAssignments).where(eq(mealPlanAssignments.id, id));
     return assignment;
@@ -1455,6 +1474,14 @@ export class DatabaseStorage implements IStorage {
   async createSupplementPlanAssignment(assignment: InsertSupplementPlanAssignment): Promise<SupplementPlanAssignment> {
     const [created] = await db.insert(supplementPlanAssignments).values(assignment).returning();
     return created;
+  }
+
+  async replaceSupplementPlanAssignment(assignment: InsertSupplementPlanAssignment): Promise<SupplementPlanAssignment> {
+    return await db.transaction(async (tx) => {
+      await tx.delete(supplementPlanAssignments).where(eq(supplementPlanAssignments.clientId, assignment.clientId));
+      const [created] = await tx.insert(supplementPlanAssignments).values(assignment).returning();
+      return created;
+    });
   }
 
   async getSupplementPlanAssignment(id: string): Promise<SupplementPlanAssignment | undefined> {
