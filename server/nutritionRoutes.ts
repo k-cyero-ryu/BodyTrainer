@@ -3,6 +3,7 @@ import { db } from './db';
 import { storage } from './storage';
 import { 
   insertMealPlanSchema,
+  insertMealPlanAssignmentSchema,
   insertMealDaySchema, 
   insertMealSchema,
   insertMealItemSchema,
@@ -94,17 +95,7 @@ nutritionRouter.get('/meal-plans/:id', async (req, res) => {
   }
 });
 
-// Get meal plans by client
-nutritionRouter.get('/clients/:clientId/meal-plans', async (req, res) => {
-  try {
-    const plans = await storage.getMealPlansByClient(req.params.clientId);
-    res.json(plans);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Get meal plans by trainer
+// Get meal plan templates by trainer
 nutritionRouter.get('/trainers/:trainerId/meal-plans', async (req, res) => {
   try {
     const plans = await storage.getMealPlansByTrainer(req.params.trainerId);
@@ -114,11 +105,78 @@ nutritionRouter.get('/trainers/:trainerId/meal-plans', async (req, res) => {
   }
 });
 
-// Get active meal plan for a client
-nutritionRouter.get('/clients/:clientId/meal-plans/active', async (req, res) => {
+// ============== Meal Plan Assignment Routes ==============
+
+// Create meal plan assignment (assign template to client)
+nutritionRouter.post('/meal-plan-assignments', async (req, res) => {
   try {
-    const plan = await storage.getActiveMealPlan(req.params.clientId);
-    res.json(plan || null);
+    const assignmentData = insertMealPlanAssignmentSchema.parse(req.body);
+    const assignment = await storage.createMealPlanAssignment(assignmentData);
+    res.json(assignment);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get meal plan assignment by ID
+nutritionRouter.get('/meal-plan-assignments/:id', async (req, res) => {
+  try {
+    const assignment = await storage.getMealPlanAssignment(req.params.id);
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+    res.json(assignment);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get meal plan assignments for a client
+nutritionRouter.get('/clients/:clientId/meal-plan-assignments', async (req, res) => {
+  try {
+    const assignments = await storage.getMealPlanAssignmentsByClient(req.params.clientId);
+    res.json(assignments);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get meal plan assignments for a specific plan
+nutritionRouter.get('/meal-plans/:planId/assignments', async (req, res) => {
+  try {
+    const assignments = await storage.getMealPlanAssignmentsByPlan(req.params.planId);
+    res.json(assignments);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get active meal plan assignment for a client
+nutritionRouter.get('/clients/:clientId/active-meal-plan-assignment', async (req, res) => {
+  try {
+    const assignment = await storage.getActiveMealPlanAssignment(req.params.clientId);
+    res.json(assignment || null);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update meal plan assignment
+nutritionRouter.put('/meal-plan-assignments/:id', async (req, res) => {
+  try {
+    const assignmentData = insertMealPlanAssignmentSchema.partial().parse(req.body);
+    const updated = await storage.updateMealPlanAssignment(req.params.id, assignmentData);
+    res.json(updated);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete meal plan assignment
+nutritionRouter.delete('/meal-plan-assignments/:id', async (req, res) => {
+  try {
+    await storage.deleteMealPlanAssignment(req.params.id);
+    res.json({ success: true });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
