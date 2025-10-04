@@ -153,7 +153,16 @@ nutritionRouter.get('/clients/:clientId/meal-plan-assignments', async (req, res)
 nutritionRouter.get('/clients/:clientId/meal-plan-assignments/active', async (req, res) => {
   try {
     const assignment = await storage.getActiveMealPlanAssignment(req.params.clientId);
-    res.json(assignment || null);
+    if (!assignment) {
+      return res.json(null);
+    }
+    
+    // Get full meal plan details
+    const mealPlan = await storage.getMealPlan(assignment.mealPlanId);
+    res.json({
+      ...assignment,
+      mealPlan
+    });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
@@ -557,7 +566,16 @@ nutritionRouter.get('/clients/:clientId/supplement-plan-assignments', async (req
 nutritionRouter.get('/clients/:clientId/supplement-plan-assignments/active', async (req, res) => {
   try {
     const assignment = await storage.getActiveSupplementPlanAssignment(req.params.clientId);
-    res.json(assignment || null);
+    if (!assignment) {
+      return res.json(null);
+    }
+    
+    // Get full supplement plan details
+    const supplementPlan = await storage.getSupplementPlan(assignment.supplementPlanId);
+    res.json({
+      ...assignment,
+      supplementPlan
+    });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

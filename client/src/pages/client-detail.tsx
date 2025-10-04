@@ -105,19 +105,19 @@ export default function ClientDetail() {
   });
 
   const { data: assignedPlans = [] } = useQuery({
-    queryKey: ["/api/client-plans", clientId],
+    queryKey: [`/api/client-plans/${clientId}`],
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
   // Load client's assigned meal plan
   const { data: assignedMealPlan } = useQuery({
-    queryKey: ["/api/nutrition/clients", clientId, "meal-plan-assignments", "active"],
+    queryKey: [`/api/nutrition/clients/${clientId}/meal-plan-assignments/active`],
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
   // Load client's assigned supplement plan
   const { data: assignedSupplementPlan } = useQuery({
-    queryKey: ["/api/nutrition/clients", clientId, "supplement-plan-assignments", "active"],
+    queryKey: [`/api/nutrition/clients/${clientId}/supplement-plan-assignments/active`],
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
@@ -275,7 +275,7 @@ export default function ClientDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/client-plans", clientId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/client-plans/${clientId}`] });
       toast({
         title: "Success",
         description: "Training plan assigned successfully",
@@ -312,7 +312,7 @@ export default function ClientDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "meal-plan-assignments", "active"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/clients/${clientId}/meal-plan-assignments/active`] });
       toast({
         title: "Success",
         description: "Meal plan assigned successfully",
@@ -338,7 +338,7 @@ export default function ClientDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "supplement-plan-assignments", "active"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/clients/${clientId}/supplement-plan-assignments/active`] });
       toast({
         title: "Success",
         description: "Supplement plan assigned successfully",
@@ -724,6 +724,76 @@ export default function ClientDetail() {
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center py-8">{t('clientDetail.noTrainingPlans')}</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Meal Plans */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UtensilsCrossed className="h-5 w-5" />
+                Meal Plans
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {assignedMealPlan ? (
+                <div className="p-3 border rounded-lg">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-medium">{assignedMealPlan.mealPlan?.name}</h3>
+                    <div className="flex items-center gap-2">
+                      {assignedMealPlan.isActive && (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                          Active
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{assignedMealPlan.mealPlan?.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Started: {new Date(assignedMealPlan.startDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No meal plans assigned yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Supplement Plans */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Pill className="h-5 w-5" />
+                Supplement Plans
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {assignedSupplementPlan ? (
+                <div className="p-3 border rounded-lg">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-medium">{assignedSupplementPlan.supplementPlan?.name}</h3>
+                    <div className="flex items-center gap-2">
+                      {assignedSupplementPlan.isActive && (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                          Active
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{assignedSupplementPlan.supplementPlan?.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Started: {new Date(assignedSupplementPlan.startDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No supplement plans assigned yet.</p>
               )}
             </CardContent>
           </Card>
