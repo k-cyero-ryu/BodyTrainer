@@ -47,6 +47,7 @@ import ClientEvaluationsList from "@/pages/client-evaluations-list";
 import ClientEvaluationsCompare from "@/pages/client-evaluations-compare";
 import TrainerProfile from "@/pages/trainer-profile";
 import TrainerMealPlans from "@/pages/trainer-meal-plans";
+import TrainerMealPlanDetail from "@/pages/trainer-meal-plan-detail";
 import TrainerSupplements from "@/pages/trainer-supplements";
 import ClientMealPlans from "@/pages/client-meal-plans";
 import ClientSupplements from "@/pages/client-supplements";
@@ -219,6 +220,7 @@ function Router() {
                   <Route path="/training-plans/:planId" component={TrainingPlanDetail} />
                   <Route path="/exercises" component={Exercises} />
                   <Route path="/trainer-meal-plans" component={TrainerMealPlans} />
+                  <Route path="/trainer-meal-plans/:id" component={TrainerMealPlanDetail} />
                   <Route path="/trainer-supplements" component={TrainerSupplements} />
                   <Route path="/client-payment-plans" component={ClientPaymentPlansPage} />
                   <Route path="/reports" component={Reports} />

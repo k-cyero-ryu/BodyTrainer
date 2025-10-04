@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -113,8 +114,6 @@ export default function TrainerMealPlans() {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([1]));
   const [activeDay, setActiveDay] = useState<number>(1);
   const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
-  const [viewMealPlan, setViewMealPlan] = useState<MealPlan | null>(null);
-  const [showViewDialog, setShowViewDialog] = useState(false);
   const [deleteMealPlanId, setDeleteMealPlanId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -246,14 +245,6 @@ export default function TrainerMealPlans() {
       });
     },
   });
-
-  const handleViewMealPlan = async (planId: string) => {
-    const plan = mealPlans.find(p => p.id === planId);
-    if (plan) {
-      setViewMealPlan(plan);
-      setShowViewDialog(true);
-    }
-  };
 
   const handleDeleteClick = (planId: string) => {
     setDeleteMealPlanId(planId);
@@ -841,16 +832,17 @@ export default function TrainerMealPlans() {
                 </div>
               </CardContent>
               <CardFooter className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleViewMealPlan(plan.id)}
-                  className="flex-1"
-                  data-testid={`button-view-plan-${plan.id}`}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View
-                </Button>
+                <Link href={`/trainer-meal-plans/${plan.id}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    data-testid={`button-view-plan-${plan.id}`}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </Link>
                 <Button
                   variant="outline"
                   size="sm"
@@ -888,64 +880,6 @@ export default function TrainerMealPlans() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* View Details Dialog */}
-      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{viewMealPlan?.name}</DialogTitle>
-          </DialogHeader>
-          {viewMealPlan && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Daily Calories</Label>
-                  <p className="text-lg font-semibold">{viewMealPlan.dailyCalories} cal</p>
-                </div>
-                {viewMealPlan.targetProtein && (
-                  <div>
-                    <Label>Protein Target</Label>
-                    <p className="text-lg font-semibold">{viewMealPlan.targetProtein}g</p>
-                  </div>
-                )}
-                {viewMealPlan.targetCarbs && (
-                  <div>
-                    <Label>Carbs Target</Label>
-                    <p className="text-lg font-semibold">{viewMealPlan.targetCarbs}g</p>
-                  </div>
-                )}
-                {viewMealPlan.targetFat && (
-                  <div>
-                    <Label>Fat Target</Label>
-                    <p className="text-lg font-semibold">{viewMealPlan.targetFat}g</p>
-                  </div>
-                )}
-              </div>
-              {viewMealPlan.goal && (
-                <div>
-                  <Label>Goal</Label>
-                  <Badge variant="outline" className="mt-1">{viewMealPlan.goal}</Badge>
-                </div>
-              )}
-              {viewMealPlan.description && (
-                <div>
-                  <Label>Description</Label>
-                  <p className="text-sm text-muted-foreground">{viewMealPlan.description}</p>
-                </div>
-              )}
-              {viewMealPlan.notes && (
-                <div>
-                  <Label>Notes</Label>
-                  <p className="text-sm text-muted-foreground">{viewMealPlan.notes}</p>
-                </div>
-              )}
-              <div className="text-sm text-muted-foreground">
-                <p>To view the complete 7-day meal schedule with all meals and food items, this feature is coming soon.</p>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
