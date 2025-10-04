@@ -1,0 +1,92 @@
+Nutrition & Supplement Planning Module – PRD
+1. Overview
+The Nutrition & Supplement Module enables fitness trainers to create, manage, and assign personalized meal plans and supplement schedules for their clients. It integrates USDA FoodData Central to calculate nutritional values automatically and supports both daily and weekly food planning.
+Calculate BMR (Basal Metabolic Rate)
+Your BMR is the amount of energy (calories) your body needs to stay alive at rest — basically what you’d burn lying in bed all day.
+Use the Mifflin–St Jeor equation (the most accepted modern one):
+🧍‍♂️ For men:
+BMR=(10×weight in kg)+(6.25×height in cm)−(5×age)+5 
+🧍‍♀️ For women:
+BMR=(10×weight in kg)+(6.25×height in cm)−(5×age)−161 ________________________________________
+⚙️ Step 2: Multiply by Activity Factor (to get TDEE)
+Activity Level	Description	Multiplier
+Sedentary	Little or no exercise	1.2
+Lightly Active	Light exercise/sports 1–3 days/week	1.375
+Moderately Active	Moderate exercise 3–5 days/week	1.55
+Very Active	Hard exercise 6–7 days/week	1.725
+Extra Active	Very hard physical job or twice-a-day training	1.9
+TDEE=BMR×Activity Factor 
+
+
+
+
+
+
+
+2. Objectives
+•	Provide trainers with a structured way to create customized meal and supplement plans.
+•	Automatically calculate daily calorie and macro totals (protein, carbs, fats).
+•	Track client adherence and progress.
+•	Sync food and supplement plans with training plans for holistic program management.
+________________________________________
+3. Key Features
+3.1. Meal Plan Builder
+•	Add activity level at the client profile (activity levels in the overview) .
+•	Create plans by day (Mon–Sun) and by meal (Breakfast, Snack, Lunch, Dinner, pre-workout, post-workout, intraworkout etc).
+•	Base plan is based on the Base KCalories and the adjusted kcalories. (base kilocalories will be calculated based on Total Daily Energy Expenditure (TDEE) )
+•	Add foods from:
+o	USDA FoodData Central API (with nutritional breakdown)
+o	Custom foods (for local or brand-specific items)
+•	Automatically calculate:
+o	Total daily Calories
+o	Macros: Proteins, Carbs, Fats
+•	Optional notes for meal timing, preparation, or substitutions.
+3.2. Supplement Management
+•	Add supplements to client plans (pre-workout, post-workout, vitamins, etc.).
+•	Allow Define new suplements:
+o	Supplement name
+o	Brand (optional)
+o	Dosage (e.g., “1 scoop = 30g”)
+o	Timing (e.g., “before workout”, “after breakfast”)
+o	Notes (purpose, effects, etc.)
+3.3. Weekly Overview
+•	Display weekly distribution of calories and macros.
+•	Show summary chart:
+o	Total weekly calories
+o	Macro ratio %
+o	Adherence rate (based on user tracking or trainer updates)
+3.4. Client View
+•	Clients can view:
+o	Daily meals and supplements
+o	Nutritional breakdowns
+o	Meal reminders (optional)
+•	Option to mark meals as completed to track adherence.
+________________________________________
+4. Data Model
+Entities:
+•	MealPlan
+o	id, client_id, trainer_id, start_date, end_date, notes
+•	MealDay
+o	id, meal_plan_id, day_of_week
+•	Meal
+o	id, meal_day_id, meal_type, time, total_calories
+•	MealItem
+o	id, meal_id, food_id, quantity, unit, calories, protein, carbs, fat
+•	SupplementPlan
+o	id, client_id, trainer_id, notes
+•	SupplementItem
+o	id, supplement_plan_id, name, brand, dosage, timing, notes
+Integrations:
+•	FoodItem fetched via USDA API (stored locally for caching/performance).
+________________________________________
+5. UX Flow
+1.	Trainer selects client → “Create Nutrition Plan”
+2.	Choose template (optional) or create from scratch
+3.	Add meals per day, then foods per meal
+4.	System auto-calculates totals
+5.	Add supplements
+6.	Save → client gets access in their dashboard/app
+________________________________________
+6. API Integrations
+•	USDA FoodData Central API
+o	Endpoints for food search, nutrient data, and portion conversions.
