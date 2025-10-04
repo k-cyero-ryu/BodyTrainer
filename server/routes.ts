@@ -2419,9 +2419,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Deactivate any existing active plans for this client
       const existingPlans = await storage.getClientPlans(clientId);
+      console.log(`[DEACTIVATE DEBUG] Found ${existingPlans.length} existing plans for client ${clientId}`);
       for (const existingPlan of existingPlans) {
+        console.log(`[DEACTIVATE DEBUG] Checking plan ${existingPlan.id}, isActive: ${existingPlan.isActive}`);
         if (existingPlan.isActive) {
+          console.log(`[DEACTIVATE DEBUG] Deactivating plan ${existingPlan.id}`);
           await storage.updateClientPlan(existingPlan.id, { isActive: false });
+          console.log(`[DEACTIVATE DEBUG] Plan ${existingPlan.id} deactivated`);
         }
       }
 
