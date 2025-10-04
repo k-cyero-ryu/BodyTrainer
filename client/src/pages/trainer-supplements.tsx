@@ -96,10 +96,12 @@ export default function TrainerSupplements() {
     },
   });
 
-  const { data: clients = [] } = useQuery<Client[]>({
+  const { data: clientsData } = useQuery<{ clients: Client[] }>({
     queryKey: ["/api/trainers/clients"],
     enabled: !!user && user.role === "trainer",
   });
+
+  const clients = clientsData?.clients || [];
 
   const { data: supplementPlans = [] } = useQuery<(SupplementPlan & { items?: SupplementItem[] })[]>({
     queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-plans"],
