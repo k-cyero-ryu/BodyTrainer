@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Chat from "@/components/chat";
 import { 
@@ -37,7 +38,10 @@ import {
   Heart,
   Apple,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Dumbbell,
+  UtensilsCrossed,
+  Pill
 } from "lucide-react";
 
 const formatCurrency = (amount: number, currency: string = "USD") => {
@@ -69,6 +73,7 @@ export default function ClientDetail() {
   const clientId = params?.clientId;
   const [showChat, setShowChat] = useState(false);
   const [showAssignPlanModal, setShowAssignPlanModal] = useState(false);
+  const [planAssignmentType, setPlanAssignmentType] = useState<'training' | 'meal' | 'supplement'>('training');
   const [showCalorieGoalModal, setShowCalorieGoalModal] = useState(false);
   const [newCalorieGoal, setNewCalorieGoal] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -125,7 +130,19 @@ export default function ClientDetail() {
   // Load trainer's training plans for assignment
   const { data: availablePlans = [] } = useQuery({
     queryKey: ["/api/training-plans"],
-    enabled: !!user && user.role === 'trainer' && showAssignPlanModal,
+    enabled: !!user && user.role === 'trainer' && showAssignPlanModal && planAssignmentType === 'training',
+  });
+
+  // Load trainer's meal plan templates for assignment
+  const { data: availableMealPlans = [] } = useQuery({
+    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`],
+    enabled: !!user?.trainer?.id && showAssignPlanModal && planAssignmentType === 'meal',
+  });
+
+  // Load trainer's supplement plan templates for assignment
+  const { data: availableSupplementPlans = [] } = useQuery({
+    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`],
+    enabled: !!user?.trainer?.id && showAssignPlanModal && planAssignmentType === 'supplement',
   });
 
   // Load client's recent daily resume data
@@ -273,6 +290,58 @@ export default function ClientDetail() {
     },
   });
 
+  const assignMealPlanMutation = useMutation({
+    mutationFn: async ({ mealPlanId, clientId, startDate, isActive }: any) => {
+      await apiRequest("POST", "/api/nutrition/meal-plan-assignments", {
+        mealPlanId,
+        clientId,
+        startDate,
+        isActive,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "meal-plan-assignments"] });
+      toast({
+        title: "Success",
+        description: "Meal plan assigned successfully",
+      });
+      setShowAssignPlanModal(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign meal plan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const assignSupplementPlanMutation = useMutation({
+    mutationFn: async ({ supplementPlanId, clientId, startDate, isActive }: any) => {
+      await apiRequest("POST", "/api/nutrition/supplement-plan-assignments", {
+        supplementPlanId,
+        clientId,
+        startDate,
+        isActive,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "supplement-plan-assignments"] });
+      toast({
+        title: "Success",
+        description: "Supplement plan assigned successfully",
+      });
+      setShowAssignPlanModal(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign supplement plan",
+        variant: "destructive",
+      });
+    },
+  });
+
   const updateCalorieGoalMutation = useMutation({
     mutationFn: async (goal: number) => {
       return await apiRequest('PUT', `/api/clients/${clientId}/calories/goal`, { goal });
@@ -403,14 +472,50 @@ export default function ClientDetail() {
           <Badge className={getStatusColor(client.user?.status || 'inactive')}>
             {client.user?.status || 'inactive'}
           </Badge>
-          <Button 
-            size="sm"
-            onClick={() => setShowAssignPlanModal(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t('clientDetail.assignPlan')}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+                data-testid="button-assign-plan"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {t('clientDetail.assignPlan')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={() => {
+                  setPlanAssignmentType('training');
+                  setShowAssignPlanModal(true);
+                }}
+                data-testid="menu-assign-training-plan"
+              >
+                <Dumbbell className="h-4 w-4 mr-2" />
+                Training Plan
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setPlanAssignmentType('meal');
+                  setShowAssignPlanModal(true);
+                }}
+                data-testid="menu-assign-meal-plan"
+              >
+                <UtensilsCrossed className="h-4 w-4 mr-2" />
+                Meal Plan
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setPlanAssignmentType('supplement');
+                  setShowAssignPlanModal(true);
+                }}
+                data-testid="menu-assign-supplement-plan"
+              >
+                <Pill className="h-4 w-4 mr-2" />
+                Supplement Plan
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button 
             variant="outline" 
             size="sm"
@@ -1032,7 +1137,11 @@ export default function ClientDetail() {
       <Dialog open={showAssignPlanModal} onOpenChange={setShowAssignPlanModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Assign Training Plan</DialogTitle>
+            <DialogTitle>
+              {planAssignmentType === 'training' && 'Assign Training Plan'}
+              {planAssignmentType === 'meal' && 'Assign Meal Plan'}
+              {planAssignmentType === 'supplement' && 'Assign Supplement Plan'}
+            </DialogTitle>
           </DialogHeader>
           
           <div className="mb-4">
@@ -1051,52 +1160,85 @@ export default function ClientDetail() {
               if (!planId) {
                 toast({
                   title: "Error",
-                  description: "Please select a training plan",
+                  description: `Please select a ${planAssignmentType} plan`,
                   variant: "destructive",
                 });
                 return;
               }
 
-              // Find the selected plan to calculate end date
-              const selectedPlan = availablePlans.find((plan: any) => plan.id === planId);
-              if (!selectedPlan) {
-                toast({
-                  title: "Error",
-                  description: "Selected plan not found",
-                  variant: "destructive",
+              if (planAssignmentType === 'training') {
+                // Training plan assignment logic
+                const selectedPlan = availablePlans.find((plan: any) => plan.id === planId);
+                if (!selectedPlan) {
+                  toast({
+                    title: "Error",
+                    description: "Selected plan not found",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                const start = new Date(startDate);
+                const end = new Date(start);
+                end.setDate(start.getDate() + (selectedPlan.duration * 7));
+
+                assignPlanMutation.mutate({
+                  planId,
+                  startDate,
+                  endDate: end.toISOString().split('T')[0],
                 });
-                return;
+              } else if (planAssignmentType === 'meal') {
+                // Meal plan assignment logic
+                assignMealPlanMutation.mutate({
+                  mealPlanId: planId,
+                  clientId: clientId!,
+                  startDate,
+                  isActive: true,
+                });
+              } else if (planAssignmentType === 'supplement') {
+                // Supplement plan assignment logic
+                assignSupplementPlanMutation.mutate({
+                  supplementPlanId: planId,
+                  clientId: clientId!,
+                  startDate,
+                  isActive: true,
+                });
               }
-
-              // Calculate end date based on plan duration
-              const start = new Date(startDate);
-              const end = new Date(start);
-              end.setDate(start.getDate() + (selectedPlan.duration * 7));
-
-              assignPlanMutation.mutate({
-                planId,
-                startDate,
-                endDate: end.toISOString().split('T')[0],
-              });
             }}
           >
             <div className="space-y-4">
               <div>
-                <Label htmlFor="planId">Select Training Plan</Label>
+                <Label htmlFor="planId">
+                  {planAssignmentType === 'training' && 'Select Training Plan'}
+                  {planAssignmentType === 'meal' && 'Select Meal Plan'}
+                  {planAssignmentType === 'supplement' && 'Select Supplement Plan'}
+                </Label>
                 <Select name="planId" required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose a training plan" />
+                    <SelectValue placeholder={`Choose a ${planAssignmentType} plan`} />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.isArray(availablePlans) && availablePlans.length > 0 ? (
+                    {planAssignmentType === 'training' && Array.isArray(availablePlans) && availablePlans.length > 0 ? (
                       availablePlans.map((plan: any) => (
                         <SelectItem key={plan.id} value={plan.id}>
                           {plan.name} ({plan.duration} weeks)
                         </SelectItem>
                       ))
+                    ) : planAssignmentType === 'meal' && Array.isArray(availableMealPlans) && availableMealPlans.length > 0 ? (
+                      availableMealPlans.map((plan: any) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </SelectItem>
+                      ))
+                    ) : planAssignmentType === 'supplement' && Array.isArray(availableSupplementPlans) && availableSupplementPlans.length > 0 ? (
+                      availableSupplementPlans.map((plan: any) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </SelectItem>
+                      ))
                     ) : (
                       <SelectItem value="no-plans" disabled>
-                        No training plans available
+                        No {planAssignmentType} plans available
                       </SelectItem>
                     )}
                   </SelectContent>
@@ -1124,9 +1266,11 @@ export default function ClientDetail() {
               </Button>
               <Button
                 type="submit"
-                disabled={assignPlanMutation.isPending}
+                disabled={assignPlanMutation.isPending || assignMealPlanMutation.isPending || assignSupplementPlanMutation.isPending}
               >
-                {assignPlanMutation.isPending ? t('clientDetail.assigning') : t('clientDetail.assignPlan')}
+                {(assignPlanMutation.isPending || assignMealPlanMutation.isPending || assignSupplementPlanMutation.isPending) 
+                  ? t('clientDetail.assigning') 
+                  : t('clientDetail.assignPlan')}
               </Button>
             </div>
           </form>
