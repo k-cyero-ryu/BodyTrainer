@@ -1,6 +1,7 @@
 import { sql, relations } from 'drizzle-orm';
 import {
   index,
+  uniqueIndex,
   jsonb,
   pgTable,
   text,
@@ -550,6 +551,140 @@ export const cardioActivities = pgTable("cardio_activities", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ============== NUTRITION & MEAL PLANNING SYSTEM ==============
+
+// USDA Foods Cache - stores frequently used USDA food items for quick access
+export const usdaFoodsCache = pgTable("usda_foods_cache", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fdcId: varchar("fdc_id").notNull().unique(), // USDA FDC ID
+  description: text("description").notNull(), // Food name/description
+  dataType: varchar("data_type"), // e.g., "Survey (FNDDS)", "SR Legacy"
+  // Nutritional data per 100g
+  calories: decimal("calories", { precision: 8, scale: 2 }),
+  protein: decimal("protein", { precision: 8, scale: 2 }),
+  carbs: decimal("carbs", { precision: 8, scale: 2 }),
+  fat: decimal("fat", { precision: 8, scale: 2 }),
+  fiber: decimal("fiber", { precision: 8, scale: 2 }),
+  sugar: decimal("sugar", { precision: 8, scale: 2 }),
+  // Additional metadata
+  brandOwner: varchar("brand_owner"),
+  servingSize: decimal("serving_size", { precision: 8, scale: 2 }), // in grams
+  servingUnit: varchar("serving_unit"), // e.g., "g", "ml", "piece"
+  lastUsed: timestamp("last_used").defaultNow(),
+  refreshedAt: timestamp("refreshed_at").defaultNow(), // For cache invalidation
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Meal Plans - Main structured nutrition plan for a client
+export const mealPlans = pgTable("meal_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(), // e.g., "Weight Loss Plan - Week 1"
+  description: text("description"),
+  goal: varchar("goal"), // e.g., "weight_loss", "muscle_gain", "maintenance"
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  // Nutrition targets
+  dailyCalories: integer("daily_calories").notNull(),
+  targetProtein: integer("target_protein"), // grams
+  targetCarbs: integer("target_carbs"), // grams
+  targetFat: integer("target_fat"), // grams
+  // Plan metadata
+  weekCycle: integer("week_cycle").default(1), // How many weeks of unique meal patterns
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"), // Trainer notes for the client
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Meal Days - Represents specific days in the meal plan (e.g., Day 1 - Monday)
+export const mealDays = pgTable("meal_days", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mealPlanId: varchar("meal_plan_id").notNull().references(() => mealPlans.id, { onDelete: 'cascade' }),
+  dayNumber: integer("day_number").notNull(), // 1-7 for week cycle
+  dayName: varchar("day_name"), // e.g., "Monday", "Day 1"
+  totalCalories: integer("total_calories").default(0), // Calculated from meals
+  totalProtein: decimal("total_protein", { precision: 8, scale: 2 }).default('0'),
+  totalCarbs: decimal("total_carbs", { precision: 8, scale: 2 }).default('0'),
+  totalFat: decimal("total_fat", { precision: 8, scale: 2 }).default('0'),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  // Ensure each plan has unique day numbers (no duplicate days)
+  uniquePlanDay: uniqueIndex("meal_days_plan_day_unique").on(table.mealPlanId, table.dayNumber),
+}));
+
+// Meals - Individual meals within a day (breakfast, lunch, etc.)
+export const meals = pgTable("meals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mealDayId: varchar("meal_day_id").notNull().references(() => mealDays.id, { onDelete: 'cascade' }),
+  mealType: mealTypeEnum("meal_type").notNull(), // breakfast, lunch, dinner, snack, etc.
+  name: varchar("name"), // Optional custom name
+  targetTime: varchar("target_time"), // Suggested eating time, e.g., "08:00 AM"
+  // Calculated totals from meal items
+  totalCalories: integer("total_calories").default(0),
+  totalProtein: decimal("total_protein", { precision: 8, scale: 2 }).default('0'),
+  totalCarbs: decimal("total_carbs", { precision: 8, scale: 2 }).default('0'),
+  totalFat: decimal("total_fat", { precision: 8, scale: 2 }).default('0'),
+  notes: text("notes"), // Preparation notes or instructions
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Meal Items - Individual food items in a meal
+export const mealItems = pgTable("meal_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mealId: varchar("meal_id").notNull().references(() => meals.id, { onDelete: 'cascade' }),
+  usdaFoodId: varchar("usda_food_id").references(() => usdaFoodsCache.id, { onDelete: 'set null' }), // Reference to cached USDA food, nullable
+  // Food details (can be custom or from USDA)
+  foodName: text("food_name").notNull(),
+  fdcId: varchar("fdc_id"), // USDA FDC ID if from USDA database
+  quantity: decimal("quantity", { precision: 8, scale: 2 }).notNull(), // Amount in grams
+  unit: varchar("unit").default('g'), // Unit of measurement
+  // Nutritional values for this specific quantity
+  calories: decimal("calories", { precision: 8, scale: 2 }),
+  protein: decimal("protein", { precision: 8, scale: 2 }),
+  carbs: decimal("carbs", { precision: 8, scale: 2 }),
+  fat: decimal("fat", { precision: 8, scale: 2 }),
+  fiber: decimal("fiber", { precision: 8, scale: 2 }),
+  sugar: decimal("sugar", { precision: 8, scale: 2 }),
+  notes: text("notes"), // Preparation method, substitutions, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ============== SUPPLEMENT MANAGEMENT SYSTEM ==============
+
+// Supplement Plans - Main supplement protocol for a client
+export const supplementPlans = pgTable("supplement_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(), // e.g., "Recovery Stack", "Pre-Workout Protocol"
+  description: text("description"),
+  goal: varchar("goal"), // e.g., "recovery", "energy", "muscle_gain", "health"
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"), // Trainer notes or special instructions
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Supplement Items - Individual supplements within a plan
+export const supplementItems = pgTable("supplement_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  supplementPlanId: varchar("supplement_plan_id").notNull().references(() => supplementPlans.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(), // Supplement name, e.g., "Whey Protein", "Creatine"
+  brand: varchar("brand"), // Brand name if specific
+  dosage: varchar("dosage").notNull(), // e.g., "5g", "2 capsules", "1 scoop"
+  frequency: varchar("frequency").notNull(), // e.g., "daily", "2x daily", "post-workout"
+  timing: varchar("timing"), // When to take it, e.g., "morning", "post-workout", "before bed"
+  purpose: text("purpose"), // Why this supplement is recommended
+  instructions: text("instructions"), // Detailed usage instructions
+  isOptional: boolean("is_optional").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Social posts schema - platform-wide posts visible to all users
 export const socialPosts = pgTable("social_posts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -666,6 +801,70 @@ export const cardioActivitiesRelations = relations(cardioActivities, ({ one }) =
   }),
 }));
 
+// Meal Planning Relations
+export const mealPlansRelations = relations(mealPlans, ({ one, many }) => ({
+  client: one(clients, {
+    fields: [mealPlans.clientId],
+    references: [clients.id],
+  }),
+  trainer: one(trainers, {
+    fields: [mealPlans.trainerId],
+    references: [trainers.id],
+  }),
+  mealDays: many(mealDays),
+}));
+
+export const mealDaysRelations = relations(mealDays, ({ one, many }) => ({
+  mealPlan: one(mealPlans, {
+    fields: [mealDays.mealPlanId],
+    references: [mealPlans.id],
+  }),
+  meals: many(meals),
+}));
+
+export const mealsRelations = relations(meals, ({ one, many }) => ({
+  mealDay: one(mealDays, {
+    fields: [meals.mealDayId],
+    references: [mealDays.id],
+  }),
+  mealItems: many(mealItems),
+}));
+
+export const mealItemsRelations = relations(mealItems, ({ one }) => ({
+  meal: one(meals, {
+    fields: [mealItems.mealId],
+    references: [meals.id],
+  }),
+  usdaFood: one(usdaFoodsCache, {
+    fields: [mealItems.usdaFoodId],
+    references: [usdaFoodsCache.id],
+  }),
+}));
+
+export const usdaFoodsCacheRelations = relations(usdaFoodsCache, ({ many }) => ({
+  mealItems: many(mealItems),
+}));
+
+// Supplement Planning Relations
+export const supplementPlansRelations = relations(supplementPlans, ({ one, many }) => ({
+  client: one(clients, {
+    fields: [supplementPlans.clientId],
+    references: [clients.id],
+  }),
+  trainer: one(trainers, {
+    fields: [supplementPlans.trainerId],
+    references: [trainers.id],
+  }),
+  supplementItems: many(supplementItems),
+}));
+
+export const supplementItemsRelations = relations(supplementItems, ({ one }) => ({
+  supplementPlan: one(supplementPlans, {
+    fields: [supplementItems.supplementPlanId],
+    references: [supplementPlans.id],
+  }),
+}));
+
 // Community insert schemas and types (defined after tables)
 export const insertCommunityGroupSchema = createInsertSchema(communityGroups).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCommunityMemberSchema = createInsertSchema(communityMembers).omit({ id: true, joinedAt: true });
@@ -710,6 +909,33 @@ export type FoodEntry = typeof foodEntries.$inferSelect;
 export type UpdateFoodEntry = z.infer<typeof updateFoodEntrySchema>;
 export type InsertCardioActivity = z.infer<typeof insertCardioActivitySchema>;
 export type CardioActivity = typeof cardioActivities.$inferSelect;
+
+// Meal Planning insert schemas and types
+export const insertUsdaFoodCacheSchema = createInsertSchema(usdaFoodsCache).omit({ id: true, createdAt: true, lastUsed: true, refreshedAt: true });
+export const insertMealPlanSchema = createInsertSchema(mealPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMealDaySchema = createInsertSchema(mealDays).omit({ id: true, createdAt: true });
+export const insertMealSchema = createInsertSchema(meals).omit({ id: true, createdAt: true });
+export const insertMealItemSchema = createInsertSchema(mealItems).omit({ id: true, createdAt: true });
+
+export type InsertUsdaFoodCache = z.infer<typeof insertUsdaFoodCacheSchema>;
+export type UsdaFoodCache = typeof usdaFoodsCache.$inferSelect;
+export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
+export type MealPlan = typeof mealPlans.$inferSelect;
+export type InsertMealDay = z.infer<typeof insertMealDaySchema>;
+export type MealDay = typeof mealDays.$inferSelect;
+export type InsertMeal = z.infer<typeof insertMealSchema>;
+export type Meal = typeof meals.$inferSelect;
+export type InsertMealItem = z.infer<typeof insertMealItemSchema>;
+export type MealItem = typeof mealItems.$inferSelect;
+
+// Supplement Planning insert schemas and types
+export const insertSupplementPlanSchema = createInsertSchema(supplementPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSupplementItemSchema = createInsertSchema(supplementItems).omit({ id: true, createdAt: true });
+
+export type InsertSupplementPlan = z.infer<typeof insertSupplementPlanSchema>;
+export type SupplementPlan = typeof supplementPlans.$inferSelect;
+export type InsertSupplementItem = z.infer<typeof insertSupplementItemSchema>;
+export type SupplementItem = typeof supplementItems.$inferSelect;
 
 // Custom calorie entries insert schema
 export const insertCustomCalorieEntrySchema = createInsertSchema(customCalorieEntries).omit({ id: true, createdAt: true, date: true }).extend({
