@@ -162,7 +162,7 @@ export default function ClientMealPlans() {
             )}
           </div>
 
-          {(activeMealPlan.startDate || activeMealPlan.goal) && (
+          {(activeAssignment?.startDate || activeMealPlan.goal) && (
             <>
               <Separator className="my-4" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -172,12 +172,12 @@ export default function ClientMealPlans() {
                     <Badge variant="outline">{activeMealPlan.goal.replace("_", " ")}</Badge>
                   </div>
                 )}
-                {activeMealPlan.startDate && (
+                {activeAssignment?.startDate && (
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">Started:</span>
                     <span className="text-sm font-medium">
-                      {new Date(activeMealPlan.startDate).toLocaleDateString()}
+                      {new Date(activeAssignment.startDate).toLocaleDateString()}
                     </span>
                   </div>
                 )}
