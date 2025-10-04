@@ -186,9 +186,11 @@ export function FoodDropdownSelector({
         {/* Category Selection */}
         <div className="space-y-2">
           <Label htmlFor="category-select">Food Category</Label>
-          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+          <Select key={`category-${selectedCategory}`} value={selectedCategory} onValueChange={handleCategoryChange}>
             <SelectTrigger data-testid="select-food-category">
-              <SelectValue placeholder="Select category" />
+              <SelectValue>
+                {selectedCategory === 'all' ? 'All Categories' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {FOOD_CATEGORIES.map((category) => (

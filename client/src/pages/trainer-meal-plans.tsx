@@ -284,15 +284,17 @@ export default function TrainerMealPlans() {
     calculatedCalories: number;
     calculatedNutrition: NutritionData;
   }) => {
+    // Store per-100g values so we can recalculate when quantity changes
     const newItem: MealItemData = {
       id: `item-${Date.now()}`,
-      foodName: data.food.name,
+      foodName: data.food.name || "Unknown Food",
       fdcId: data.food.fdcId.toString(),
       quantity: data.quantity,
-      calories: data.calculatedCalories,
-      protein: data.calculatedNutrition.protein,
-      carbs: data.calculatedNutrition.carbs,
-      fat: data.calculatedNutrition.totalFat,
+      // Store per-100g values (original USDA data)
+      calories: data.food.calories || 0,
+      protein: data.food.protein || 0,
+      carbs: data.food.carbs || 0,
+      fat: data.food.totalFat || 0,
     };
 
     setDaysData((prev) =>
@@ -646,7 +648,9 @@ export default function TrainerMealPlans() {
                                       data-testid={`row-meal-item-${item.id}`}
                                     >
                                       <div className="flex-1">
-                                        <div className="font-medium text-sm">{item.foodName}</div>
+                                        <div className="font-medium text-sm">
+                                          {item.foodName || "Unknown Food"} ({item.quantity}g)
+                                        </div>
                                         <div className="text-xs text-muted-foreground">
                                           {Math.round((item.calories || 0) * (item.quantity / 100))} cal | P:{" "}
                                           {Math.round((item.protein || 0) * (item.quantity / 100))}g | C:{" "}
