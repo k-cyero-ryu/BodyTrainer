@@ -333,6 +333,7 @@ export default function ClientDetail() {
       await apiRequest("POST", "/api/nutrition/supplement-plan-assignments", {
         supplementPlanId,
         clientId,
+        trainerId: client?.trainerId,
         startDate,
         isActive,
       });
