@@ -158,7 +158,9 @@ export default function TrainerSupplementItems() {
     editForm.reset({
       name: item.name,
       brand: item.brand || "",
-      dosage: item.dosage,
+      defaultDosage: item.defaultDosage || "",
+      defaultFrequency: item.defaultFrequency || "",
+      defaultTiming: item.defaultTiming || "",
       purpose: item.purpose || "",
       instructions: item.instructions || "",
     });
@@ -241,7 +243,7 @@ export default function TrainerSupplementItems() {
 
                 <FormField
                   control={form.control}
-                  name="dosage"
+                  name="defaultDosage"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Dosage *</FormLabel>
@@ -389,7 +391,7 @@ export default function TrainerSupplementItems() {
                   <div>
                     <span className="text-sm font-medium">Dosage: </span>
                     <span className="text-sm text-muted-foreground" data-testid={`text-dosage-${item.id}`}>
-                      {item.dosage}
+                      {item.defaultDosage}
                     </span>
                   </div>
                   {item.purpose && (
@@ -452,7 +454,7 @@ export default function TrainerSupplementItems() {
 
               <FormField
                 control={editForm.control}
-                name="dosage"
+                name="defaultDosage"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Dosage *</FormLabel>
