@@ -49,6 +49,7 @@ import TrainerProfile from "@/pages/trainer-profile";
 import TrainerMealPlans from "@/pages/trainer-meal-plans";
 import TrainerMealPlanDetail from "@/pages/trainer-meal-plan-detail";
 import TrainerSupplements from "@/pages/trainer-supplements";
+import TrainerSupplementItems from "@/pages/trainer-supplement-items";
 import ClientMealPlans from "@/pages/client-meal-plans";
 import ClientSupplements from "@/pages/client-supplements";
 import Community from "@/pages/community";
@@ -221,6 +222,7 @@ function Router() {
                   <Route path="/exercises" component={Exercises} />
                   <Route path="/trainer-meal-plans" component={TrainerMealPlans} />
                   <Route path="/trainer-meal-plans/:id" component={TrainerMealPlanDetail} />
+                  <Route path="/trainer-supplement-items" component={TrainerSupplementItems} />
                   <Route path="/trainer-supplements" component={TrainerSupplements} />
                   <Route path="/client-payment-plans" component={ClientPaymentPlansPage} />
                   <Route path="/reports" component={Reports} />
