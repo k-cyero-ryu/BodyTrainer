@@ -149,6 +149,16 @@ nutritionRouter.get('/clients/:clientId/meal-plan-assignments', async (req, res)
   }
 });
 
+// Get active meal plan assignment for a client
+nutritionRouter.get('/clients/:clientId/meal-plan-assignments/active', async (req, res) => {
+  try {
+    const assignment = await storage.getActiveMealPlanAssignment(req.params.clientId);
+    res.json(assignment || null);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Get meal plan assignments for a specific plan
 nutritionRouter.get('/meal-plans/:planId/assignments', async (req, res) => {
   try {

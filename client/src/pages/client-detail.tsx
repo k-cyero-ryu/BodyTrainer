@@ -109,6 +109,18 @@ export default function ClientDetail() {
     enabled: !!clientId && !!user && user.role === 'trainer',
   });
 
+  // Load client's assigned meal plan
+  const { data: assignedMealPlan } = useQuery({
+    queryKey: ["/api/nutrition/clients", clientId, "meal-plan-assignments", "active"],
+    enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
+  // Load client's assigned supplement plan
+  const { data: assignedSupplementPlan } = useQuery({
+    queryKey: ["/api/nutrition/clients", clientId, "supplement-plan-assignments", "active"],
+    enabled: !!clientId && !!user && user.role === 'trainer',
+  });
+
   const { data: evaluations = [] } = useQuery({
     queryKey: ["/api/evaluations", clientId],
     queryFn: async () => {
@@ -135,14 +147,14 @@ export default function ClientDetail() {
 
   // Load trainer's meal plan templates for assignment
   const { data: availableMealPlans = [] } = useQuery({
-    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`],
-    enabled: !!user?.trainer?.id && showAssignPlanModal && planAssignmentType === 'meal',
+    queryKey: [`/api/nutrition/trainers/${client?.trainerId}/meal-plans`],
+    enabled: !!client?.trainerId && showAssignPlanModal && planAssignmentType === 'meal',
   });
 
   // Load trainer's supplement plan templates for assignment
   const { data: availableSupplementPlans = [] } = useQuery({
-    queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`],
-    enabled: !!user?.trainer?.id && showAssignPlanModal && planAssignmentType === 'supplement',
+    queryKey: [`/api/nutrition/trainers/${client?.trainerId}/supplement-plans`],
+    enabled: !!client?.trainerId && showAssignPlanModal && planAssignmentType === 'supplement',
   });
 
   // Load client's recent daily resume data
@@ -300,7 +312,7 @@ export default function ClientDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "meal-plan-assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "meal-plan-assignments", "active"] });
       toast({
         title: "Success",
         description: "Meal plan assigned successfully",
@@ -326,7 +338,7 @@ export default function ClientDetail() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "supplement-plan-assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/clients", clientId, "supplement-plan-assignments", "active"] });
       toast({
         title: "Success",
         description: "Supplement plan assigned successfully",
@@ -1200,7 +1212,7 @@ export default function ClientDetail() {
                 assignSupplementPlanMutation.mutate({
                   supplementPlanId: planId,
                   clientId: clientId!,
-                  trainerId: user?.trainer?.id!,
+                  trainerId: client?.trainerId!,
                   startDate,
                   isActive: true,
                 });
