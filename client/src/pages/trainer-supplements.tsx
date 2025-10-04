@@ -108,10 +108,11 @@ export default function TrainerSupplements() {
 
   const createPlanMutation = useMutation({
     mutationFn: async (data: { plan: SupplementPlanFormData; items: SelectedSupplementItem[] }) => {
-      const planResponse = await apiRequest("POST", "/api/nutrition/supplement-plans", {
+      const planResponseRaw = await apiRequest("POST", "/api/nutrition/supplement-plans", {
         ...data.plan,
         trainerId: user?.trainer?.id,
       });
+      const planResponse = await planResponseRaw.json();
 
       for (const item of data.items) {
         await apiRequest("POST", "/api/nutrition/supplement-plan-items", {

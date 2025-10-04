@@ -15,7 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Pencil, Pill, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Pill, Search, ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,7 @@ export default function TrainerSupplementItems() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<SupplementItem | null>(null);
@@ -186,11 +188,21 @@ export default function TrainerSupplementItems() {
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="page-supplement-items">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold" data-testid="text-page-title">Supplement Items Library</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your reusable supplement items to use in supplement plans
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLocation("/trainer/supplements")}
+            data-testid="button-back-to-plans"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold" data-testid="text-page-title">Supplement Items Library</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your reusable supplement items to use in supplement plans
+            </p>
+          </div>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
