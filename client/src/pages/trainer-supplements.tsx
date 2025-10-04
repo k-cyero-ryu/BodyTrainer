@@ -11,49 +11,42 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Save, Pill } from "lucide-react";
-import type { SupplementPlan, SupplementItem, Client, InsertSupplementPlan } from "@shared/schema";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, Pill, FileText, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { SupplementPlan, SupplementItem, SupplementPlanItem } from "@shared/schema";
 
 const supplementPlanFormSchema = z.object({
-  clientId: z.string().min(1, "Client is required"),
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   goal: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  isActive: z.boolean().default(true),
   notes: z.string().optional(),
 });
 
 type SupplementPlanFormData = z.infer<typeof supplementPlanFormSchema>;
 
-interface SupplementItemData {
-  id: string;
-  name: string;
-  brand?: string;
-  dosage: string;
+interface SelectedSupplementItem {
+  supplementItemId: string;
   frequency: string;
-  timing?: string;
-  purpose?: string;
-  instructions?: string;
+  timing: string;
   isOptional: boolean;
+  notes?: string;
 }
-
-const GOAL_OPTIONS = [
-  { value: "recovery", label: "Recovery" },
-  { value: "energy", label: "Energy" },
-  { value: "muscle_gain", label: "Muscle Gain" },
-  { value: "health", label: "General Health" },
-  { value: "performance", label: "Performance" },
-  { value: "weight_loss", label: "Weight Loss" },
-];
 
 const FREQUENCY_OPTIONS = [
   { value: "daily", label: "Daily" },
@@ -75,486 +68,524 @@ const TIMING_OPTIONS = [
   { value: "pre-workout", label: "Pre-Workout" },
 ];
 
+const GOAL_OPTIONS = [
+  { value: "recovery", label: "Recovery" },
+  { value: "energy", label: "Energy" },
+  { value: "muscle_gain", label: "Muscle Gain" },
+  { value: "health", label: "General Health" },
+  { value: "performance", label: "Performance" },
+  { value: "weight_loss", label: "Weight Loss" },
+];
+
 export default function TrainerSupplements() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [supplements, setSupplements] = useState<SupplementItemData[]>([]);
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState<SelectedSupplementItem[]>([]);
+  const [selectedLibraryItemId, setSelectedLibraryItemId] = useState<string>("");
 
   const form = useForm<SupplementPlanFormData>({
     resolver: zodResolver(supplementPlanFormSchema),
     defaultValues: {
-      clientId: "",
       name: "",
       description: "",
       goal: "",
-      isActive: true,
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: "",
       notes: "",
     },
   });
 
-  const { data: clientsData } = useQuery<{ clients: Client[] }>({
-    queryKey: ["/api/trainers/clients"],
-    enabled: !!user && user.role === "trainer",
+  const { data: supplementItems = [] } = useQuery<SupplementItem[]>({
+    queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-items"],
+    enabled: !!user?.trainer?.id,
   });
 
-  const clients = clientsData?.clients || [];
-
-  const { data: supplementPlans = [] } = useQuery<(SupplementPlan & { items?: SupplementItem[] })[]>({
+  const { data: supplementPlans = [] } = useQuery<SupplementPlan[]>({
     queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-plans"],
     enabled: !!user?.trainer?.id,
   });
 
-  const createSupplementPlanMutation = useMutation({
-    mutationFn: async (data: { plan: SupplementPlanFormData; supplements: SupplementItemData[] }) => {
-      const planResponse = await apiRequest(`/api/nutrition/supplement-plans`, "POST", {
+  const createPlanMutation = useMutation({
+    mutationFn: async (data: { plan: SupplementPlanFormData; items: SelectedSupplementItem[] }) => {
+      const planResponse = await apiRequest("POST", "/api/nutrition/supplement-plans", {
         ...data.plan,
         trainerId: user?.trainer?.id,
       });
 
-      for (const supplement of data.supplements) {
-        await apiRequest(`/api/nutrition/supplement-items`, "POST", {
+      for (const item of data.items) {
+        await apiRequest("POST", "/api/nutrition/supplement-plan-items", {
           supplementPlanId: planResponse.id,
-          name: supplement.name,
-          brand: supplement.brand,
-          dosage: supplement.dosage,
-          frequency: supplement.frequency,
-          timing: supplement.timing,
-          purpose: supplement.purpose,
-          instructions: supplement.instructions,
-          isOptional: supplement.isOptional,
+          supplementItemId: item.supplementItemId,
+          frequency: item.frequency,
+          timing: item.timing,
+          isOptional: item.isOptional,
+          notes: item.notes,
         });
       }
 
       return planResponse;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-plans"] });
       toast({
-        title: "Success",
-        description: "Supplement plan created successfully",
+        title: t("Success"),
+        description: "Supplement plan template created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers"] });
       setShowCreateDialog(false);
       form.reset();
-      setSupplements([]);
+      setSelectedItems([]);
+      setSelectedLibraryItemId("");
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t("Error"),
         description: error.message || "Failed to create supplement plan",
         variant: "destructive",
       });
     },
   });
 
-  const addSupplement = () => {
-    setSupplements([
-      ...supplements,
-      {
-        id: `supplement-${Date.now()}`,
-        name: "",
-        brand: "",
-        dosage: "",
-        frequency: "daily",
-        timing: "",
-        purpose: "",
-        instructions: "",
-        isOptional: false,
-      },
-    ]);
-  };
+  const deletePlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      return await apiRequest("DELETE", `/api/nutrition/supplement-plans/${planId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/trainers", user?.trainer?.id, "supplement-plans"] });
+      toast({
+        title: t("Success"),
+        description: "Supplement plan deleted successfully",
+      });
+      setDeletingPlanId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: t("Error"),
+        description: error.message || "Failed to delete supplement plan",
+        variant: "destructive",
+      });
+      setDeletingPlanId(null);
+    },
+  });
 
-  const removeSupplement = (id: string) => {
-    setSupplements(supplements.filter((s) => s.id !== id));
-  };
-
-  const updateSupplement = (id: string, updates: Partial<SupplementItemData>) => {
-    setSupplements(supplements.map((s) => (s.id === id ? { ...s, ...updates } : s)));
-  };
-
-  const onSubmit = (data: SupplementPlanFormData) => {
-    if (supplements.length === 0) {
+  const handleCreate = (data: SupplementPlanFormData) => {
+    if (selectedItems.length === 0) {
       toast({
         title: "Error",
-        description: "Please add at least one supplement to the plan",
+        description: "Please add at least one supplement item to the plan",
+        variant: "destructive",
+      });
+      return;
+    }
+    createPlanMutation.mutate({ plan: data, items: selectedItems });
+  };
+
+  const handleAddItem = () => {
+    if (!selectedLibraryItemId) {
+      toast({
+        title: "Error",
+        description: "Please select a supplement item",
         variant: "destructive",
       });
       return;
     }
 
-    createSupplementPlanMutation.mutate({ plan: data, supplements });
+    if (selectedItems.some(item => item.supplementItemId === selectedLibraryItemId)) {
+      toast({
+        title: "Error",
+        description: "This supplement is already added to the plan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedItems([...selectedItems, {
+      supplementItemId: selectedLibraryItemId,
+      frequency: "daily",
+      timing: "morning",
+      isOptional: false,
+      notes: "",
+    }]);
+    setSelectedLibraryItemId("");
+  };
+
+  const handleRemoveItem = (supplementItemId: string) => {
+    setSelectedItems(selectedItems.filter(item => item.supplementItemId !== supplementItemId));
+  };
+
+  const handleUpdateItem = (supplementItemId: string, updates: Partial<SelectedSupplementItem>) => {
+    setSelectedItems(selectedItems.map(item =>
+      item.supplementItemId === supplementItemId ? { ...item, ...updates } : item
+    ));
+  };
+
+  const getSupplementItemById = (id: string) => {
+    return supplementItems.find(item => item.id === id);
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container mx-auto p-6 space-y-6" data-testid="page-supplement-plans">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Supplement Plans</h1>
-          <p className="text-muted-foreground">Create and manage supplement plans for your clients</p>
+          <h1 className="text-3xl font-bold" data-testid="text-page-title">Supplement Plan Templates</h1>
+          <p className="text-muted-foreground mt-1">
+            Create reusable supplement plan templates to assign to your clients
+          </p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-supplement-plan">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Supplement Plan
+        <div className="flex gap-2">
+          <Link href="/trainer-supplement-items">
+            <Button variant="outline" data-testid="button-manage-items">
+              <FileText className="w-4 h-4 mr-2" />
+              Manage Items Library
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="dialog-create-supplement-plan">
-            <DialogHeader>
-              <DialogTitle>Create New Supplement Plan</DialogTitle>
-            </DialogHeader>
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="clientId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Client</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
+          </Link>
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-plan">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Plan Template
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle data-testid="text-dialog-title">Create Supplement Plan Template</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Plan Name *</FormLabel>
                           <FormControl>
-                            <SelectTrigger data-testid="select-client">
-                              <SelectValue placeholder="Select a client" />
-                            </SelectTrigger>
+                            <Input
+                              {...field}
+                              placeholder="e.g., Muscle Building Stack"
+                              data-testid="input-name"
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {clients.map((client) => (
-                              <SelectItem key={client.id} value={client.id}>
-                                {client.user?.firstName} {client.user?.lastName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Plan Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g., Recovery Stack" data-testid="input-plan-name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="goal"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Goal</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger data-testid="select-goal">
-                              <SelectValue placeholder="Select goal" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {GOAL_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} data-testid="input-start-date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date (Optional)</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} data-testid="input-end-date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={2} data-testid="textarea-description" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Separator />
-
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Supplements</h3>
-                    <Button type="button" variant="outline" onClick={addSupplement} data-testid="button-add-supplement">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Supplement
-                    </Button>
+                    <FormField
+                      control={form.control}
+                      name="goal"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Goal</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-goal">
+                                <SelectValue placeholder="Select goal" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {GOAL_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Describe the purpose of this supplement plan..."
+                            rows={2}
+                            data-testid="input-description"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Any additional notes..."
+                            rows={2}
+                            data-testid="input-notes"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Separator />
 
                   <div className="space-y-4">
-                    {supplements.map((supplement) => (
-                      <Card key={supplement.id} data-testid={`card-supplement-${supplement.id}`}>
-                        <CardContent className="pt-6">
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <Label>Supplement Name *</Label>
-                                <Input
-                                  value={supplement.name}
-                                  onChange={(e) => updateSupplement(supplement.id, { name: e.target.value })}
-                                  placeholder="e.g., Whey Protein"
-                                  data-testid={`input-supplement-name-${supplement.id}`}
-                                />
-                              </div>
-                              <div>
-                                <Label>Brand</Label>
-                                <Input
-                                  value={supplement.brand || ""}
-                                  onChange={(e) => updateSupplement(supplement.id, { brand: e.target.value })}
-                                  placeholder="e.g., Optimum Nutrition"
-                                  data-testid={`input-supplement-brand-${supplement.id}`}
-                                />
-                              </div>
-                              <div>
-                                <Label>Dosage *</Label>
-                                <Input
-                                  value={supplement.dosage}
-                                  onChange={(e) => updateSupplement(supplement.id, { dosage: e.target.value })}
-                                  placeholder="e.g., 1 scoop, 5g, 2 capsules"
-                                  data-testid={`input-supplement-dosage-${supplement.id}`}
-                                />
-                              </div>
-                              <div>
-                                <Label>Frequency *</Label>
-                                <Select
-                                  value={supplement.frequency}
-                                  onValueChange={(value) => updateSupplement(supplement.id, { frequency: value })}
-                                >
-                                  <SelectTrigger data-testid={`select-supplement-frequency-${supplement.id}`}>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {FREQUENCY_OPTIONS.map((option) => (
-                                      <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label>Timing</Label>
-                                <Select
-                                  value={supplement.timing || ""}
-                                  onValueChange={(value) => updateSupplement(supplement.id, { timing: value })}
-                                >
-                                  <SelectTrigger data-testid={`select-supplement-timing-${supplement.id}`}>
-                                    <SelectValue placeholder="Select timing" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {TIMING_OPTIONS.map((option) => (
-                                      <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label>Purpose</Label>
-                                <Input
-                                  value={supplement.purpose || ""}
-                                  onChange={(e) => updateSupplement(supplement.id, { purpose: e.target.value })}
-                                  placeholder="e.g., Muscle recovery"
-                                  data-testid={`input-supplement-purpose-${supplement.id}`}
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <Label>Instructions</Label>
-                              <Textarea
-                                value={supplement.instructions || ""}
-                                onChange={(e) => updateSupplement(supplement.id, { instructions: e.target.value })}
-                                rows={2}
-                                placeholder="Detailed usage instructions..."
-                                data-testid={`textarea-supplement-instructions-${supplement.id}`}
-                              />
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`optional-${supplement.id}`}
-                                  checked={supplement.isOptional}
-                                  onCheckedChange={(checked) =>
-                                    updateSupplement(supplement.id, { isOptional: checked as boolean })
-                                  }
-                                  data-testid={`checkbox-supplement-optional-${supplement.id}`}
-                                />
-                                <label
-                                  htmlFor={`optional-${supplement.id}`}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                  Optional supplement
-                                </label>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeSupplement(supplement.id)}
-                                data-testid={`button-remove-supplement-${supplement.id}`}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Remove
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Supplement Items</h3>
+                      {supplementItems.length === 0 && (
+                        <Link href="/trainer-supplement-items">
+                          <Button type="button" variant="outline" size="sm">
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Add Items to Library
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
 
-                    {supplements.length === 0 && (
-                      <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-12">
-                          <Pill className="h-12 w-12 text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground text-center">
-                            No supplements added yet. Click "Add Supplement" to get started.
-                          </p>
-                        </CardContent>
-                      </Card>
+                    <div className="flex gap-2">
+                      <Select value={selectedLibraryItemId} onValueChange={setSelectedLibraryItemId}>
+                        <SelectTrigger className="flex-1" data-testid="select-library-item">
+                          <SelectValue placeholder="Select supplement from library" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {supplementItems.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name} {item.brand && `(${item.brand})`} - {item.defaultDosage}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        onClick={handleAddItem}
+                        disabled={!selectedLibraryItemId}
+                        data-testid="button-add-item"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add
+                      </Button>
+                    </div>
+
+                    {selectedItems.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Pill className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <p>No supplements added yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {selectedItems.map((item) => {
+                          const libraryItem = getSupplementItemById(item.supplementItemId);
+                          if (!libraryItem) return null;
+
+                          return (
+                            <Card key={item.supplementItemId} data-testid={`card-item-${item.supplementItemId}`}>
+                              <CardContent className="pt-4">
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h4 className="font-semibold">{libraryItem.name}</h4>
+                                      {libraryItem.brand && (
+                                        <p className="text-sm text-muted-foreground">{libraryItem.brand}</p>
+                                      )}
+                                      <p className="text-sm text-muted-foreground">
+                                        Dosage: {libraryItem.defaultDosage}
+                                      </p>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleRemoveItem(item.supplementItemId)}
+                                      data-testid={`button-remove-${item.supplementItemId}`}
+                                    >
+                                      <Trash2 className="w-4 h-4 text-destructive" />
+                                    </Button>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <label className="text-sm font-medium">Frequency</label>
+                                      <Select
+                                        value={item.frequency}
+                                        onValueChange={(value) => handleUpdateItem(item.supplementItemId, { frequency: value })}
+                                      >
+                                        <SelectTrigger data-testid={`select-frequency-${item.supplementItemId}`}>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {FREQUENCY_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                              {opt.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="text-sm font-medium">Timing</label>
+                                      <Select
+                                        value={item.timing}
+                                        onValueChange={(value) => handleUpdateItem(item.supplementItemId, { timing: value })}
+                                      >
+                                        <SelectTrigger data-testid={`select-timing-${item.supplementItemId}`}>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {TIMING_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                              {opt.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={item.isOptional}
+                                      onCheckedChange={(checked) =>
+                                        handleUpdateItem(item.supplementItemId, { isOptional: !!checked })
+                                      }
+                                      data-testid={`checkbox-optional-${item.supplementItemId}`}
+                                    />
+                                    <label className="text-sm">Optional supplement</label>
+                                  </div>
+
+                                  <Input
+                                    placeholder="Additional notes for this item..."
+                                    value={item.notes || ""}
+                                    onChange={(e) => handleUpdateItem(item.supplementItemId, { notes: e.target.value })}
+                                    data-testid={`input-notes-${item.supplementItemId}`}
+                                  />
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Additional Notes</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={3} placeholder="Any special instructions or notes for the client..." data-testid="textarea-notes" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowCreateDialog(false)}
-                    data-testid="button-cancel"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createSupplementPlanMutation.isPending}
-                    data-testid="button-save-supplement-plan"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {createSupplementPlanMutation.isPending ? "Saving..." : "Save Supplement Plan"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowCreateDialog(false);
+                        form.reset();
+                        setSelectedItems([]);
+                        setSelectedLibraryItemId("");
+                      }}
+                      data-testid="button-cancel"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createPlanMutation.isPending}
+                      data-testid="button-submit"
+                    >
+                      {createPlanMutation.isPending ? "Creating..." : "Create Template"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {supplementPlans.length === 0 ? (
-          <Card className="col-span-full">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Pill className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No supplement plans yet</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                Create your first supplement plan to get started
+      {supplementPlans.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Pill className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">
+                No supplement plan templates yet. Create your first one!
               </p>
-            </CardContent>
-          </Card>
-        ) : (
-          supplementPlans.map((plan) => (
-            <Card key={plan.id} data-testid={`card-supplement-plan-${plan.id}`}>
+              {supplementItems.length === 0 && (
+                <Link href="/trainer-supplement-items">
+                  <Button variant="outline">
+                    Add Supplements to Library First
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {supplementPlans.map((plan) => (
+            <Card key={plan.id} data-testid={`card-plan-${plan.id}`}>
               <CardHeader>
-                <div className="flex items-start justify-between">
+                <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{plan.name}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {plan.client?.user?.firstName} {plan.client?.user?.lastName}
-                    </CardDescription>
+                    <CardTitle data-testid={`text-plan-name-${plan.id}`}>{plan.name}</CardTitle>
+                    {plan.goal && (
+                      <Badge className="mt-2" variant="secondary" data-testid={`badge-goal-${plan.id}`}>
+                        {plan.goal}
+                      </Badge>
+                    )}
                   </div>
-                  {plan.isActive && <Badge variant="default">Active</Badge>}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeletingPlanId(plan.id)}
+                    data-testid={`button-delete-${plan.id}`}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
                 </div>
+                {plan.description && (
+                  <CardDescription className="mt-2" data-testid={`text-description-${plan.id}`}>
+                    {plan.description}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {plan.goal && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Goal:</span>
-                      <Badge variant="outline">{plan.goal}</Badge>
-                    </div>
-                  )}
-                  {plan.startDate && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Start Date:</span>
-                      <span>{new Date(plan.startDate).toLocaleDateString()}</span>
-                    </div>
-                  )}
-                  {plan.endDate && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">End Date:</span>
-                      <span>{new Date(plan.endDate).toLocaleDateString()}</span>
-                    </div>
-                  )}
-                  {plan.description && (
-                    <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
-                  )}
-                </div>
+                {plan.notes && (
+                  <p className="text-sm text-muted-foreground" data-testid={`text-notes-${plan.id}`}>
+                    {plan.notes}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  Template - Assign to clients from their detail page
+                </p>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      <AlertDialog open={!!deletingPlanId} onOpenChange={() => setDeletingPlanId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Supplement Plan Template</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this supplement plan template? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingPlanId && deletePlanMutation.mutate(deletingPlanId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
