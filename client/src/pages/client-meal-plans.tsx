@@ -38,15 +38,12 @@ export default function ClientMealPlans() {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  const { data: activeAssignment, isLoading } = useQuery<MealPlanAssignment>({
+  const { data: activeAssignment, isLoading } = useQuery<AssignmentWithPlan>({
     queryKey: [`/api/nutrition/clients/${user?.client?.id}/meal-plan-assignments/active`],
     enabled: !!user?.client?.id,
   });
 
-  const { data: activeMealPlan } = useQuery<MealPlanWithDetails>({
-    queryKey: ["/api/nutrition/meal-plans", activeAssignment?.mealPlanId],
-    enabled: !!activeAssignment?.mealPlanId,
-  });
+  const activeMealPlan = activeAssignment?.mealPlan;
 
   const { data: mealDays = [] } = useQuery<(MealDay & {
     meals?: (Meal & { items?: MealItem[] })[];

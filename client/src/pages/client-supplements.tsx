@@ -6,10 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, Info, Pill } from "lucide-react";
-import type { SupplementPlan, SupplementItem } from "@shared/schema";
+import type { SupplementPlan, SupplementItem, SupplementPlanAssignment } from "@shared/schema";
 
 interface SupplementPlanWithItems extends SupplementPlan {
   supplementItems?: SupplementItem[];
+}
+
+interface AssignmentWithPlan extends SupplementPlanAssignment {
+  supplementPlan?: SupplementPlanWithItems;
 }
 
 export default function ClientSupplements() {
@@ -17,10 +21,12 @@ export default function ClientSupplements() {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  const { data: activeSupplementPlan, isLoading } = useQuery<SupplementPlanWithItems>({
+  const { data: activeAssignment, isLoading } = useQuery<AssignmentWithPlan>({
     queryKey: [`/api/nutrition/clients/${user?.client?.id}/supplement-plan-assignments/active`],
     enabled: !!user?.client?.id,
   });
+
+  const activeSupplementPlan = activeAssignment?.supplementPlan;
 
   const { data: supplementItems = [] } = useQuery<SupplementItem[]>({
     queryKey: ["/api/nutrition/supplement-plans", activeSupplementPlan?.id, "items"],
@@ -95,21 +101,21 @@ export default function ClientSupplements() {
                 <Badge variant="outline">{activeSupplementPlan.goal.replace("_", " ")}</Badge>
               </div>
             )}
-            {activeSupplementPlan.startDate && (
+            {activeAssignment?.startDate && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Started:</span>
                 <span className="text-sm font-medium">
-                  {new Date(activeSupplementPlan.startDate).toLocaleDateString()}
+                  {new Date(activeAssignment.startDate).toLocaleDateString()}
                 </span>
               </div>
             )}
-            {activeSupplementPlan.endDate && (
+            {activeAssignment?.endDate && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Ends:</span>
                 <span className="text-sm font-medium">
-                  {new Date(activeSupplementPlan.endDate).toLocaleDateString()}
+                  {new Date(activeAssignment.endDate).toLocaleDateString()}
                 </span>
               </div>
             )}
