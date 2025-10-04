@@ -23,7 +23,6 @@ import {
   UtensilsCrossed, 
   Plus, 
   Trash2, 
-  Calculator, 
   Save, 
   Calendar,
   ChevronDown,
@@ -33,7 +32,6 @@ import {
 import type { MealPlan, Client, InsertMealPlan } from "@shared/schema";
 
 const mealPlanFormSchema = z.object({
-  clientId: z.string().min(1, "Client is required"),
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   goal: z.string().optional(),
@@ -41,9 +39,6 @@ const mealPlanFormSchema = z.object({
   targetProtein: z.number().optional(),
   targetCarbs: z.number().optional(),
   targetFat: z.number().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  isActive: z.boolean().default(true),
   notes: z.string().optional(),
 });
 
@@ -101,8 +96,6 @@ export default function TrainerMealPlans() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [calculatedTDEE, setCalculatedTDEE] = useState<number | null>(null);
   const [daysData, setDaysData] = useState<DayData[]>(
     DAY_NAMES.map((name, index) => ({
       dayNumber: index + 1,
@@ -117,7 +110,6 @@ export default function TrainerMealPlans() {
   const form = useForm<MealPlanFormData>({
     resolver: zodResolver(mealPlanFormSchema),
     defaultValues: {
-      clientId: "",
       name: "",
       description: "",
       goal: "",
@@ -125,9 +117,6 @@ export default function TrainerMealPlans() {
       targetProtein: 150,
       targetCarbs: 200,
       targetFat: 60,
-      isActive: true,
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: "",
       notes: "",
     },
   });
@@ -149,6 +138,7 @@ export default function TrainerMealPlans() {
       const planResponse = await apiRequest(`/api/nutrition/meal-plans`, "POST", {
         ...data.plan,
         trainerId: user?.trainer?.id,
+        isTemplate: true,
       });
 
       for (const day of data.days) {
@@ -211,7 +201,6 @@ export default function TrainerMealPlans() {
           notes: "",
         }))
       );
-      setCalculatedTDEE(null);
     },
     onError: (error: any) => {
       toast({
@@ -222,43 +211,6 @@ export default function TrainerMealPlans() {
     },
   });
 
-  const calculateTDEEMutation = useMutation({
-    mutationFn: async (clientId: string) => {
-      const client = clients.find((c) => c.id === clientId);
-      if (!client) throw new Error("Client not found");
-
-      const response = await apiRequest(`/api/nutrition/calculate-tdee`, "POST", {
-        weight: parseFloat(client.weight || "0"),
-        height: parseFloat(client.height || "0"),
-        age: client.age || 0,
-        gender: client.gender || "male",
-        activityLevel: client.activityLevel || "moderate",
-      });
-
-      return response.tdee;
-    },
-    onSuccess: (tdee) => {
-      setCalculatedTDEE(tdee);
-      form.setValue("dailyCalories", tdee);
-      toast({
-        title: "TDEE Calculated",
-        description: `Recommended daily calories: ${tdee}`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to calculate TDEE",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleClientChange = (clientId: string) => {
-    form.setValue("clientId", clientId);
-    const client = clients.find((c) => c.id === clientId);
-    setSelectedClient(client || null);
-  };
 
   const toggleDay = (dayNumber: number) => {
     setExpandedDays((prev) => {
@@ -436,8 +388,8 @@ export default function TrainerMealPlans() {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Meal Plans</h1>
-          <p className="text-muted-foreground">Create and manage meal plans for your clients</p>
+          <h1 className="text-3xl font-bold">Meal Plan Templates</h1>
+          <p className="text-muted-foreground">Create reusable meal plan templates and assign them to clients</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
@@ -448,43 +400,12 @@ export default function TrainerMealPlans() {
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" data-testid="dialog-create-meal-plan">
             <DialogHeader>
-              <DialogTitle>Create New Meal Plan</DialogTitle>
+              <DialogTitle>Create New Meal Plan Template</DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="clientId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Client</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            handleClientChange(value);
-                          }}
-                        >
-                          <FormControl>
-                            <SelectTrigger data-testid="select-client">
-                              <SelectValue placeholder="Select a client" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {clients.map((client) => (
-                              <SelectItem key={client.id} value={client.id}>
-                                {client.user?.firstName} {client.user?.lastName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <FormField
                     control={form.control}
                     name="name"
@@ -524,38 +445,24 @@ export default function TrainerMealPlans() {
                     )}
                   />
 
-                  <div className="flex gap-2 items-end">
-                    <FormField
-                      control={form.control}
-                      name="dailyCalories"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Daily Calories</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              data-testid="input-daily-calories"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {selectedClient && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => calculateTDEEMutation.mutate(selectedClient.id)}
-                        disabled={calculateTDEEMutation.isPending}
-                        data-testid="button-calculate-tdee"
-                      >
-                        <Calculator className="h-4 w-4 mr-2" />
-                        Calculate TDEE
-                      </Button>
+                  <FormField
+                    control={form.control}
+                    name="dailyCalories"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Daily Calories</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            data-testid="input-daily-calories"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
 
                   <FormField
                     control={form.control}
@@ -608,34 +515,6 @@ export default function TrainerMealPlans() {
                             onChange={(e) => field.onChange(parseInt(e.target.value))}
                             data-testid="input-target-fat"
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Start Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} data-testid="input-start-date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>End Date (Optional)</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} data-testid="input-end-date" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -865,10 +744,10 @@ export default function TrainerMealPlans() {
                   <div className="flex-1">
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
                     <CardDescription className="mt-1">
-                      {plan.client?.user?.firstName} {plan.client?.user?.lastName}
+                      {plan.description || "Meal plan template"}
                     </CardDescription>
                   </div>
-                  {plan.isActive && <Badge variant="default">Active</Badge>}
+                  {plan.isTemplate && <Badge variant="secondary">Template</Badge>}
                 </div>
               </CardHeader>
               <CardContent>
@@ -899,12 +778,6 @@ export default function TrainerMealPlans() {
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Goal:</span>
                       <Badge variant="outline">{plan.goal}</Badge>
-                    </div>
-                  )}
-                  {plan.startDate && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Start Date:</span>
-                      <span>{new Date(plan.startDate).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>
