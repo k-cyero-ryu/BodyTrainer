@@ -663,35 +663,59 @@ export const mealItems = pgTable("meal_items", {
 
 // ============== SUPPLEMENT MANAGEMENT SYSTEM ==============
 
-// Supplement Plans - Main supplement protocol for a client
+// Supplement Items Library - Trainer-owned reusable supplement definitions
+export const supplementItems = pgTable("supplement_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(), // Supplement name, e.g., "Whey Protein", "Creatine"
+  brand: varchar("brand"), // Brand name if specific
+  defaultDosage: varchar("default_dosage"), // e.g., "5g", "2 capsules", "1 scoop"
+  defaultFrequency: varchar("default_frequency"), // e.g., "daily", "2x daily", "post-workout"
+  defaultTiming: varchar("default_timing"), // When to take it, e.g., "morning", "post-workout", "before bed"
+  purpose: text("purpose"), // Why this supplement is recommended
+  instructions: text("instructions"), // Detailed usage instructions
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Supplement Plans - Template protocols (like training plans)
 export const supplementPlans = pgTable("supplement_plans", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
   trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
   name: varchar("name").notNull(), // e.g., "Recovery Stack", "Pre-Workout Protocol"
   description: text("description"),
   goal: varchar("goal"), // e.g., "recovery", "energy", "muscle_gain", "health"
-  startDate: timestamp("start_date"),
-  endDate: timestamp("end_date"),
-  isActive: boolean("is_active").default(true),
+  isTemplate: boolean("is_template").default(true), // Templates can be assigned to multiple clients
   notes: text("notes"), // Trainer notes or special instructions
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Supplement Items - Individual supplements within a plan
-export const supplementItems = pgTable("supplement_items", {
+// Supplement Plan Items - Junction table linking plans to supplement items
+export const supplementPlanItems = pgTable("supplement_plan_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   supplementPlanId: varchar("supplement_plan_id").notNull().references(() => supplementPlans.id, { onDelete: 'cascade' }),
-  name: varchar("name").notNull(), // Supplement name, e.g., "Whey Protein", "Creatine"
-  brand: varchar("brand"), // Brand name if specific
-  dosage: varchar("dosage").notNull(), // e.g., "5g", "2 capsules", "1 scoop"
-  frequency: varchar("frequency").notNull(), // e.g., "daily", "2x daily", "post-workout"
-  timing: varchar("timing"), // When to take it, e.g., "morning", "post-workout", "before bed"
-  purpose: text("purpose"), // Why this supplement is recommended
-  instructions: text("instructions"), // Detailed usage instructions
+  supplementItemId: varchar("supplement_item_id").notNull().references(() => supplementItems.id, { onDelete: 'cascade' }),
+  dosage: varchar("dosage"), // Override default dosage for this plan
+  frequency: varchar("frequency"), // Override default frequency for this plan
+  timing: varchar("timing"), // Override default timing for this plan
   isOptional: boolean("is_optional").default(false),
+  sortOrder: integer("sort_order").default(0), // Display order
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Supplement Plan Assignments - Assign plans to clients (like training plan assignments)
+export const supplementPlanAssignments = pgTable("supplement_plan_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  supplementPlanId: varchar("supplement_plan_id").notNull().references(() => supplementPlans.id, { onDelete: 'cascade' }),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  trainerId: varchar("trainer_id").notNull().references(() => trainers.id, { onDelete: 'cascade' }),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"), // Assignment-specific notes
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Social posts schema - platform-wide posts visible to all users
@@ -863,22 +887,46 @@ export const usdaFoodsCacheRelations = relations(usdaFoodsCache, ({ many }) => (
 }));
 
 // Supplement Planning Relations
-export const supplementPlansRelations = relations(supplementPlans, ({ one, many }) => ({
-  client: one(clients, {
-    fields: [supplementPlans.clientId],
-    references: [clients.id],
+export const supplementItemsRelations = relations(supplementItems, ({ one, many }) => ({
+  trainer: one(trainers, {
+    fields: [supplementItems.trainerId],
+    references: [trainers.id],
   }),
+  supplementPlanItems: many(supplementPlanItems),
+}));
+
+export const supplementPlansRelations = relations(supplementPlans, ({ one, many }) => ({
   trainer: one(trainers, {
     fields: [supplementPlans.trainerId],
     references: [trainers.id],
   }),
-  supplementItems: many(supplementItems),
+  supplementPlanItems: many(supplementPlanItems),
+  assignments: many(supplementPlanAssignments),
 }));
 
-export const supplementItemsRelations = relations(supplementItems, ({ one }) => ({
+export const supplementPlanItemsRelations = relations(supplementPlanItems, ({ one }) => ({
   supplementPlan: one(supplementPlans, {
-    fields: [supplementItems.supplementPlanId],
+    fields: [supplementPlanItems.supplementPlanId],
     references: [supplementPlans.id],
+  }),
+  supplementItem: one(supplementItems, {
+    fields: [supplementPlanItems.supplementItemId],
+    references: [supplementItems.id],
+  }),
+}));
+
+export const supplementPlanAssignmentsRelations = relations(supplementPlanAssignments, ({ one }) => ({
+  supplementPlan: one(supplementPlans, {
+    fields: [supplementPlanAssignments.supplementPlanId],
+    references: [supplementPlans.id],
+  }),
+  client: one(clients, {
+    fields: [supplementPlanAssignments.clientId],
+    references: [clients.id],
+  }),
+  trainer: one(trainers, {
+    fields: [supplementPlanAssignments.trainerId],
+    references: [trainers.id],
   }),
 }));
 
@@ -949,13 +997,19 @@ export type InsertMealItem = z.infer<typeof insertMealItemSchema>;
 export type MealItem = typeof mealItems.$inferSelect;
 
 // Supplement Planning insert schemas and types
+export const insertSupplementItemSchema = createInsertSchema(supplementItems).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertSupplementPlanSchema = createInsertSchema(supplementPlans).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertSupplementItemSchema = createInsertSchema(supplementItems).omit({ id: true, createdAt: true });
+export const insertSupplementPlanItemSchema = createInsertSchema(supplementPlanItems).omit({ id: true, createdAt: true });
+export const insertSupplementPlanAssignmentSchema = createInsertSchema(supplementPlanAssignments).omit({ id: true, createdAt: true, updatedAt: true });
 
-export type InsertSupplementPlan = z.infer<typeof insertSupplementPlanSchema>;
-export type SupplementPlan = typeof supplementPlans.$inferSelect;
 export type InsertSupplementItem = z.infer<typeof insertSupplementItemSchema>;
 export type SupplementItem = typeof supplementItems.$inferSelect;
+export type InsertSupplementPlan = z.infer<typeof insertSupplementPlanSchema>;
+export type SupplementPlan = typeof supplementPlans.$inferSelect;
+export type InsertSupplementPlanItem = z.infer<typeof insertSupplementPlanItemSchema>;
+export type SupplementPlanItem = typeof supplementPlanItems.$inferSelect;
+export type InsertSupplementPlanAssignment = z.infer<typeof insertSupplementPlanAssignmentSchema>;
+export type SupplementPlanAssignment = typeof supplementPlanAssignments.$inferSelect;
 
 // Custom calorie entries insert schema
 export const insertCustomCalorieEntrySchema = createInsertSchema(customCalorieEntries).omit({ id: true, createdAt: true, date: true }).extend({
