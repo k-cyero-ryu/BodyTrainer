@@ -48,7 +48,7 @@ export default function ClientMealPlans() {
   const { data: mealDays = [] } = useQuery<(MealDay & {
     meals?: (Meal & { items?: MealItem[] })[];
   })[]>({
-    queryKey: ["/api/nutrition/meal-plans", activeMealPlan?.id, "days"],
+    queryKey: [`/api/nutrition/meal-plans/${activeMealPlan?.id}/days`],
     enabled: !!activeMealPlan?.id,
   });
 

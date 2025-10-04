@@ -245,11 +245,25 @@ nutritionRouter.post('/meal-days', async (req, res) => {
   }
 });
 
-// Get meal days by plan
+// Get meal days by plan (with meals and items)
 nutritionRouter.get('/meal-plans/:planId/days', async (req, res) => {
   try {
     const days = await storage.getMealDaysByPlan(req.params.planId);
-    res.json(days);
+    
+    const daysWithMeals = await Promise.all(
+      days.map(async (day) => {
+        const meals = await storage.getMealsByDay(day.id);
+        const mealsWithItems = await Promise.all(
+          meals.map(async (meal) => {
+            const items = await storage.getMealItemsByMeal(meal.id);
+            return { ...meal, items };
+          })
+        );
+        return { ...day, meals: mealsWithItems };
+      })
+    );
+    
+    res.json(daysWithMeals);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
