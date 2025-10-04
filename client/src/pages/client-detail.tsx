@@ -698,14 +698,7 @@ export default function ClientDetail() {
                         <Link href={`/training-plans/${clientPlan.planId}`}>
                           <h3 className="font-medium hover:text-primary cursor-pointer">{clientPlan.plan?.name}</h3>
                         </Link>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">{clientPlan.plan?.difficulty}</Badge>
-                          {clientPlan.isActive && (
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                              Active
-                            </Badge>
-                          )}
-                        </div>
+                        <Badge variant="secondary">{clientPlan.plan?.difficulty}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">{clientPlan.plan?.description}</p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
