@@ -119,6 +119,13 @@ nutritionRouter.post('/meal-plan-assignments', async (req, res) => {
       endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
     };
     const assignmentData = insertMealPlanAssignmentSchema.parse(body);
+    
+    // Deactivate any existing active meal plan for this client
+    const existingAssignment = await storage.getActiveMealPlanAssignment(assignmentData.clientId);
+    if (existingAssignment) {
+      await storage.updateMealPlanAssignment(existingAssignment.id, { isActive: false });
+    }
+    
     const assignment = await storage.createMealPlanAssignment(assignmentData);
     res.json(assignment);
   } catch (error: any) {
@@ -532,6 +539,13 @@ nutritionRouter.post('/supplement-plan-assignments', async (req, res) => {
       endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
     };
     const assignmentData = insertSupplementPlanAssignmentSchema.parse(body);
+    
+    // Deactivate any existing active supplement plan for this client
+    const existingAssignment = await storage.getActiveSupplementPlanAssignment(assignmentData.clientId);
+    if (existingAssignment) {
+      await storage.updateSupplementPlanAssignment(existingAssignment.id, { isActive: false });
+    }
+    
     const assignment = await storage.createSupplementPlanAssignment(assignmentData);
     res.json(assignment);
   } catch (error: any) {

@@ -2417,6 +2417,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Client not found or access denied" });
       }
 
+      // Deactivate any existing active plans for this client
+      const existingPlans = await storage.getClientPlans(clientId);
+      for (const existingPlan of existingPlans) {
+        if (existingPlan.isActive) {
+          await storage.updateClientPlan(existingPlan.id, { isActive: false });
+        }
+      }
+
       const clientPlan = await storage.assignPlanToClient({
         planId,
         clientId,
