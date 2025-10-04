@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Target, UtensilsCrossed } from "lucide-react";
-import type { MealPlan, MealDay, Meal, MealItem } from "@shared/schema";
+import type { MealPlan, MealPlanAssignment, MealDay, Meal, MealItem } from "@shared/schema";
 
 interface MealPlanWithDetails extends MealPlan {
   mealDays?: (MealDay & {
@@ -15,6 +15,10 @@ interface MealPlanWithDetails extends MealPlan {
       items?: MealItem[];
     })[];
   })[];
+}
+
+interface AssignmentWithPlan extends MealPlanAssignment {
+  mealPlan?: MealPlanWithDetails;
 }
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -34,9 +38,14 @@ export default function ClientMealPlans() {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  const { data: activeMealPlan, isLoading } = useQuery<MealPlanWithDetails>({
-    queryKey: ["/api/nutrition/clients", user?.client?.id, "meal-plans/active"],
+  const { data: activeAssignment, isLoading } = useQuery<MealPlanAssignment>({
+    queryKey: ["/api/nutrition/clients", user?.client?.id, "active-meal-plan-assignment"],
     enabled: !!user?.client?.id,
+  });
+
+  const { data: activeMealPlan } = useQuery<MealPlanWithDetails>({
+    queryKey: ["/api/nutrition/meal-plans", activeAssignment?.mealPlanId],
+    enabled: !!activeAssignment?.mealPlanId,
   });
 
   const { data: mealDays = [] } = useQuery<(MealDay & {
