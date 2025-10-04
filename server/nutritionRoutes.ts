@@ -120,13 +120,8 @@ nutritionRouter.post('/meal-plan-assignments', async (req, res) => {
     };
     const assignmentData = insertMealPlanAssignmentSchema.parse(body);
     
-    // Deactivate any existing active meal plan for this client
-    const existingAssignment = await storage.getActiveMealPlanAssignment(assignmentData.clientId);
-    if (existingAssignment) {
-      await storage.updateMealPlanAssignment(existingAssignment.id, { isActive: false });
-    }
-    
-    const assignment = await storage.createMealPlanAssignment(assignmentData);
+    // Replace any existing meal plan assignment (deletes old assignments)
+    const assignment = await storage.replaceMealPlanAssignment(assignmentData);
     res.json(assignment);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
@@ -540,13 +535,8 @@ nutritionRouter.post('/supplement-plan-assignments', async (req, res) => {
     };
     const assignmentData = insertSupplementPlanAssignmentSchema.parse(body);
     
-    // Deactivate any existing active supplement plan for this client
-    const existingAssignment = await storage.getActiveSupplementPlanAssignment(assignmentData.clientId);
-    if (existingAssignment) {
-      await storage.updateSupplementPlanAssignment(existingAssignment.id, { isActive: false });
-    }
-    
-    const assignment = await storage.createSupplementPlanAssignment(assignmentData);
+    // Replace any existing supplement plan assignment (deletes old assignments)
+    const assignment = await storage.replaceSupplementPlanAssignment(assignmentData);
     res.json(assignment);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
