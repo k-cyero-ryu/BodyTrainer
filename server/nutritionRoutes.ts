@@ -9,6 +9,8 @@ import {
   insertMealItemSchema,
   insertSupplementPlanSchema,
   insertSupplementItemSchema,
+  insertSupplementPlanItemSchema,
+  insertSupplementPlanAssignmentSchema,
   insertUsdaFoodCacheSchema,
 } from '@shared/schema';
 import { calculateTDEE, type TDEEInput } from './nutritionCalculator';
@@ -335,9 +337,66 @@ nutritionRouter.delete('/meal-items/:id', async (req, res) => {
   }
 });
 
-// ============== Supplement Plan Routes ==============
+// ============== Supplement Item Library Routes (Trainer-owned) ==============
 
-// Create supplement plan
+// Create supplement item in library
+nutritionRouter.post('/supplement-items', async (req, res) => {
+  try {
+    const itemData = insertSupplementItemSchema.parse(req.body);
+    const item = await storage.createSupplementItem(itemData);
+    res.json(item);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get supplement item by ID
+nutritionRouter.get('/supplement-items/:id', async (req, res) => {
+  try {
+    const item = await storage.getSupplementItem(req.params.id);
+    if (!item) {
+      return res.status(404).json({ error: 'Supplement item not found' });
+    }
+    res.json(item);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get supplement items by trainer
+nutritionRouter.get('/trainers/:trainerId/supplement-items', async (req, res) => {
+  try {
+    const items = await storage.getSupplementItemsByTrainer(req.params.trainerId);
+    res.json(items);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update supplement item
+nutritionRouter.patch('/supplement-items/:id', async (req, res) => {
+  try {
+    const updates = insertSupplementItemSchema.partial().parse(req.body);
+    const updated = await storage.updateSupplementItem(req.params.id, updates);
+    res.json(updated);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete supplement item
+nutritionRouter.delete('/supplement-items/:id', async (req, res) => {
+  try {
+    await storage.deleteSupplementItem(req.params.id);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ============== Supplement Plan Template Routes ==============
+
+// Create supplement plan template
 nutritionRouter.post('/supplement-plans', async (req, res) => {
   try {
     const planData = insertSupplementPlanSchema.parse(req.body);
@@ -361,31 +420,11 @@ nutritionRouter.get('/supplement-plans/:id', async (req, res) => {
   }
 });
 
-// Get supplement plans by client
-nutritionRouter.get('/clients/:clientId/supplement-plans', async (req, res) => {
-  try {
-    const plans = await storage.getSupplementPlansByClient(req.params.clientId);
-    res.json(plans);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
 // Get supplement plans by trainer
 nutritionRouter.get('/trainers/:trainerId/supplement-plans', async (req, res) => {
   try {
     const plans = await storage.getSupplementPlansByTrainer(req.params.trainerId);
     res.json(plans);
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Get active supplement plan for a client
-nutritionRouter.get('/clients/:clientId/supplement-plans/active', async (req, res) => {
-  try {
-    const plan = await storage.getActiveSupplementPlan(req.params.clientId);
-    res.json(plan || null);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
@@ -412,44 +451,111 @@ nutritionRouter.delete('/supplement-plans/:id', async (req, res) => {
   }
 });
 
-// ============== Supplement Item Routes ==============
+// ============== Supplement Plan Item Routes (Junction) ==============
 
-// Create supplement item
-nutritionRouter.post('/supplement-items', async (req, res) => {
+// Add supplement item to plan
+nutritionRouter.post('/supplement-plan-items', async (req, res) => {
   try {
-    const itemData = insertSupplementItemSchema.parse(req.body);
-    const item = await storage.createSupplementItem(itemData);
+    const itemData = insertSupplementPlanItemSchema.parse(req.body);
+    const item = await storage.createSupplementPlanItem(itemData);
     res.json(item);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Get supplement items by plan
+// Get supplement plan items by plan
 nutritionRouter.get('/supplement-plans/:planId/items', async (req, res) => {
   try {
-    const items = await storage.getSupplementItemsByPlan(req.params.planId);
+    const items = await storage.getSupplementPlanItemsByPlan(req.params.planId);
     res.json(items);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Update supplement item
-nutritionRouter.patch('/supplement-items/:id', async (req, res) => {
+// Update supplement plan item
+nutritionRouter.patch('/supplement-plan-items/:id', async (req, res) => {
   try {
-    const updates = insertSupplementItemSchema.partial().parse(req.body);
-    const updated = await storage.updateSupplementItem(req.params.id, updates);
+    const updates = insertSupplementPlanItemSchema.partial().parse(req.body);
+    const updated = await storage.updateSupplementPlanItem(req.params.id, updates);
     res.json(updated);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Delete supplement item
-nutritionRouter.delete('/supplement-items/:id', async (req, res) => {
+// Delete supplement plan item
+nutritionRouter.delete('/supplement-plan-items/:id', async (req, res) => {
   try {
-    await storage.deleteSupplementItem(req.params.id);
+    await storage.deleteSupplementPlanItem(req.params.id);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ============== Supplement Plan Assignment Routes ==============
+
+// Assign supplement plan to client
+nutritionRouter.post('/supplement-plan-assignments', async (req, res) => {
+  try {
+    const assignmentData = insertSupplementPlanAssignmentSchema.parse(req.body);
+    const assignment = await storage.createSupplementPlanAssignment(assignmentData);
+    res.json(assignment);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get supplement plan assignment by ID
+nutritionRouter.get('/supplement-plan-assignments/:id', async (req, res) => {
+  try {
+    const assignment = await storage.getSupplementPlanAssignment(req.params.id);
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+    res.json(assignment);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get supplement plan assignments by client
+nutritionRouter.get('/clients/:clientId/supplement-plan-assignments', async (req, res) => {
+  try {
+    const assignments = await storage.getSupplementPlanAssignmentsByClient(req.params.clientId);
+    res.json(assignments);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get active supplement plan assignment for a client
+nutritionRouter.get('/clients/:clientId/supplement-plan-assignments/active', async (req, res) => {
+  try {
+    const assignment = await storage.getActiveSupplementPlanAssignment(req.params.clientId);
+    res.json(assignment || null);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update supplement plan assignment
+nutritionRouter.patch('/supplement-plan-assignments/:id', async (req, res) => {
+  try {
+    const updates = insertSupplementPlanAssignmentSchema.partial().parse(req.body);
+    const updated = await storage.updateSupplementPlanAssignment(req.params.id, updates);
+    res.json(updated);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete supplement plan assignment
+nutritionRouter.delete('/supplement-plan-assignments/:id', async (req, res) => {
+  try {
+    await storage.deleteSupplementPlanAssignment(req.params.id);
     res.json({ success: true });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
