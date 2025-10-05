@@ -31,6 +31,7 @@ import {
   supplementItems,
   supplementPlanItems,
   supplementPlanAssignments,
+  systemSettings,
   type User,
   type UpsertUser,
   type Trainer,
@@ -98,6 +99,8 @@ import {
   type InsertSupplementPlanItem,
   type SupplementPlanAssignment,
   type InsertSupplementPlanAssignment,
+  type SystemSetting,
+  type InsertSystemSetting,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sum, sql, gte, lte } from "drizzle-orm";
@@ -381,6 +384,12 @@ export interface IStorage {
   // Helper method to check if image belongs to a social post
   isSocialPostImage(imageUrl: string): Promise<boolean>;
   isCommunityFile(fileUrl: string): Promise<{ groupId: string } | null>;
+
+  // System Settings operations
+  getSystemSetting(key: string): Promise<SystemSetting | undefined>;
+  getAllSystemSettings(): Promise<SystemSetting[]>;
+  upsertSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting>;
+  updateSystemSetting(key: string, value: boolean, updatedBy?: string): Promise<SystemSetting>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2422,6 +2431,62 @@ export class DatabaseStorage implements IStorage {
         .set({ commentsCount })
         .where(eq(socialPosts.id, comment.postId));
     }
+  }
+
+  // System Settings operations
+  async getSystemSetting(key: string): Promise<SystemSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, key));
+    return setting;
+  }
+
+  async getAllSystemSettings(): Promise<SystemSetting[]> {
+    return await db.select().from(systemSettings);
+  }
+
+  async upsertSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting> {
+    const existing = await this.getSystemSetting(setting.key);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(systemSettings)
+        .set({ ...setting, updatedAt: new Date() })
+        .where(eq(systemSettings.key, setting.key))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(systemSettings)
+        .values(setting)
+        .returning();
+      return created;
+    }
+  }
+
+  async updateSystemSetting(key: string, value: boolean, updatedBy?: string): Promise<SystemSetting> {
+    const updateData: any = { value, updatedAt: new Date() };
+    if (updatedBy) {
+      updateData.updatedBy = updatedBy;
+    }
+
+    const [updated] = await db
+      .update(systemSettings)
+      .set(updateData)
+      .where(eq(systemSettings.key, key))
+      .returning();
+    
+    if (!updated) {
+      // If the setting doesn't exist, create it
+      const [created] = await db
+        .insert(systemSettings)
+        .values({ key, value, updatedBy })
+        .returning();
+      return created;
+    }
+    
+    return updated;
   }
 }
 

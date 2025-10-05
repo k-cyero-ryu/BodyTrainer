@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +7,9 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bus, CheckCircle, Users, DollarSign, Eye } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Bus, CheckCircle, Users, DollarSign, Eye, Settings } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -38,6 +40,44 @@ export default function AdminDashboard() {
     queryKey: ["/api/admin/pending-trainers"],
     enabled: !!user && user.role === 'superadmin',
   });
+
+  const { data: socialSetting } = useQuery({
+    queryKey: ["/api/admin/system-settings", "social_feature_enabled"],
+    enabled: !!user && user.role === 'superadmin',
+  });
+
+  const updateSocialFeatureMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const response = await fetch('/api/admin/system-settings/social_feature_enabled', {
+        method: 'PUT',
+        body: JSON.stringify({ value: enabled }),
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update setting');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/system-settings", "social_feature_enabled"] });
+      toast({
+        title: "Success",
+        description: "Social feature setting updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update social feature setting",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSocialFeatureToggle = (enabled: boolean) => {
+    updateSocialFeatureMutation.mutate(enabled);
+  };
 
   if (isLoading) {
     return (
@@ -186,6 +226,34 @@ export default function AdminDashboard() {
           ) : (
             <p className="text-gray-500 text-center py-8">No pending trainer approvals</p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* System Settings */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            System Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-gray-900">Social Feature</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Enable or disable the social community features for all users
+                </p>
+              </div>
+              <Switch
+                checked={socialSetting?.value ?? true}
+                onCheckedChange={handleSocialFeatureToggle}
+                disabled={updateSocialFeatureMutation.isPending}
+                data-testid="toggle-social-feature"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 

@@ -1075,3 +1075,18 @@ export interface NutritionData {
   servingSize?: number; // grams (usually 100g)
   servingUnit?: string;
 }
+
+// System Settings table for feature toggles and app-wide settings
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: varchar("key").notNull().unique(), // e.g., 'social_feature_enabled'
+  value: boolean("value").notNull().default(true),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: varchar("updated_by"), // userId of the admin who updated it
+});
+
+// Insert and Select schemas for System Settings
+export const insertSystemSettingSchema = createInsertSchema(systemSettings);
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type SystemSetting = typeof systemSettings.$inferSelect;
