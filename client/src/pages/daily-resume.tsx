@@ -34,6 +34,8 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import FoodDropdownSelector from "@/components/FoodDropdownSelector";
 import type { NutritionData } from "@shared/schema";
+import { translateFoodName } from "@/lib/foodTranslations";
+import i18n from "@/lib/i18n";
 
 // Food Entry Form Schema
 const getFoodEntrySchema = (t: any) => z.object({
@@ -521,7 +523,7 @@ export default function DailyResume() {
                           </span>
                         </div>
                         <h3 className="font-medium text-gray-900 dark:text-white">
-                          {entry.description}
+                          {translateFoodName(entry.description, i18n.language)}
                         </h3>
                         {entry.notes && (
                           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
