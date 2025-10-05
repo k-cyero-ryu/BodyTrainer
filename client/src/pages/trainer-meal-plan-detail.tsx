@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, Target, Flame } from "lucide-react";
+import { ArrowLeft, Calendar, Target, Flame, Edit } from "lucide-react";
 import type { MealPlan, MealDay, Meal, MealItem } from "@shared/schema";
 
 interface MealWithItems extends Meal {
@@ -149,9 +149,17 @@ export default function TrainerMealPlanDetail() {
             )}
           </div>
         </div>
-        {mealPlan.isTemplate && (
-          <Badge variant="secondary" data-testid="badge-template">Template</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {mealPlan.isTemplate && (
+            <Badge variant="secondary" data-testid="badge-template">Template</Badge>
+          )}
+          <Link href={`/trainer-meal-plans/${id}/edit`}>
+            <Button variant="outline" data-testid="button-edit-plan">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Plan
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Summary Cards */}

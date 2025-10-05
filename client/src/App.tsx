@@ -48,6 +48,7 @@ import ClientEvaluationsCompare from "@/pages/client-evaluations-compare";
 import TrainerProfile from "@/pages/trainer-profile";
 import TrainerMealPlans from "@/pages/trainer-meal-plans";
 import TrainerMealPlanDetail from "@/pages/trainer-meal-plan-detail";
+import TrainerMealPlanEdit from "@/pages/trainer-meal-plan-edit";
 import TrainerSupplements from "@/pages/trainer-supplements";
 import TrainerSupplementPlanDetail from "@/pages/trainer-supplement-plan-detail";
 import TrainerSupplementPlanEdit from "@/pages/trainer-supplement-plan-edit";
@@ -224,6 +225,7 @@ function Router() {
                   <Route path="/exercises" component={Exercises} />
                   <Route path="/trainer-meal-plans" component={TrainerMealPlans} />
                   <Route path="/trainer-meal-plans/:id" component={TrainerMealPlanDetail} />
+                  <Route path="/trainer-meal-plans/:id/edit" component={TrainerMealPlanEdit} />
                   <Route path="/trainer-supplement-items" component={TrainerSupplementItems} />
                   <Route path="/trainer-supplements" component={TrainerSupplements} />
                   <Route path="/trainer-supplements/:id" component={TrainerSupplementPlanDetail} />
