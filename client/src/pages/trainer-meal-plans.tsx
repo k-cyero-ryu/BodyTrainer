@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,8 @@ import {
   Eye,
   Edit,
   Trash,
-  Copy
+  Copy,
+  MoreVertical
 } from "lucide-react";
 import type { MealPlan, Client, InsertMealPlan } from "@shared/schema";
 
@@ -852,7 +854,34 @@ export default function TrainerMealPlans() {
                       {plan.description || "Meal plan template"}
                     </CardDescription>
                   </div>
-                  {plan.isTemplate && <Badge variant="secondary">Template</Badge>}
+                  <div className="flex items-center gap-2">
+                    {plan.isTemplate && <Badge variant="secondary">Template</Badge>}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`button-menu-${plan.id}`}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditClick(plan)} data-testid={`menu-edit-${plan.id}`}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleCopyClick(plan.id)} 
+                          disabled={copyMealPlanMutation.isPending}
+                          data-testid={`menu-copy-${plan.id}`}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteClick(plan.id)} data-testid={`menu-delete-${plan.id}`}>
+                          <Trash className="h-4 w-4 mr-2 text-destructive" />
+                          <span className="text-destructive">Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -887,45 +916,18 @@ export default function TrainerMealPlans() {
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="flex gap-2">
-                <Link href={`/trainer-meal-plans/${plan.id}`}>
+              <CardFooter>
+                <Link href={`/trainer-meal-plans/${plan.id}`} className="w-full">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="w-full"
                     data-testid={`button-view-plan-${plan.id}`}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    View
+                    View Details
                   </Button>
                 </Link>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditClick(plan)}
-                  data-testid={`button-edit-plan-${plan.id}`}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopyClick(plan.id)}
-                  disabled={copyMealPlanMutation.isPending}
-                  data-testid={`button-copy-plan-${plan.id}`}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteClick(plan.id)}
-                  data-testid={`button-delete-plan-${plan.id}`}
-                >
-                  <Trash className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
               </CardFooter>
             </Card>
           ))
