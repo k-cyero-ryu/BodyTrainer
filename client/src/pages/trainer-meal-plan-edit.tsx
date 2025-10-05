@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,32 +68,41 @@ interface DayData {
   notes?: string;
 }
 
-const MEAL_TYPES = [
-  { value: "breakfast", label: "Breakfast" },
-  { value: "lunch", label: "Lunch" },
-  { value: "dinner", label: "Dinner" },
-  { value: "snack", label: "Snack" },
-  { value: "pre-workout", label: "Pre-Workout" },
-  { value: "post-workout", label: "Post-Workout" },
-  { value: "intra-workout", label: "Intra-Workout" },
-];
-
-const GOAL_OPTIONS = [
-  { value: "weight_loss", label: "Weight Loss" },
-  { value: "muscle_gain", label: "Muscle Gain" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "endurance", label: "Endurance" },
-  { value: "strength", label: "Strength" },
-];
-
-const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
 export default function TrainerMealPlanEdit() {
   const [, params] = useRoute("/trainer-meal-plans/:id/edit");
   const planId = params?.id;
   const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { toast } = useToast();
+  
+  const MEAL_TYPES = [
+    { value: "breakfast", label: t('mealPlans.mealTypes.breakfast') },
+    { value: "lunch", label: t('mealPlans.mealTypes.lunch') },
+    { value: "dinner", label: t('mealPlans.mealTypes.dinner') },
+    { value: "snack", label: t('mealPlans.mealTypes.snack') },
+    { value: "pre-workout", label: t('mealPlans.mealTypes.pre_workout') },
+    { value: "post-workout", label: t('mealPlans.mealTypes.post_workout') },
+    { value: "intra-workout", label: t('mealPlans.mealTypes.intra_workout') },
+  ];
+
+  const GOAL_OPTIONS = [
+    { value: "weight_loss", label: t('mealPlans.goals.weight_loss') },
+    { value: "muscle_gain", label: t('mealPlans.goals.muscle_gain') },
+    { value: "maintenance", label: t('mealPlans.goals.maintenance') },
+    { value: "endurance", label: t('mealPlans.goals.endurance') },
+    { value: "strength", label: t('mealPlans.goals.strength') },
+  ];
+
+  const DAY_NAMES = [
+    t('days.monday'),
+    t('days.tuesday'),
+    t('days.wednesday'),
+    t('days.thursday'),
+    t('days.friday'),
+    t('days.saturday'),
+    t('days.sunday')
+  ];
   const [daysData, setDaysData] = useState<DayData[]>([]);
   const [activeDay, setActiveDay] = useState<number>(1);
   const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
@@ -425,14 +435,14 @@ export default function TrainerMealPlanEdit() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Edit Meal Plan</h1>
-          <p className="text-muted-foreground">Update plan details and manage meals</p>
+          <h1 className="text-3xl font-bold">{t('mealPlans.editPlan')}</h1>
+          <p className="text-muted-foreground">{t('mealPlans.updatePlanDetails')}</p>
         </div>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Plan Details</CardTitle>
+          <CardTitle>{t('mealPlans.planDetails')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -443,7 +453,7 @@ export default function TrainerMealPlanEdit() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan Name</FormLabel>
+                      <FormLabel>{t('mealPlans.planName')}</FormLabel>
                       <FormControl>
                         <Input {...field} data-testid="input-plan-name" />
                       </FormControl>
@@ -482,7 +492,7 @@ export default function TrainerMealPlanEdit() {
                   name="dailyCalories"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Daily Calories</FormLabel>
+                      <FormLabel>{t('mealPlans.dailyCalories')}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -501,7 +511,7 @@ export default function TrainerMealPlanEdit() {
                   name="targetProtein"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Target Protein (g)</FormLabel>
+                      <FormLabel>{t('mealPlans.targetProtein')}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -520,7 +530,7 @@ export default function TrainerMealPlanEdit() {
                   name="targetCarbs"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Target Carbs (g)</FormLabel>
+                      <FormLabel>{t('mealPlans.targetCarbs')}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -539,7 +549,7 @@ export default function TrainerMealPlanEdit() {
                   name="targetFat"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Target Fat (g)</FormLabel>
+                      <FormLabel>{t('mealPlans.targetFat')}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -559,7 +569,7 @@ export default function TrainerMealPlanEdit() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t('mealPlans.description')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} rows={2} data-testid="textarea-description" />
                     </FormControl>
@@ -573,7 +583,7 @@ export default function TrainerMealPlanEdit() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel>{t('mealPlans.notes')}</FormLabel>
                     <FormControl>
                       <Textarea {...field} rows={2} data-testid="textarea-notes" />
                     </FormControl>
@@ -584,7 +594,7 @@ export default function TrainerMealPlanEdit() {
 
               <Button type="submit" data-testid="button-save-plan" disabled={updateMealPlanMutation.isPending}>
                 <Save className="h-4 w-4 mr-2" />
-                {updateMealPlanMutation.isPending ? "Saving..." : "Save Plan Details"}
+                {updateMealPlanMutation.isPending ? t('mealPlans.saving') : t('mealPlans.savePlanDetails')}
               </Button>
             </form>
           </Form>
@@ -593,8 +603,8 @@ export default function TrainerMealPlanEdit() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Weekly Meals</CardTitle>
-          <CardDescription>Manage meals for each day of the week</CardDescription>
+          <CardTitle>{t('mealPlans.weeklyMeals')}</CardTitle>
+          <CardDescription>{t('mealPlans.manageMealsDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeDay.toString()} onValueChange={(v) => setActiveDay(parseInt(v))}>
@@ -613,12 +623,12 @@ export default function TrainerMealPlanEdit() {
                     <div>
                       <h3 className="text-lg font-semibold">{day.dayName}</h3>
                       <div className="text-sm text-muted-foreground">
-                        Total: {totals.calories} cal | P: {totals.protein}g | C: {totals.carbs}g | F: {totals.fat}g
+                        {t('mealPlans.total')}: {totals.calories} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {totals.protein}g | {t('mealPlans.carbsShort')}: {totals.carbs}g | {t('mealPlans.fatShort')}: {totals.fat}g
                       </div>
                     </div>
                     <Button onClick={() => handleAddMeal(day.id)} size="sm" data-testid={`button-add-meal-day-${day.dayNumber}`}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Meal
+                      {t('mealPlans.addMeal')}
                     </Button>
                   </div>
 
@@ -658,21 +668,21 @@ export default function TrainerMealPlanEdit() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                   <Input
-                                    placeholder="Meal name (optional)"
+                                    placeholder={t('mealPlans.mealName')}
                                     value={meal.name || ""}
                                     onChange={(e) => handleUpdateMeal(meal.id, { name: e.target.value })}
                                     data-testid={`input-meal-name-${mealIndex}`}
                                   />
                                   <Input
                                     type="time"
-                                    placeholder="Target time"
+                                    placeholder={t('mealPlans.targetTime')}
                                     value={meal.targetTime || ""}
                                     onChange={(e) => handleUpdateMeal(meal.id, { targetTime: e.target.value })}
                                     data-testid={`input-meal-time-${mealIndex}`}
                                   />
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  {Math.round(mealTotals.calories)} cal | P: {Math.round(mealTotals.protein)}g | C: {Math.round(mealTotals.carbs)}g | F: {Math.round(mealTotals.fat)}g
+                                  {Math.round(mealTotals.calories)} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {Math.round(mealTotals.protein)}g | {t('mealPlans.carbsShort')}: {Math.round(mealTotals.carbs)}g | {t('mealPlans.fatShort')}: {Math.round(mealTotals.fat)}g
                                 </div>
                               </div>
                               <Button
@@ -697,7 +707,7 @@ export default function TrainerMealPlanEdit() {
                                   <div className="flex-1">
                                     <div className="font-medium">{item.foodName}</div>
                                     <div className="text-sm text-muted-foreground">
-                                      {item.quantity}g | {Math.round(itemTotalCalories)} cal | P: {Math.round(itemTotalProtein)}g | C: {Math.round(itemTotalCarbs)}g | F: {Math.round(itemTotalFat)}g
+                                      {item.quantity}g | {Math.round(itemTotalCalories)} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {Math.round(itemTotalProtein)}g | {t('mealPlans.carbsShort')}: {Math.round(itemTotalCarbs)}g | {t('mealPlans.fatShort')}: {Math.round(itemTotalFat)}g
                                     </div>
                                   </div>
                                   <Input
@@ -728,7 +738,7 @@ export default function TrainerMealPlanEdit() {
                             />
 
                             <Textarea
-                              placeholder="Meal notes (optional)"
+                              placeholder={t('mealPlans.mealNotesPlaceholder')}
                               value={meal.notes || ""}
                               onChange={(e) => handleUpdateMeal(meal.id, { notes: e.target.value })}
                               rows={2}
@@ -741,7 +751,7 @@ export default function TrainerMealPlanEdit() {
 
                     {day.meals.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
-                        No meals added for this day. Click "Add Meal" to get started.
+                        {t('mealPlans.noMealsAddedYet')}
                       </div>
                     )}
                   </div>
