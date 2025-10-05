@@ -1062,11 +1062,17 @@ export default function TrainerMealPlans() {
               onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
+                const dailyCalories = Number(formData.get('dailyCalories'));
+                const adjustedCalories = Number(formData.get('adjustedDailyCalories')) || dailyCalories;
+                const adjustmentPercentage = Math.round(((adjustedCalories - dailyCalories) / dailyCalories) * 100);
+                
                 const updates = {
                   name: formData.get('name') as string,
                   description: formData.get('description') as string,
                   goal: formData.get('goal') as string,
-                  dailyCalories: Number(formData.get('dailyCalories')),
+                  dailyCalories,
+                  adjustedDailyCalories: adjustedCalories,
+                  adjustmentPercentage,
                   targetProtein: Number(formData.get('targetProtein')) || undefined,
                   targetCarbs: Number(formData.get('targetCarbs')) || undefined,
                   targetFat: Number(formData.get('targetFat')) || undefined,
@@ -1116,15 +1122,64 @@ export default function TrainerMealPlans() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-dailyCalories">Daily Calories</Label>
+                  <Label htmlFor="edit-dailyCalories">Daily Calories (TDEE)</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="edit-dailyCalories"
+                      name="dailyCalories"
+                      type="number"
+                      defaultValue={editingPlan.dailyCalories}
+                      required
+                      data-testid="input-edit-dailyCalories"
+                      readOnly
+                      className="bg-gray-50 dark:bg-gray-800"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowTDEECalculator(true)}
+                      data-testid="button-edit-calculate-tdee"
+                    >
+                      {t('tdee.calculator')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-adjustedCalories">Adjusted Daily Calories</Label>
                   <Input
-                    id="edit-dailyCalories"
-                    name="dailyCalories"
+                    id="edit-adjustedCalories"
+                    name="adjustedDailyCalories"
                     type="number"
-                    defaultValue={editingPlan.dailyCalories}
-                    required
-                    data-testid="input-edit-dailyCalories"
+                    defaultValue={editingPlan.adjustedDailyCalories || editingPlan.dailyCalories}
+                    readOnly
+                    className="bg-gray-50 dark:bg-gray-800"
+                    data-testid="input-edit-adjusted-calories"
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Adjustment: {editingPlan.adjustmentPercentage || 0}%</Label>
+                  <Slider
+                    min={-100}
+                    max={100}
+                    step={5}
+                    defaultValue={[editingPlan.adjustmentPercentage || 0]}
+                    onValueChange={(value) => {
+                      const adjusted = applyAdjustment(editingPlan.dailyCalories, value[0]);
+                      const input = document.getElementById('edit-adjustedCalories') as HTMLInputElement;
+                      if (input) input.value = adjusted.toString();
+                    }}
+                    data-testid="slider-edit-adjustment"
+                    className="w-full mt-2"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>-100%</span>
+                    <span>0%</span>
+                    <span>+100%</span>
+                  </div>
                 </div>
               </div>
 
