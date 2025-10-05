@@ -81,30 +81,38 @@ interface DayData {
   notes?: string;
 }
 
-const MEAL_TYPES = [
-  { value: "breakfast", label: "Breakfast" },
-  { value: "lunch", label: "Lunch" },
-  { value: "dinner", label: "Dinner" },
-  { value: "snack", label: "Snack" },
-  { value: "pre-workout", label: "Pre-Workout" },
-  { value: "post-workout", label: "Post-Workout" },
-  { value: "intra-workout", label: "Intra-Workout" },
-];
-
-const GOAL_OPTIONS = [
-  { value: "weight_loss", label: "Weight Loss" },
-  { value: "muscle_gain", label: "Muscle Gain" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "endurance", label: "Endurance" },
-  { value: "strength", label: "Strength" },
-];
-
-const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
 export default function TrainerMealPlans() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+
+  const MEAL_TYPES = [
+    { value: "breakfast", label: t('mealPlans.mealTypes.breakfast') },
+    { value: "lunch", label: t('mealPlans.mealTypes.lunch') },
+    { value: "dinner", label: t('mealPlans.mealTypes.dinner') },
+    { value: "snack", label: t('mealPlans.mealTypes.snack') },
+    { value: "pre_workout", label: t('mealPlans.mealTypes.pre_workout') },
+    { value: "post_workout", label: t('mealPlans.mealTypes.post_workout') },
+    { value: "intra_workout", label: t('mealPlans.mealTypes.intra_workout') },
+  ];
+
+  const GOAL_OPTIONS = [
+    { value: "weight_loss", label: t('mealPlans.goals.weight_loss') },
+    { value: "muscle_gain", label: t('mealPlans.goals.muscle_gain') },
+    { value: "maintenance", label: t('mealPlans.goals.maintenance') },
+    { value: "endurance", label: t('mealPlans.goals.endurance') },
+    { value: "strength", label: t('mealPlans.goals.strength') },
+  ];
+
+  const DAY_NAMES = [
+    t('days.monday'),
+    t('days.tuesday'),
+    t('days.wednesday'),
+    t('days.thursday'),
+    t('days.friday'),
+    t('days.saturday'),
+    t('days.sunday')
+  ];
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [daysData, setDaysData] = useState<DayData[]>(
     DAY_NAMES.map((name, index) => ({
@@ -887,31 +895,31 @@ export default function TrainerMealPlans() {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Daily Calories:</span>
-                    <span className="font-medium">{plan.dailyCalories} cal</span>
+                    <span className="text-muted-foreground">{t('mealPlans.dailyCalories')}:</span>
+                    <span className="font-medium">{plan.dailyCalories} {t('mealPlans.calories')}</span>
                   </div>
                   {plan.targetProtein && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Protein:</span>
+                      <span className="text-muted-foreground">{t('mealPlans.protein')}:</span>
                       <span className="font-medium">{plan.targetProtein}g</span>
                     </div>
                   )}
                   {plan.targetCarbs && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Carbs:</span>
+                      <span className="text-muted-foreground">{t('mealPlans.carbs')}:</span>
                       <span className="font-medium">{plan.targetCarbs}g</span>
                     </div>
                   )}
                   {plan.targetFat && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Fat:</span>
+                      <span className="text-muted-foreground">{t('mealPlans.fat')}:</span>
                       <span className="font-medium">{plan.targetFat}g</span>
                     </div>
                   )}
                   {plan.goal && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Goal:</span>
-                      <Badge variant="outline">{plan.goal}</Badge>
+                      <span className="text-muted-foreground">{t('mealPlans.goal')}:</span>
+                      <Badge variant="outline">{t(`mealPlans.goals.${plan.goal}`)}</Badge>
                     </div>
                   )}
                 </div>

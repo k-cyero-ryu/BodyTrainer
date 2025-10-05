@@ -21,22 +21,25 @@ interface AssignmentWithPlan extends MealPlanAssignment {
   mealPlan?: MealPlanWithDetails;
 }
 
-const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-const MEAL_TYPE_LABELS: Record<string, string> = {
-  breakfast: "Breakfast",
-  lunch: "Lunch",
-  dinner: "Dinner",
-  snack: "Snack",
-  "pre-workout": "Pre-Workout",
-  "post-workout": "Post-Workout",
-  "intra-workout": "Intra-Workout",
-};
-
 export default function ClientMealPlans() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+
+  const DAY_NAMES = [
+    t('days.monday'),
+    t('days.tuesday'),
+    t('days.wednesday'),
+    t('days.thursday'),
+    t('days.friday'),
+    t('days.saturday'),
+    t('days.sunday')
+  ];
+
+  const getMealTypeLabel = (mealType: string) => {
+    const typeKey = mealType.replace('-', '_');
+    return t(`mealPlans.mealTypes.${typeKey}`);
+  };
 
   const { data: activeAssignment, isLoading } = useQuery<AssignmentWithPlan>({
     queryKey: [`/api/nutrition/clients/${user?.client?.id}/meal-plan-assignments/active`],
@@ -65,17 +68,17 @@ export default function ClientMealPlans() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">My Meal Plan</h1>
-            <p className="text-muted-foreground">View your active nutrition plan</p>
+            <h1 className="text-3xl font-bold">{t('mealPlans.myMealPlan')}</h1>
+            <p className="text-muted-foreground">{t('mealPlans.viewActivePlan')}</p>
           </div>
         </div>
 
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <UtensilsCrossed className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No active meal plan</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('mealPlans.noActivePlan')}</h3>
             <p className="text-muted-foreground text-center">
-              Your trainer hasn't assigned a meal plan yet. Contact your trainer to get started.
+              {t('mealPlans.noActivePlanDescription')}
             </p>
           </CardContent>
         </Card>
@@ -89,11 +92,11 @@ export default function ClientMealPlans() {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">My Meal Plan</h1>
-          <p className="text-muted-foreground">Follow your personalized nutrition plan</p>
+          <h1 className="text-3xl font-bold">{t('mealPlans.myMealPlan')}</h1>
+          <p className="text-muted-foreground">{t('mealPlans.followNutritionPlan')}</p>
         </div>
         <Badge variant="default" className="text-lg px-4 py-2">
-          Active Plan
+          {t('mealPlans.activePlan')}
         </Badge>
       </div>
 
@@ -115,19 +118,19 @@ export default function ClientMealPlans() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Target className="h-4 w-4" />
-                <span className="text-sm">Daily Target</span>
+                <span className="text-sm">{t('mealPlans.dailyTarget')}</span>
               </div>
               <div>
                 <div className="text-3xl font-bold" data-testid="text-daily-calories">
                   {activeMealPlan.dailyCalories}
                 </div>
-                <div className="text-sm text-muted-foreground">calories</div>
+                <div className="text-sm text-muted-foreground">{t('mealPlans.calories')}</div>
               </div>
             </div>
 
             {activeMealPlan.targetProtein && (
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Protein</div>
+                <div className="text-sm text-muted-foreground">{t('mealPlans.protein')}</div>
                 <div>
                   <div className="text-2xl font-semibold" data-testid="text-target-protein">
                     {activeMealPlan.targetProtein}g
@@ -138,7 +141,7 @@ export default function ClientMealPlans() {
 
             {activeMealPlan.targetCarbs && (
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Carbs</div>
+                <div className="text-sm text-muted-foreground">{t('mealPlans.carbs')}</div>
                 <div>
                   <div className="text-2xl font-semibold" data-testid="text-target-carbs">
                     {activeMealPlan.targetCarbs}g
@@ -149,7 +152,7 @@ export default function ClientMealPlans() {
 
             {activeMealPlan.targetFat && (
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Fat</div>
+                <div className="text-sm text-muted-foreground">{t('mealPlans.fat')}</div>
                 <div>
                   <div className="text-2xl font-semibold" data-testid="text-target-fat">
                     {activeMealPlan.targetFat}g
@@ -165,14 +168,14 @@ export default function ClientMealPlans() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeMealPlan.goal && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Goal:</span>
-                    <Badge variant="outline">{activeMealPlan.goal.replace("_", " ")}</Badge>
+                    <span className="text-sm text-muted-foreground">{t('mealPlans.goal')}:</span>
+                    <Badge variant="outline">{t(`mealPlans.goals.${activeMealPlan.goal}`)}</Badge>
                   </div>
                 )}
                 {activeAssignment?.startDate && (
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Started:</span>
+                    <span className="text-sm text-muted-foreground">{t('mealPlans.started')}:</span>
                     <span className="text-sm font-medium">
                       {new Date(activeAssignment.startDate).toLocaleDateString()}
                     </span>
@@ -186,7 +189,7 @@ export default function ClientMealPlans() {
             <>
               <Separator className="my-4" />
               <div>
-                <div className="text-sm font-medium mb-2">Trainer Notes:</div>
+                <div className="text-sm font-medium mb-2">{t('mealPlans.trainerNotes')}:</div>
                 <p className="text-sm text-muted-foreground">{activeMealPlan.notes}</p>
               </div>
             </>
@@ -196,8 +199,8 @@ export default function ClientMealPlans() {
 
       <Card data-testid="card-weekly-meals">
         <CardHeader>
-          <CardTitle>Weekly Meal Schedule</CardTitle>
-          <CardDescription>Your daily meal breakdown</CardDescription>
+          <CardTitle>{t('mealPlans.weeklyMealSchedule')}</CardTitle>
+          <CardDescription>{t('mealPlans.dailyMealBreakdown')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="1" className="w-full">
@@ -213,9 +216,9 @@ export default function ClientMealPlans() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold">{day.dayName || DAY_NAMES[day.dayNumber - 1]}</h3>
                   <div className="text-right">
-                    <div className="text-sm text-muted-foreground">Day Total</div>
+                    <div className="text-sm text-muted-foreground">{t('mealPlans.dayTotal')}</div>
                     <div className="text-lg font-semibold" data-testid={`text-day-total-${day.dayNumber}`}>
-                      {day.totalCalories || 0} cal
+                      {day.totalCalories || 0} {t('mealPlans.calories')}
                     </div>
                     {(day.totalProtein || day.totalCarbs || day.totalFat) && (
                       <div className="text-xs text-muted-foreground">
@@ -235,15 +238,15 @@ export default function ClientMealPlans() {
                           <div className="flex items-center justify-between">
                             <div>
                               <CardTitle className="text-lg">
-                                {meal.name || MEAL_TYPE_LABELS[meal.mealType] || meal.mealType}
+                                {meal.name || getMealTypeLabel(meal.mealType)}
                               </CardTitle>
                               {meal.targetTime && (
                                 <CardDescription className="mt-1">
-                                  Recommended time: {meal.targetTime}
+                                  {meal.targetTime}
                                 </CardDescription>
                               )}
                             </div>
-                            <Badge variant="secondary">{MEAL_TYPE_LABELS[meal.mealType] || meal.mealType}</Badge>
+                            <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
                           </div>
                         </CardHeader>
                         <CardContent>

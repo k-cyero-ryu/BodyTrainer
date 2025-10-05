@@ -41,22 +41,32 @@ export default function ClientSupplements() {
     );
   }
 
+  const getFrequencyLabel = (frequency: string) => {
+    const freqKey = frequency.replace(' ', '_').replace('-', '_');
+    return t(`supplements.frequency.${freqKey}`);
+  };
+
+  const getTimingLabel = (timing: string) => {
+    const timingKey = timing.replace(' ', '_').replace('-', '_');
+    return t(`supplements.timing.${timingKey}`);
+  };
+
   if (!activeSupplementPlan) {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">My Supplements</h1>
-            <p className="text-muted-foreground">View your active supplement plan</p>
+            <h1 className="text-3xl font-bold">{t('supplements.mySupplements')}</h1>
+            <p className="text-muted-foreground">{t('supplements.viewActivePlan')}</p>
           </div>
         </div>
 
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Pill className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No active supplement plan</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('supplements.noActivePlan')}</h3>
             <p className="text-muted-foreground text-center">
-              Your trainer hasn't assigned a supplement plan yet. Contact your trainer if you need guidance.
+              {t('supplements.noActivePlanDescription')}
             </p>
           </CardContent>
         </Card>
@@ -71,11 +81,11 @@ export default function ClientSupplements() {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">My Supplements</h1>
-          <p className="text-muted-foreground">Follow your personalized supplement protocol</p>
+          <h1 className="text-3xl font-bold">{t('supplements.mySupplements')}</h1>
+          <p className="text-muted-foreground">{t('supplements.followProtocol')}</p>
         </div>
         <Badge variant="default" className="text-lg px-4 py-2">
-          Active Plan
+          {t('supplements.activePlan')}
         </Badge>
       </div>
 
@@ -97,14 +107,14 @@ export default function ClientSupplements() {
             {activeSupplementPlan.goal && (
               <div className="flex items-center gap-2">
                 <Info className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Goal:</span>
-                <Badge variant="outline">{activeSupplementPlan.goal.replace("_", " ")}</Badge>
+                <span className="text-sm text-muted-foreground">{t('supplements.goal')}:</span>
+                <Badge variant="outline">{t(`supplements.goals.${activeSupplementPlan.goal}`)}</Badge>
               </div>
             )}
             {activeAssignment?.startDate && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Started:</span>
+                <span className="text-sm text-muted-foreground">{t('supplements.started')}:</span>
                 <span className="text-sm font-medium">
                   {new Date(activeAssignment.startDate).toLocaleDateString()}
                 </span>
@@ -113,7 +123,7 @@ export default function ClientSupplements() {
             {activeAssignment?.endDate && (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Ends:</span>
+                <span className="text-sm text-muted-foreground">{t('supplements.ends')}:</span>
                 <span className="text-sm font-medium">
                   {new Date(activeAssignment.endDate).toLocaleDateString()}
                 </span>
@@ -125,7 +135,7 @@ export default function ClientSupplements() {
             <>
               <Separator className="my-4" />
               <div>
-                <div className="text-sm font-medium mb-2">Trainer Notes:</div>
+                <div className="text-sm font-medium mb-2">{t('supplements.trainerNotes')}:</div>
                 <p className="text-sm text-muted-foreground">{activeSupplementPlan.notes}</p>
               </div>
             </>
@@ -135,7 +145,7 @@ export default function ClientSupplements() {
 
       {requiredSupplements.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Required Supplements</h2>
+          <h2 className="text-2xl font-semibold mb-4">{t('supplements.requiredSupplements')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {requiredSupplements.map((supplement) => (
               <Card key={supplement.id} data-testid={`card-supplement-${supplement.id}`}>
@@ -145,25 +155,25 @@ export default function ClientSupplements() {
                       <CardTitle className="text-lg">{supplement.name}</CardTitle>
                       {supplement.brand && (
                         <CardDescription className="mt-1">
-                          Brand: {supplement.brand}
+                          {t('supplements.brand')}: {supplement.brand}
                         </CardDescription>
                       )}
                     </div>
-                    <Badge variant="default">Required</Badge>
+                    <Badge variant="default">{t('supplements.required')}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Dosage</div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.dosage')}</div>
                       <div className="text-lg font-semibold" data-testid={`text-dosage-${supplement.id}`}>
                         {supplement.dosage}
                       </div>
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Frequency</div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.frequency')}</div>
                       <div className="text-lg font-semibold" data-testid={`text-frequency-${supplement.id}`}>
-                        {supplement.frequency}
+                        {getFrequencyLabel(supplement.frequency)}
                       </div>
                     </div>
                   </div>
@@ -172,10 +182,10 @@ export default function ClientSupplements() {
                     <div>
                       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
                         <Clock className="h-4 w-4" />
-                        <span>Timing</span>
+                        <span>{t('supplements.timing')}</span>
                       </div>
                       <div className="text-base" data-testid={`text-timing-${supplement.id}`}>
-                        {supplement.timing}
+                        {getTimingLabel(supplement.timing)}
                       </div>
                     </div>
                   )}
@@ -184,7 +194,7 @@ export default function ClientSupplements() {
                     <>
                       <Separator />
                       <div>
-                        <div className="text-sm font-medium text-muted-foreground mb-1">Purpose</div>
+                        <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.purpose')}</div>
                         <p className="text-sm">{supplement.purpose}</p>
                       </div>
                     </>
@@ -194,7 +204,7 @@ export default function ClientSupplements() {
                     <>
                       <Separator />
                       <div>
-                        <div className="text-sm font-medium text-muted-foreground mb-1">Instructions</div>
+                        <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.instructions')}</div>
                         <p className="text-sm text-muted-foreground">{supplement.instructions}</p>
                       </div>
                     </>
@@ -208,7 +218,7 @@ export default function ClientSupplements() {
 
       {optionalSupplements.length > 0 && (
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Optional Supplements</h2>
+          <h2 className="text-2xl font-semibold mb-4">{t('supplements.optionalSupplements')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {optionalSupplements.map((supplement) => (
               <Card key={supplement.id} data-testid={`card-supplement-optional-${supplement.id}`}>
@@ -218,25 +228,25 @@ export default function ClientSupplements() {
                       <CardTitle className="text-lg">{supplement.name}</CardTitle>
                       {supplement.brand && (
                         <CardDescription className="mt-1">
-                          Brand: {supplement.brand}
+                          {t('supplements.brand')}: {supplement.brand}
                         </CardDescription>
                       )}
                     </div>
-                    <Badge variant="secondary">Optional</Badge>
+                    <Badge variant="secondary">{t('supplements.optional')}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Dosage</div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.dosage')}</div>
                       <div className="text-lg font-semibold" data-testid={`text-dosage-${supplement.id}`}>
                         {supplement.dosage}
                       </div>
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-1">Frequency</div>
+                      <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.frequency')}</div>
                       <div className="text-lg font-semibold" data-testid={`text-frequency-${supplement.id}`}>
-                        {supplement.frequency}
+                        {getFrequencyLabel(supplement.frequency)}
                       </div>
                     </div>
                   </div>
@@ -245,10 +255,10 @@ export default function ClientSupplements() {
                     <div>
                       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
                         <Clock className="h-4 w-4" />
-                        <span>Timing</span>
+                        <span>{t('supplements.timing')}</span>
                       </div>
                       <div className="text-base" data-testid={`text-timing-${supplement.id}`}>
-                        {supplement.timing}
+                        {getTimingLabel(supplement.timing)}
                       </div>
                     </div>
                   )}
@@ -257,7 +267,7 @@ export default function ClientSupplements() {
                     <>
                       <Separator />
                       <div>
-                        <div className="text-sm font-medium text-muted-foreground mb-1">Purpose</div>
+                        <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.purpose')}</div>
                         <p className="text-sm">{supplement.purpose}</p>
                       </div>
                     </>
@@ -267,7 +277,7 @@ export default function ClientSupplements() {
                     <>
                       <Separator />
                       <div>
-                        <div className="text-sm font-medium text-muted-foreground mb-1">Instructions</div>
+                        <div className="text-sm font-medium text-muted-foreground mb-1">{t('supplements.instructions')}</div>
                         <p className="text-sm text-muted-foreground">{supplement.instructions}</p>
                       </div>
                     </>

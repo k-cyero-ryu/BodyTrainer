@@ -54,39 +54,39 @@ interface SelectedSupplementItem {
   notes?: string;
 }
 
-const FREQUENCY_OPTIONS = [
-  { value: "daily", label: "Daily" },
-  { value: "2x daily", label: "2x Daily" },
-  { value: "3x daily", label: "3x Daily" },
-  { value: "post-workout", label: "Post-Workout" },
-  { value: "pre-workout", label: "Pre-Workout" },
-  { value: "as needed", label: "As Needed" },
-];
-
-const TIMING_OPTIONS = [
-  { value: "morning", label: "Morning" },
-  { value: "afternoon", label: "Afternoon" },
-  { value: "evening", label: "Evening" },
-  { value: "before bed", label: "Before Bed" },
-  { value: "with meals", label: "With Meals" },
-  { value: "between meals", label: "Between Meals" },
-  { value: "post-workout", label: "Post-Workout" },
-  { value: "pre-workout", label: "Pre-Workout" },
-];
-
-const GOAL_OPTIONS = [
-  { value: "recovery", label: "Recovery" },
-  { value: "energy", label: "Energy" },
-  { value: "muscle_gain", label: "Muscle Gain" },
-  { value: "health", label: "General Health" },
-  { value: "performance", label: "Performance" },
-  { value: "weight_loss", label: "Weight Loss" },
-];
-
 export default function TrainerSupplements() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+
+  const FREQUENCY_OPTIONS = [
+    { value: "daily", label: t('supplements.frequency.daily') },
+    { value: "2x_daily", label: t('supplements.frequency.2x_daily') },
+    { value: "3x_daily", label: t('supplements.frequency.3x_daily') },
+    { value: "post_workout", label: t('supplements.frequency.post_workout') },
+    { value: "pre_workout", label: t('supplements.frequency.pre_workout') },
+    { value: "as_needed", label: t('supplements.frequency.as_needed') },
+  ];
+
+  const TIMING_OPTIONS = [
+    { value: "morning", label: t('supplements.timing.morning') },
+    { value: "afternoon", label: t('supplements.timing.afternoon') },
+    { value: "evening", label: t('supplements.timing.evening') },
+    { value: "before_bed", label: t('supplements.timing.before_bed') },
+    { value: "with_meals", label: t('supplements.timing.with_meals') },
+    { value: "between_meals", label: t('supplements.timing.between_meals') },
+    { value: "post_workout", label: t('supplements.timing.post_workout') },
+    { value: "pre_workout", label: t('supplements.timing.pre_workout') },
+  ];
+
+  const GOAL_OPTIONS = [
+    { value: "recovery", label: t('supplements.goals.recovery') },
+    { value: "energy", label: t('supplements.goals.energy') },
+    { value: "muscle_gain", label: t('supplements.goals.muscle_gain') },
+    { value: "health", label: t('supplements.goals.health') },
+    { value: "performance", label: t('supplements.goals.performance') },
+    { value: "weight_loss", label: t('supplements.goals.weight_loss') },
+  ];
   const [, setLocation] = useLocation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -604,7 +604,7 @@ export default function TrainerSupplements() {
                     </div>
                     {plan.goal && (
                       <Badge className="mt-2" variant="secondary" data-testid={`badge-goal-${plan.id}`}>
-                        {plan.goal}
+                        {t(`supplements.goals.${plan.goal}`)}
                       </Badge>
                     )}
                   </div>
