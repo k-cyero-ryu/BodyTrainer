@@ -35,10 +35,13 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
 import { FoodDropdownSelector } from "@/components/FoodDropdownSelector";
-import { ArrowLeft, Plus, Trash2, Save, X } from "lucide-react";
-import type { NutritionData } from "@shared/schema";
+import { TDEECalculatorDialog } from "@/components/TDEECalculatorDialog";
+import { ArrowLeft, Plus, Trash2, Save, X, Calculator } from "lucide-react";
+import type { NutritionData, Client } from "@shared/schema";
 import { translateFoodName } from "@/lib/foodTranslations";
+import { applyAdjustment } from "@/lib/tdeeCalculator";
 import i18n from "@/lib/i18n";
 
 const mealPlanFormSchema = z.object({
@@ -46,6 +49,8 @@ const mealPlanFormSchema = z.object({
   description: z.string().optional(),
   goal: z.string().optional(),
   dailyCalories: z.number().min(1, "Daily calories required"),
+  adjustedDailyCalories: z.number().optional(),
+  adjustmentPercentage: z.number().optional(),
   targetProtein: z.number().optional(),
   targetCarbs: z.number().optional(),
   targetFat: z.number().optional(),
@@ -124,6 +129,7 @@ export default function TrainerMealPlanEdit() {
     useState<string>("all");
   const [modifiedMeals, setModifiedMeals] = useState<Set<string>>(new Set());
   const [modifiedItems, setModifiedItems] = useState<Set<string>>(new Set());
+  const [showTDEECalculator, setShowTDEECalculator] = useState(false);
 
   const form = useForm<MealPlanFormData>({
     resolver: zodResolver(mealPlanFormSchema),
@@ -132,6 +138,8 @@ export default function TrainerMealPlanEdit() {
       description: "",
       goal: "",
       dailyCalories: 2000,
+      adjustedDailyCalories: 2000,
+      adjustmentPercentage: 0,
       targetProtein: 150,
       targetCarbs: 200,
       targetFat: 60,
@@ -149,6 +157,11 @@ export default function TrainerMealPlanEdit() {
     enabled: !!planId,
   });
 
+  const { data: clientsData } = useQuery<{ clients: Client[] }>({
+    queryKey: ["/api/trainers/clients"],
+  });
+  const clients = clientsData?.clients || [];
+
   useEffect(() => {
     if (mealPlan) {
       form.reset({
@@ -156,6 +169,8 @@ export default function TrainerMealPlanEdit() {
         description: mealPlan.description || "",
         goal: mealPlan.goal || "",
         dailyCalories: mealPlan.dailyCalories || 2000,
+        adjustedDailyCalories: mealPlan.adjustedDailyCalories || mealPlan.dailyCalories || 2000,
+        adjustmentPercentage: mealPlan.adjustmentPercentage || 0,
         targetProtein: mealPlan.targetProtein || 150,
         targetCarbs: mealPlan.targetCarbs || 200,
         targetFat: mealPlan.targetFat || 60,
@@ -195,6 +210,12 @@ export default function TrainerMealPlanEdit() {
       setModifiedItems(new Set());
     }
   }, [mealDays]);
+
+  const handleApplyTDEE = (tdee: number) => {
+    form.setValue("dailyCalories", tdee);
+    form.setValue("adjustedDailyCalories", tdee);
+    form.setValue("adjustmentPercentage", 0);
+  };
 
   const updateMealPlanMutation = useMutation({
     mutationFn: async (data: MealPlanFormData) => {
@@ -559,7 +580,41 @@ export default function TrainerMealPlanEdit() {
                   name="dailyCalories"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("mealPlans.dailyCalories")}</FormLabel>
+                      <FormLabel>{t("mealPlans.dailyCalories")} (TDEE)</FormLabel>
+                      <div className="flex space-x-2">
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value))
+                            }
+                            data-testid="input-daily-calories"
+                            readOnly
+                            className="bg-gray-50 dark:bg-gray-800"
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowTDEECalculator(true)}
+                          data-testid="button-calculate-tdee"
+                        >
+                          <Calculator className="h-4 w-4 mr-2" />
+                          {t('tdee.calculator')}
+                        </Button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="adjustedDailyCalories"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("mealPlans.adjustedDailyCalories")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -567,12 +622,48 @@ export default function TrainerMealPlanEdit() {
                           onChange={(e) =>
                             field.onChange(parseInt(e.target.value))
                           }
-                          data-testid="input-daily-calories"
+                          data-testid="input-adjusted-calories"
+                          readOnly
+                          className="bg-gray-50 dark:bg-gray-800"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="adjustmentPercentage"
+                  render={({ field }) => {
+                    const dailyCalories = form.watch("dailyCalories");
+                    return (
+                      <FormItem>
+                        <FormLabel>{t("mealPlans.adjustmentPercentage")}: {field.value || 0}%</FormLabel>
+                        <FormControl>
+                          <Slider
+                            min={-100}
+                            max={100}
+                            step={5}
+                            value={[field.value || 0]}
+                            onValueChange={(value) => {
+                              field.onChange(value[0]);
+                              const adjusted = applyAdjustment(dailyCalories, value[0]);
+                              form.setValue("adjustedDailyCalories", adjusted);
+                            }}
+                            data-testid="slider-adjustment"
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                          <span>-100%</span>
+                          <span>0%</span>
+                          <span>+100%</span>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
@@ -928,6 +1019,14 @@ export default function TrainerMealPlanEdit() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* TDEE Calculator Dialog */}
+      <TDEECalculatorDialog
+        open={showTDEECalculator}
+        onOpenChange={setShowTDEECalculator}
+        clients={clients}
+        onApplyTDEE={handleApplyTDEE}
+      />
     </div>
   );
 }
