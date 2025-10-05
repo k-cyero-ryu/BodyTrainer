@@ -38,6 +38,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FoodDropdownSelector } from "@/components/FoodDropdownSelector";
 import { ArrowLeft, Plus, Trash2, Save, X } from "lucide-react";
 import type { NutritionData } from "@shared/schema";
+import { translateFoodName } from "@/lib/foodTranslations";
+import i18n from "@/lib/i18n";
 
 const mealPlanFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -851,7 +853,7 @@ export default function TrainerMealPlanEdit() {
                                 >
                                   <div className="flex-1">
                                     <div className="font-medium">
-                                      {item.foodName}
+                                      {translateFoodName(item.foodName, i18n.language)}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {item.quantity}g |{" "}

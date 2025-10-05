@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Target, UtensilsCrossed } from "lucide-react";
 import type { MealPlan, MealPlanAssignment, MealDay, Meal, MealItem } from "@shared/schema";
+import { translateFoodName } from "@/lib/foodTranslations";
+import i18n from "@/lib/i18n";
 
 interface MealPlanWithDetails extends MealPlan {
   mealDays?: (MealDay & {
@@ -272,7 +274,7 @@ export default function ClientMealPlans() {
                                   data-testid={`row-meal-item-${item.id}`}
                                 >
                                   <div className="flex-1">
-                                    <div className="font-medium">{item.foodName}</div>
+                                    <div className="font-medium">{translateFoodName(item.foodName, i18n.language)}</div>
                                     <div className="text-sm text-muted-foreground mt-1">
                                       {parseFloat(item.quantity?.toString() || "0").toFixed(0)}{item.unit || "g"}
                                       {item.notes && ` • ${item.notes}`}

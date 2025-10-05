@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Calendar, Target, Flame, Edit } from "lucide-react";
 import type { MealPlan, MealDay, Meal, MealItem } from "@shared/schema";
+import { translateFoodName } from "@/lib/foodTranslations";
+import i18n from "@/lib/i18n";
 
 interface MealWithItems extends Meal {
   items: MealItem[];
@@ -341,7 +343,7 @@ export default function TrainerMealPlanDetail() {
                                     >
                                       <div className="flex-1">
                                         <div className="font-medium">
-                                          {item.foodName} ({quantity}g)
+                                          {translateFoodName(item.foodName, i18n.language)} ({quantity}g)
                                         </div>
                                         <div className="text-sm text-muted-foreground">
                                           {calories} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {protein}g | {t('mealPlans.carbsShort')}: {carbs}g | {t('mealPlans.fatShort')}: {fat}g
