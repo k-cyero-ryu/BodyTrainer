@@ -505,11 +505,19 @@ nutritionRouter.post('/supplement-plan-items', async (req, res) => {
   }
 });
 
-// Get supplement plan items by plan
+// Get supplement plan items by plan (with supplement details)
 nutritionRouter.get('/supplement-plans/:planId/items', async (req, res) => {
   try {
-    const items = await storage.getSupplementPlanItemsByPlan(req.params.planId);
-    res.json(items);
+    const planItems = await storage.getSupplementPlanItemsByPlan(req.params.planId);
+    
+    const itemsWithDetails = await Promise.all(
+      planItems.map(async (planItem) => {
+        const supplementItem = await storage.getSupplementItem(planItem.supplementItemId);
+        return { ...supplementItem, ...planItem };
+      })
+    );
+    
+    res.json(itemsWithDetails);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
