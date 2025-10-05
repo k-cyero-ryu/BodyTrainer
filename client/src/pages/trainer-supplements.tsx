@@ -326,11 +326,11 @@ export default function TrainerSupplements() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Plan Name *</FormLabel>
+                          <FormLabel>{t('supplements.planName')} *</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="e.g., Muscle Building Stack"
+                              placeholder={t('supplements.planNamePlaceholder')}
                               data-testid="input-name"
                             />
                           </FormControl>
@@ -344,11 +344,11 @@ export default function TrainerSupplements() {
                       name="goal"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Goal</FormLabel>
+                          <FormLabel>{t('supplements.goal')}</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger data-testid="select-goal">
-                                <SelectValue placeholder="Select goal" />
+                                <SelectValue placeholder={t('supplements.selectGoal')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -370,11 +370,11 @@ export default function TrainerSupplements() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>{t('supplements.description')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Describe the purpose of this supplement plan..."
+                            placeholder={t('supplements.descriptionPlaceholder')}
                             rows={2}
                             data-testid="input-description"
                           />
@@ -389,11 +389,11 @@ export default function TrainerSupplements() {
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Notes</FormLabel>
+                        <FormLabel>{t('supplements.notes')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Any additional notes..."
+                            placeholder={t('supplements.notesPlaceholder')}
                             rows={2}
                             data-testid="input-notes"
                           />
@@ -407,12 +407,12 @@ export default function TrainerSupplements() {
 
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">Supplement Items</h3>
+                      <h3 className="text-lg font-semibold">{t('supplements.supplementItems')}</h3>
                       {supplementItems.length === 0 && (
                         <Link href="/trainer-supplement-items">
                           <Button type="button" variant="outline" size="sm">
                             <ExternalLink className="w-4 h-4 mr-2" />
-                            Add Items to Library
+                            {t('supplements.addItemsToLibrary')}
                           </Button>
                         </Link>
                       )}
@@ -421,7 +421,7 @@ export default function TrainerSupplements() {
                     <div className="flex gap-2">
                       <Select value={selectedLibraryItemId} onValueChange={setSelectedLibraryItemId}>
                         <SelectTrigger className="flex-1" data-testid="select-library-item">
-                          <SelectValue placeholder="Select supplement from library" />
+                          <SelectValue placeholder={t('supplements.selectFromLibrary')} />
                         </SelectTrigger>
                         <SelectContent>
                           {supplementItems.map((item) => (
@@ -438,14 +438,14 @@ export default function TrainerSupplements() {
                         data-testid="button-add-item"
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        Add
+                        {t('supplements.add')}
                       </Button>
                     </div>
 
                     {selectedItems.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <Pill className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                        <p>No supplements added yet</p>
+                        <p>{t('supplements.noSupplementsAdded')}</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -464,7 +464,7 @@ export default function TrainerSupplements() {
                                         <p className="text-sm text-muted-foreground">{libraryItem.brand}</p>
                                       )}
                                       <p className="text-sm text-muted-foreground">
-                                        Dosage: {libraryItem.defaultDosage}
+                                        {t('supplements.dosage')}: {libraryItem.defaultDosage}
                                       </p>
                                     </div>
                                     <Button
@@ -480,7 +480,7 @@ export default function TrainerSupplements() {
 
                                   <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                      <label className="text-sm font-medium">Frequency</label>
+                                      <label className="text-sm font-medium">{t('supplements.frequency')}</label>
                                       <Select
                                         value={item.frequency}
                                         onValueChange={(value) => handleUpdateItem(item.supplementItemId, { frequency: value })}
@@ -499,7 +499,7 @@ export default function TrainerSupplements() {
                                     </div>
 
                                     <div className="space-y-1">
-                                      <label className="text-sm font-medium">Timing</label>
+                                      <label className="text-sm font-medium">{t('supplements.timing')}</label>
                                       <Select
                                         value={item.timing}
                                         onValueChange={(value) => handleUpdateItem(item.supplementItemId, { timing: value })}
@@ -526,11 +526,11 @@ export default function TrainerSupplements() {
                                       }
                                       data-testid={`checkbox-optional-${item.supplementItemId}`}
                                     />
-                                    <label className="text-sm">Optional supplement</label>
+                                    <label className="text-sm">{t('supplements.optionalSupplement')}</label>
                                   </div>
 
                                   <Input
-                                    placeholder="Additional notes for this item..."
+                                    placeholder={t('supplements.additionalNotes')}
                                     value={item.notes || ""}
                                     onChange={(e) => handleUpdateItem(item.supplementItemId, { notes: e.target.value })}
                                     data-testid={`input-notes-${item.supplementItemId}`}
@@ -556,7 +556,7 @@ export default function TrainerSupplements() {
                       }}
                       data-testid="button-cancel"
                     >
-                      Cancel
+                      {t('supplements.cancel')}
                     </Button>
                     <Button
                       type="submit"
@@ -579,12 +579,12 @@ export default function TrainerSupplements() {
             <div className="text-center">
               <Pill className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">
-                No supplement plan templates yet. Create your first one!
+                {t('supplements.createFirstPlan')}
               </p>
               {supplementItems.length === 0 && (
                 <Link href="/trainer-supplement-items">
                   <Button variant="outline">
-                    Add Supplements to Library First
+                    {t('supplements.addItemsToLibrary')}
                   </Button>
                 </Link>
               )}
