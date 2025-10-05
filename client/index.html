@@ -12,19 +12,37 @@
     <meta name="keywords" content="fitness trainer, personal training, workout plans, nutrition tracking, client management, fitness app" />
     
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="/attached_assets/stock_images/fitness_dumbbell_ico_3b8ae090.jpg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="My Body Trainer Manager - Connect Trainers & Clients" />
     <meta property="og:description" content="Comprehensive fitness management platform connecting personal trainers with clients. Manage training plans, nutrition, progress tracking, and client communication all in one place." />
-    <meta property="og:image" content="/attached_assets/stock_images/fitness_dumbbell_ico_3b8ae090.jpg" />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="My Body Trainer Manager - Connect Trainers & Clients" />
     <meta name="twitter:description" content="Comprehensive fitness management platform connecting personal trainers with clients. Manage training plans, nutrition, progress tracking, and client communication all in one place." />
-    <meta name="twitter:image" content="/attached_assets/stock_images/fitness_dumbbell_ico_3b8ae090.jpg" />
+    <meta name="twitter:image" content="/og-image.jpg" />
+    
+    <!-- Dynamic URL setup for social sharing -->
+    <script>
+      (function() {
+        const baseUrl = window.location.origin;
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        const twitterImage = document.querySelector('meta[name="twitter:image"]');
+        if (ogImage) ogImage.content = baseUrl + '/og-image.jpg';
+        if (twitterImage) twitterImage.content = baseUrl + '/og-image.jpg';
+        
+        const ogUrl = document.createElement('meta');
+        ogUrl.setAttribute('property', 'og:url');
+        ogUrl.content = window.location.href;
+        document.head.appendChild(ogUrl);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
