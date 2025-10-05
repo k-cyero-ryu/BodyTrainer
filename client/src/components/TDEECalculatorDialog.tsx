@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calculator, User, Activity, TrendingUp } from "lucide-react";
-import type { Client } from "@shared/schema";
+import type { Client, User as UserType } from "@shared/schema";
 import { calculateTDEEFromClient, ACTIVITY_LEVELS, type ActivityLevelKey } from "@/lib/tdeeCalculator";
+
+type ClientWithUser = Client & { user?: UserType };
 
 interface TDEECalculatorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  clients: Client[];
+  clients: ClientWithUser[];
   onApplyTDEE: (tdee: number) => void;
 }
 
@@ -99,7 +101,7 @@ export function TDEECalculatorDialog({
                     key={client.id} 
                     value={client.id}
                   >
-                    {client.firstName} {client.lastName}
+                    {client.user?.firstName} {client.user?.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>
