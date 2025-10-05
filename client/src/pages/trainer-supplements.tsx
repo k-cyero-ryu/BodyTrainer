@@ -640,12 +640,22 @@ export default function TrainerSupplements() {
                   </CardDescription>
                 )}
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 {plan.notes && (
                   <p className="text-sm text-muted-foreground" data-testid={`text-notes-${plan.id}`}>
                     {plan.notes}
                   </p>
                 )}
+                <Link href={`/trainer-supplements/${plan.id}`}>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    data-testid={`button-view-plan-${plan.id}`}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Details
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}

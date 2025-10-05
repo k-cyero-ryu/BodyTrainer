@@ -536,7 +536,17 @@ nutritionRouter.get('/supplement-plans/:id', async (req, res) => {
     if (!plan) {
       return res.status(404).json({ error: 'Supplement plan not found' });
     }
-    res.json(plan);
+    
+    // Get plan items with supplement details
+    const planItems = await storage.getSupplementPlanItemsByPlan(req.params.id);
+    const itemsWithDetails = await Promise.all(
+      planItems.map(async (planItem) => {
+        const supplementItem = await storage.getSupplementItem(planItem.supplementItemId);
+        return { ...planItem, supplementItem };
+      })
+    );
+    
+    res.json({ ...plan, items: itemsWithDetails });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
