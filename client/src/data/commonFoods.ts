@@ -565,6 +565,523 @@ export const commonFoods: CommonFood[] = [
     },
     nutrition: { calories: 862, protein: 0, carbs: 0, fat: 100 },
     category: "Oils"
+  },
+  {
+    fdcId: 171709,
+    name: "Shrimp",
+    translations: {
+      es: "Camarones",
+      fr: "Crevettes",
+      pt: "Camarão"
+    },
+    nutrition: { calories: 99, protein: 24, carbs: 0.2, fat: 0.3 },
+    category: "Protein"
+  },
+  {
+    fdcId: 171959,
+    name: "Tuna",
+    translations: {
+      es: "Atún",
+      fr: "Thon",
+      pt: "Atum"
+    },
+    nutrition: { calories: 130, protein: 28, carbs: 0, fat: 0.95 },
+    category: "Protein"
+  },
+  {
+    fdcId: 175168,
+    name: "Lamb",
+    translations: {
+      es: "Cordero",
+      fr: "Agneau",
+      pt: "Cordeiro"
+    },
+    nutrition: { calories: 294, protein: 25, carbs: 0, fat: 21 },
+    category: "Protein"
+  },
+  {
+    fdcId: 171722,
+    name: "Duck",
+    translations: {
+      es: "Pato",
+      fr: "Canard",
+      pt: "Pato"
+    },
+    nutrition: { calories: 337, protein: 19, carbs: 0, fat: 28 },
+    category: "Protein"
+  },
+  {
+    fdcId: 171715,
+    name: "Crab",
+    translations: {
+      es: "Cangrejo",
+      fr: "Crabe",
+      pt: "Caranguejo"
+    },
+    nutrition: { calories: 97, protein: 19, carbs: 0, fat: 1.5 },
+    category: "Protein"
+  },
+  {
+    fdcId: 171716,
+    name: "Lobster",
+    translations: {
+      es: "Langosta",
+      fr: "Homard",
+      pt: "Lagosta"
+    },
+    nutrition: { calories: 89, protein: 19, carbs: 0, fat: 0.9 },
+    category: "Protein"
+  },
+  {
+    fdcId: 175139,
+    name: "Pork chop",
+    translations: {
+      es: "Chuleta de cerdo",
+      fr: "Côtelette de porc",
+      pt: "Costeleta de porco"
+    },
+    nutrition: { calories: 231, protein: 25, carbs: 0, fat: 14 },
+    category: "Protein"
+  },
+  {
+    fdcId: 173686,
+    name: "Sardines",
+    translations: {
+      es: "Sardinas",
+      fr: "Sardines",
+      pt: "Sardinhas"
+    },
+    nutrition: { calories: 208, protein: 25, carbs: 0, fat: 11 },
+    category: "Protein"
+  },
+  {
+    fdcId: 175116,
+    name: "Bacon",
+    translations: {
+      es: "Tocino",
+      fr: "Bacon",
+      pt: "Bacon"
+    },
+    nutrition: { calories: 541, protein: 37, carbs: 1.4, fat: 42 },
+    category: "Protein"
+  },
+  {
+    fdcId: 173687,
+    name: "Mackerel",
+    translations: {
+      es: "Caballa",
+      fr: "Maquereau",
+      pt: "Cavala"
+    },
+    nutrition: { calories: 205, protein: 19, carbs: 0, fat: 14 },
+    category: "Protein"
+  },
+  {
+    fdcId: 173692,
+    name: "Cod",
+    translations: {
+      es: "Bacalao",
+      fr: "Morue",
+      pt: "Bacalhau"
+    },
+    nutrition: { calories: 82, protein: 18, carbs: 0, fat: 0.7 },
+    category: "Protein"
+  },
+  {
+    fdcId: 170394,
+    name: "Zucchini",
+    translations: {
+      es: "Calabacín",
+      fr: "Courgette",
+      pt: "Abobrinha"
+    },
+    nutrition: { calories: 17, protein: 1.2, carbs: 3.1, fat: 0.3 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 169228,
+    name: "Eggplant",
+    translations: {
+      es: "Berenjena",
+      fr: "Aubergine",
+      pt: "Berinjela"
+    },
+    nutrition: { calories: 25, protein: 1, carbs: 6, fat: 0.2 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 170108,
+    name: "Bell pepper",
+    translations: {
+      es: "Pimiento",
+      fr: "Poivron",
+      pt: "Pimentão"
+    },
+    nutrition: { calories: 31, protein: 1, carbs: 6, fat: 0.3 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 169988,
+    name: "Celery",
+    translations: {
+      es: "Apio",
+      fr: "Céleri",
+      pt: "Aipo"
+    },
+    nutrition: { calories: 16, protein: 0.7, carbs: 3, fat: 0.2 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 168409,
+    name: "Cucumber",
+    translations: {
+      es: "Pepino",
+      fr: "Concombre",
+      pt: "Pepino"
+    },
+    nutrition: { calories: 15, protein: 0.7, carbs: 3.6, fat: 0.1 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 169251,
+    name: "Mushrooms",
+    translations: {
+      es: "Champiñones",
+      fr: "Champignons",
+      pt: "Cogumelos"
+    },
+    nutrition: { calories: 22, protein: 3.1, carbs: 3.3, fat: 0.3 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 170390,
+    name: "Cauliflower",
+    translations: {
+      es: "Coliflor",
+      fr: "Chou-fleur",
+      pt: "Couve-flor"
+    },
+    nutrition: { calories: 25, protein: 1.9, carbs: 5, fat: 0.3 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 169967,
+    name: "Cabbage",
+    translations: {
+      es: "Repollo",
+      fr: "Chou",
+      pt: "Repolho"
+    },
+    nutrition: { calories: 25, protein: 1.3, carbs: 5.8, fat: 0.1 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 170379,
+    name: "Asparagus",
+    translations: {
+      es: "Espárragos",
+      fr: "Asperges",
+      pt: "Aspargos"
+    },
+    nutrition: { calories: 20, protein: 2.2, carbs: 3.9, fat: 0.1 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 170417,
+    name: "Green beans",
+    translations: {
+      es: "Judías verdes",
+      fr: "Haricots verts",
+      pt: "Vagem"
+    },
+    nutrition: { calories: 31, protein: 1.8, carbs: 7, fat: 0.2 },
+    category: "Vegetable"
+  },
+  {
+    fdcId: 171688,
+    name: "Grapes",
+    translations: {
+      es: "Uvas",
+      fr: "Raisins",
+      pt: "Uvas"
+    },
+    nutrition: { calories: 69, protein: 0.7, carbs: 18, fat: 0.2 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 169124,
+    name: "Pineapple",
+    translations: {
+      es: "Piña",
+      fr: "Ananas",
+      pt: "Abacaxi"
+    },
+    nutrition: { calories: 50, protein: 0.5, carbs: 13, fat: 0.1 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 167765,
+    name: "Watermelon",
+    translations: {
+      es: "Sandía",
+      fr: "Pastèque",
+      pt: "Melancia"
+    },
+    nutrition: { calories: 30, protein: 0.6, carbs: 8, fat: 0.2 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 169092,
+    name: "Cantaloupe",
+    translations: {
+      es: "Melón",
+      fr: "Melon cantaloup",
+      pt: "Melão"
+    },
+    nutrition: { calories: 34, protein: 0.8, carbs: 8, fat: 0.2 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 168153,
+    name: "Kiwi",
+    translations: {
+      es: "Kiwi",
+      fr: "Kiwi",
+      pt: "Kiwi"
+    },
+    nutrition: { calories: 61, protein: 1.1, carbs: 15, fat: 0.5 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 169910,
+    name: "Mango",
+    translations: {
+      es: "Mango",
+      fr: "Mangue",
+      pt: "Manga"
+    },
+    nutrition: { calories: 60, protein: 0.8, carbs: 15, fat: 0.4 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 169926,
+    name: "Papaya",
+    translations: {
+      es: "Papaya",
+      fr: "Papaye",
+      pt: "Mamão"
+    },
+    nutrition: { calories: 43, protein: 0.5, carbs: 11, fat: 0.3 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 169134,
+    name: "Peach",
+    translations: {
+      es: "Durazno",
+      fr: "Pêche",
+      pt: "Pêssego"
+    },
+    nutrition: { calories: 39, protein: 0.9, carbs: 10, fat: 0.3 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 168203,
+    name: "Plum",
+    translations: {
+      es: "Ciruela",
+      fr: "Prune",
+      pt: "Ameixa"
+    },
+    nutrition: { calories: 46, protein: 0.7, carbs: 11, fat: 0.3 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 169945,
+    name: "Pear",
+    translations: {
+      es: "Pera",
+      fr: "Poire",
+      pt: "Pera"
+    },
+    nutrition: { calories: 57, protein: 0.4, carbs: 15, fat: 0.1 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 168191,
+    name: "Cherries",
+    translations: {
+      es: "Cerezas",
+      fr: "Cerises",
+      pt: "Cerejas"
+    },
+    nutrition: { calories: 63, protein: 1.1, carbs: 16, fat: 0.2 },
+    category: "Fruit"
+  },
+  {
+    fdcId: 168917,
+    name: "Quinoa",
+    translations: {
+      es: "Quinoa",
+      fr: "Quinoa",
+      pt: "Quinoa"
+    },
+    nutrition: { calories: 120, protein: 4.4, carbs: 21, fat: 1.9 },
+    category: "Grain"
+  },
+  {
+    fdcId: 170283,
+    name: "Barley",
+    translations: {
+      es: "Cebada",
+      fr: "Orge",
+      pt: "Cevada"
+    },
+    nutrition: { calories: 123, protein: 2.3, carbs: 28, fat: 0.4 },
+    category: "Grain"
+  },
+  {
+    fdcId: 168876,
+    name: "Couscous",
+    translations: {
+      es: "Cuscús",
+      fr: "Couscous",
+      pt: "Cuscuz"
+    },
+    nutrition: { calories: 112, protein: 3.8, carbs: 23, fat: 0.2 },
+    category: "Grain"
+  },
+  {
+    fdcId: 168878,
+    name: "Buckwheat",
+    translations: {
+      es: "Trigo sarraceno",
+      fr: "Sarrasin",
+      pt: "Trigo sarraceno"
+    },
+    nutrition: { calories: 92, protein: 3.4, carbs: 20, fat: 0.6 },
+    category: "Grain"
+  },
+  {
+    fdcId: 173430,
+    name: "Cream cheese",
+    translations: {
+      es: "Queso crema",
+      fr: "Fromage à la crème",
+      pt: "Cream cheese"
+    },
+    nutrition: { calories: 342, protein: 5.9, carbs: 5.5, fat: 34 },
+    category: "Dairy"
+  },
+  {
+    fdcId: 170851,
+    name: "Sour cream",
+    translations: {
+      es: "Crema agria",
+      fr: "Crème aigre",
+      pt: "Creme azedo"
+    },
+    nutrition: { calories: 198, protein: 2.4, carbs: 4.6, fat: 19 },
+    category: "Dairy"
+  },
+  {
+    fdcId: 173417,
+    name: "Heavy cream",
+    translations: {
+      es: "Nata para montar",
+      fr: "Crème épaisse",
+      pt: "Creme de leite"
+    },
+    nutrition: { calories: 340, protein: 2.1, carbs: 2.8, fat: 36 },
+    category: "Dairy"
+  },
+  {
+    fdcId: 170188,
+    name: "Pistachios",
+    translations: {
+      es: "Pistachos",
+      fr: "Pistaches",
+      pt: "Pistaches"
+    },
+    nutrition: { calories: 560, protein: 20, carbs: 28, fat: 45 },
+    category: "Nuts"
+  },
+  {
+    fdcId: 170182,
+    name: "Pecans",
+    translations: {
+      es: "Nueces pecanas",
+      fr: "Noix de pécan",
+      pt: "Nozes-pecã"
+    },
+    nutrition: { calories: 691, protein: 9.2, carbs: 14, fat: 72 },
+    category: "Nuts"
+  },
+  {
+    fdcId: 170581,
+    name: "Hazelnuts",
+    translations: {
+      es: "Avellanas",
+      fr: "Noisettes",
+      pt: "Avelãs"
+    },
+    nutrition: { calories: 628, protein: 15, carbs: 17, fat: 61 },
+    category: "Nuts"
+  },
+  {
+    fdcId: 170591,
+    name: "Sunflower seeds",
+    translations: {
+      es: "Semillas de girasol",
+      fr: "Graines de tournesol",
+      pt: "Sementes de girassol"
+    },
+    nutrition: { calories: 584, protein: 21, carbs: 20, fat: 51 },
+    category: "Nuts"
+  },
+  {
+    fdcId: 170554,
+    name: "Chia seeds",
+    translations: {
+      es: "Semillas de chía",
+      fr: "Graines de chia",
+      pt: "Sementes de chia"
+    },
+    nutrition: { calories: 486, protein: 17, carbs: 42, fat: 31 },
+    category: "Nuts"
+  },
+  {
+    fdcId: 169640,
+    name: "Honey",
+    translations: {
+      es: "Miel",
+      fr: "Miel",
+      pt: "Mel"
+    },
+    nutrition: { calories: 304, protein: 0.3, carbs: 82, fat: 0 },
+    category: "Sweetener"
+  },
+  {
+    fdcId: 168833,
+    name: "Dark chocolate",
+    translations: {
+      es: "Chocolate negro",
+      fr: "Chocolat noir",
+      pt: "Chocolate amargo"
+    },
+    nutrition: { calories: 546, protein: 4.9, carbs: 61, fat: 31 },
+    category: "Sweetener"
+  },
+  {
+    fdcId: 170273,
+    name: "Tofu",
+    translations: {
+      es: "Tofu",
+      fr: "Tofu",
+      pt: "Tofu"
+    },
+    nutrition: { calories: 76, protein: 8, carbs: 1.9, fat: 4.8 },
+    category: "Protein"
   }
 ];
 
