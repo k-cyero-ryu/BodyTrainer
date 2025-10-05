@@ -506,19 +506,19 @@ export default function TrainerMealPlans() {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Meal Plan Templates</h1>
-          <p className="text-muted-foreground">Create reusable meal plan templates and assign them to clients</p>
+          <h1 className="text-3xl font-bold">{t('mealPlans.planTemplates')}</h1>
+          <p className="text-muted-foreground">{t('mealPlans.createReusable')}</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-meal-plan">
               <Plus className="h-4 w-4 mr-2" />
-              Create Meal Plan
+              {t('mealPlans.createPlanTemplate')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" data-testid="dialog-create-meal-plan">
             <DialogHeader>
-              <DialogTitle>Create New Meal Plan Template</DialogTitle>
+              <DialogTitle>{t('mealPlans.createMealPlan')}</DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
@@ -863,7 +863,7 @@ export default function TrainerMealPlans() {
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    {plan.isTemplate && <Badge variant="secondary">Template</Badge>}
+                    {plan.isTemplate && <Badge variant="secondary">{t('common.template')}</Badge>}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`button-menu-${plan.id}`}>
@@ -873,7 +873,7 @@ export default function TrainerMealPlans() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEditClick(plan)} data-testid={`menu-edit-${plan.id}`}>
                           <Edit className="h-4 w-4 mr-2" />
-                          Edit
+                          {t('mealPlans.edit')}
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => handleCopyClick(plan.id)} 
@@ -881,11 +881,11 @@ export default function TrainerMealPlans() {
                           data-testid={`menu-copy-${plan.id}`}
                         >
                           <Copy className="h-4 w-4 mr-2" />
-                          Copy
+                          {t('mealPlans.copy')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDeleteClick(plan.id)} data-testid={`menu-delete-${plan.id}`}>
                           <Trash className="h-4 w-4 mr-2 text-destructive" />
-                          <span className="text-destructive">Delete</span>
+                          <span className="text-destructive">{t('mealPlans.delete')}</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -933,7 +933,7 @@ export default function TrainerMealPlans() {
                     data-testid={`button-view-plan-${plan.id}`}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    View Details
+                    {t('mealPlans.viewDetails')}
                   </Button>
                 </Link>
               </CardFooter>

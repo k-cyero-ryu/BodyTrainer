@@ -295,28 +295,28 @@ export default function TrainerSupplements() {
     <div className="container mx-auto p-6 space-y-6" data-testid="page-supplement-plans">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold" data-testid="text-page-title">Supplement Plan Templates</h1>
+          <h1 className="text-3xl font-bold" data-testid="text-page-title">{t('supplements.planTemplates')}</h1>
           <p className="text-muted-foreground mt-1">
-            Create reusable supplement plan templates to assign to your clients
+            {t('supplements.createReusable')}
           </p>
         </div>
         <div className="flex gap-2">
           <Link href="/trainer-supplement-items">
             <Button variant="outline" data-testid="button-manage-items">
               <FileText className="w-4 h-4 mr-2" />
-              Manage Items Library
+              {t('supplements.manageItemsLibrary')}
             </Button>
           </Link>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button data-testid="button-create-plan">
                 <Plus className="w-4 h-4 mr-2" />
-                Create Plan Template
+                {t('supplements.createPlanTemplate')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle data-testid="text-dialog-title">Create Supplement Plan Template</DialogTitle>
+                <DialogTitle data-testid="text-dialog-title">{t('supplements.createSupplementPlan')}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-6">
@@ -563,7 +563,7 @@ export default function TrainerSupplements() {
                       disabled={createPlanMutation.isPending}
                       data-testid="button-submit"
                     >
-                      {createPlanMutation.isPending ? "Creating..." : "Create Template"}
+                      {createPlanMutation.isPending ? t('supplements.creating') : t('supplements.create')}
                     </Button>
                   </div>
                 </form>
@@ -600,7 +600,7 @@ export default function TrainerSupplements() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <CardTitle data-testid={`text-plan-name-${plan.id}`}>{plan.name}</CardTitle>
-                      <Badge variant="outline" className="text-xs">Template</Badge>
+                      <Badge variant="outline" className="text-xs">{t('common.template')}</Badge>
                     </div>
                     {plan.goal && (
                       <Badge className="mt-2" variant="secondary" data-testid={`badge-goal-${plan.id}`}>
@@ -617,7 +617,7 @@ export default function TrainerSupplements() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleEditClick(plan.id)} data-testid={`menu-edit-${plan.id}`}>
                         <Edit className="w-4 h-4 mr-2" />
-                        Edit Plan
+                        {t('supplements.edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handleCopyClick(plan.id)} 
@@ -625,11 +625,11 @@ export default function TrainerSupplements() {
                         data-testid={`menu-copy-${plan.id}`}
                       >
                         <Copy className="w-4 h-4 mr-2" />
-                        Copy
+                        {t('supplements.copy')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setDeletingPlanId(plan.id)} data-testid={`menu-delete-${plan.id}`}>
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
+                        {t('supplements.delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -653,7 +653,7 @@ export default function TrainerSupplements() {
                     data-testid={`button-view-plan-${plan.id}`}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    View Details
+                    {t('supplements.viewDetails')}
                   </Button>
                 </Link>
               </CardContent>
