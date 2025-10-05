@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ interface CompleteSupplementPlan extends SupplementPlan {
 
 export default function TrainerSupplementPlanDetail() {
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
 
   const { data: supplementPlan, isLoading, error } = useQuery<CompleteSupplementPlan>({
     queryKey: ["/api/nutrition/supplement-plans", id],
@@ -42,12 +44,12 @@ export default function TrainerSupplementPlanDetail() {
         <Link href="/trainer-supplements">
           <Button variant="ghost" data-testid="button-back">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Supplement Plans
+            {t('supplements.backToSupplementPlans')}
           </Button>
         </Link>
         <Card className="mt-6">
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Supplement plan not found or error loading data.</p>
+            <p className="text-muted-foreground">{t('supplements.planNotFound')}</p>
           </CardContent>
         </Card>
       </div>
@@ -62,7 +64,7 @@ export default function TrainerSupplementPlanDetail() {
           <Link href="/trainer-supplements">
             <Button variant="ghost" data-testid="button-back">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              {t('supplements.back')}
             </Button>
           </Link>
           <div>
@@ -74,12 +76,12 @@ export default function TrainerSupplementPlanDetail() {
         </div>
         <div className="flex items-center gap-2">
           {supplementPlan.isTemplate && (
-            <Badge variant="secondary" data-testid="badge-template">Template</Badge>
+            <Badge variant="secondary" data-testid="badge-template">{t('supplements.template')}</Badge>
           )}
           <Link href={`/trainer-supplements/${id}/edit`}>
             <Button variant="outline" data-testid="button-edit-full-plan">
               <Edit className="h-4 w-4 mr-2" />
-              Edit Full Plan
+              {t('supplements.editFullPlan')}
             </Button>
           </Link>
         </div>
@@ -89,11 +91,11 @@ export default function TrainerSupplementPlanDetail() {
       {supplementPlan.goal && (
         <Card data-testid="card-goal">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Goal</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('supplements.goal')}</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-semibold capitalize">{supplementPlan.goal.replace("_", " ")}</div>
+            <div className="text-xl font-semibold capitalize">{t(`supplements.goals.${supplementPlan.goal}`)}</div>
           </CardContent>
         </Card>
       )}
@@ -103,13 +105,13 @@ export default function TrainerSupplementPlanDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Pill className="h-5 w-5" />
-            Supplement Schedule ({supplementPlan.items?.length || 0} items)
+            {t('supplements.supplementSchedule')} ({supplementPlan.items?.length || 0} {t('supplements.items')})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {!supplementPlan.items || supplementPlan.items.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              No supplements added to this plan
+              {t('supplements.noSupplementsInPlan')}
             </div>
           ) : (
             <div className="space-y-4">
@@ -128,7 +130,7 @@ export default function TrainerSupplementPlanDetail() {
                               </span>
                             )}
                             {item.isOptional && (
-                              <Badge variant="outline" className="ml-2">Optional</Badge>
+                              <Badge variant="outline" className="ml-2">{t('supplements.optional')}</Badge>
                             )}
                           </CardTitle>
                           {item.supplementItem.purpose && (
@@ -146,7 +148,7 @@ export default function TrainerSupplementPlanDetail() {
                           <div className="flex items-start gap-2">
                             <Pill className="h-4 w-4 mt-0.5 text-muted-foreground" />
                             <div>
-                              <div className="text-sm font-medium">Dosage</div>
+                              <div className="text-sm font-medium">{t('supplements.dosage')}</div>
                               <div className="text-sm text-muted-foreground">
                                 {item.dosage || item.supplementItem.defaultDosage}
                               </div>
@@ -158,9 +160,9 @@ export default function TrainerSupplementPlanDetail() {
                           <div className="flex items-start gap-2">
                             <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
                             <div>
-                              <div className="text-sm font-medium">Frequency</div>
+                              <div className="text-sm font-medium">{t('supplements.frequency')}</div>
                               <div className="text-sm text-muted-foreground">
-                                {item.frequency || item.supplementItem.defaultFrequency}
+                                {t(`supplements.frequency.${item.frequency || item.supplementItem.defaultFrequency}`)}
                               </div>
                             </div>
                           </div>
@@ -170,9 +172,9 @@ export default function TrainerSupplementPlanDetail() {
                           <div className="flex items-start gap-2">
                             <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
                             <div>
-                              <div className="text-sm font-medium">Timing</div>
+                              <div className="text-sm font-medium">{t('supplements.timing')}</div>
                               <div className="text-sm text-muted-foreground">
-                                {item.timing || item.supplementItem.defaultTiming}
+                                {t(`supplements.timing.${item.timing || item.supplementItem.defaultTiming}`)}
                               </div>
                             </div>
                           </div>
@@ -182,7 +184,7 @@ export default function TrainerSupplementPlanDetail() {
                       {/* Instructions */}
                       {item.supplementItem.instructions && (
                         <div className="p-3 bg-muted rounded-lg">
-                          <p className="text-sm font-medium mb-1">Instructions</p>
+                          <p className="text-sm font-medium mb-1">{t('supplements.instructions')}</p>
                           <p className="text-sm text-muted-foreground">
                             {item.supplementItem.instructions}
                           </p>
@@ -200,7 +202,7 @@ export default function TrainerSupplementPlanDetail() {
       {supplementPlan.notes && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Plan Notes</CardTitle>
+            <CardTitle className="text-base">{t('supplements.planNotes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{supplementPlan.notes}</p>
