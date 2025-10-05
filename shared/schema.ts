@@ -583,7 +583,9 @@ export const mealPlans = pgTable("meal_plans", {
   description: text("description"),
   goal: varchar("goal"), // e.g., "weight_loss", "muscle_gain", "maintenance"
   // Nutrition targets
-  dailyCalories: integer("daily_calories").notNull(),
+  dailyCalories: integer("daily_calories").notNull(), // Base TDEE from calculation
+  adjustedDailyCalories: integer("adjusted_daily_calories"), // TDEE with adjustment percentage applied
+  adjustmentPercentage: integer("adjustment_percentage").default(0), // -100 to +100
   targetProtein: integer("target_protein"), // grams
   targetCarbs: integer("target_carbs"), // grams
   targetFat: integer("target_fat"), // grams
