@@ -33,7 +33,8 @@ import {
   Users,
   Eye,
   Edit,
-  Trash
+  Trash,
+  Copy
 } from "lucide-react";
 import type { MealPlan, Client, InsertMealPlan } from "@shared/schema";
 
@@ -116,6 +117,8 @@ export default function TrainerMealPlans() {
   const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
   const [deleteMealPlanId, setDeleteMealPlanId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<MealPlan | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const form = useForm<MealPlanFormData>({
     resolver: zodResolver(mealPlanFormSchema),
@@ -246,6 +249,50 @@ export default function TrainerMealPlans() {
     },
   });
 
+  const copyMealPlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const response = await apiRequest("POST", `/api/nutrition/meal-plans/${planId}/copy`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Meal plan copied successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to copy meal plan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMealPlanMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: Partial<MealPlanFormData> }) => {
+      const response = await apiRequest("PATCH", `/api/nutrition/meal-plans/${data.id}`, data.updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Meal plan updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`] });
+      setShowEditDialog(false);
+      setEditingPlan(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update meal plan",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleDeleteClick = (planId: string) => {
     setDeleteMealPlanId(planId);
     setShowDeleteDialog(true);
@@ -255,6 +302,15 @@ export default function TrainerMealPlans() {
     if (deleteMealPlanId) {
       deleteMealPlanMutation.mutate(deleteMealPlanId);
     }
+  };
+
+  const handleEditClick = (plan: MealPlan) => {
+    setEditingPlan(plan);
+    setShowEditDialog(true);
+  };
+
+  const handleCopyClick = (planId: string) => {
+    copyMealPlanMutation.mutate(planId);
   };
 
   const toggleDay = (dayNumber: number) => {
@@ -836,7 +892,6 @@ export default function TrainerMealPlans() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
                     data-testid={`button-view-plan-${plan.id}`}
                   >
                     <Eye className="h-4 w-4 mr-2" />
@@ -846,8 +901,26 @@ export default function TrainerMealPlans() {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => handleEditClick(plan)}
+                  data-testid={`button-edit-plan-${plan.id}`}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyClick(plan.id)}
+                  disabled={copyMealPlanMutation.isPending}
+                  data-testid={`button-copy-plan-${plan.id}`}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleDeleteClick(plan.id)}
-                  className="flex-1"
                   data-testid={`button-delete-plan-${plan.id}`}
                 >
                   <Trash className="h-4 w-4 mr-2" />
@@ -880,6 +953,155 @@ export default function TrainerMealPlans() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Meal Plan Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Meal Plan</DialogTitle>
+          </DialogHeader>
+          {editingPlan && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const updates = {
+                  name: formData.get('name') as string,
+                  description: formData.get('description') as string,
+                  goal: formData.get('goal') as string,
+                  dailyCalories: Number(formData.get('dailyCalories')),
+                  targetProtein: Number(formData.get('targetProtein')) || undefined,
+                  targetCarbs: Number(formData.get('targetCarbs')) || undefined,
+                  targetFat: Number(formData.get('targetFat')) || undefined,
+                  notes: formData.get('notes') as string,
+                };
+                updateMealPlanMutation.mutate({ id: editingPlan.id, updates });
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  defaultValue={editingPlan.name}
+                  required
+                  data-testid="input-edit-name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  name="description"
+                  defaultValue={editingPlan.description || ''}
+                  rows={2}
+                  data-testid="textarea-edit-description"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-goal">Goal</Label>
+                  <Select name="goal" defaultValue={editingPlan.goal || ''}>
+                    <SelectTrigger id="edit-goal" data-testid="select-edit-goal">
+                      <SelectValue placeholder="Select goal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GOAL_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-dailyCalories">Daily Calories</Label>
+                  <Input
+                    id="edit-dailyCalories"
+                    name="dailyCalories"
+                    type="number"
+                    defaultValue={editingPlan.dailyCalories}
+                    required
+                    data-testid="input-edit-dailyCalories"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-targetProtein">Protein (g)</Label>
+                  <Input
+                    id="edit-targetProtein"
+                    name="targetProtein"
+                    type="number"
+                    defaultValue={editingPlan.targetProtein || ''}
+                    data-testid="input-edit-targetProtein"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-targetCarbs">Carbs (g)</Label>
+                  <Input
+                    id="edit-targetCarbs"
+                    name="targetCarbs"
+                    type="number"
+                    defaultValue={editingPlan.targetCarbs || ''}
+                    data-testid="input-edit-targetCarbs"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-targetFat">Fat (g)</Label>
+                  <Input
+                    id="edit-targetFat"
+                    name="targetFat"
+                    type="number"
+                    defaultValue={editingPlan.targetFat || ''}
+                    data-testid="input-edit-targetFat"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes">Notes</Label>
+                <Textarea
+                  id="edit-notes"
+                  name="notes"
+                  defaultValue={editingPlan.notes || ''}
+                  rows={2}
+                  data-testid="textarea-edit-notes"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingPlan(null);
+                  }}
+                  data-testid="button-cancel-edit"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateMealPlanMutation.isPending}
+                  data-testid="button-save-edit"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {updateMealPlanMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
