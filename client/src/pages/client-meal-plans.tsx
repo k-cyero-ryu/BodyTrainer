@@ -36,6 +36,19 @@ export default function ClientMealPlans() {
     t('days.sunday')
   ];
 
+  const getDayName = (dayName: string) => {
+    const days: Record<string, string> = {
+      'Monday': t('days.monday'),
+      'Tuesday': t('days.tuesday'),
+      'Wednesday': t('days.wednesday'),
+      'Thursday': t('days.thursday'),
+      'Friday': t('days.friday'),
+      'Saturday': t('days.saturday'),
+      'Sunday': t('days.sunday')
+    };
+    return days[dayName] || dayName;
+  };
+
   const getMealTypeLabel = (mealType: string) => {
     const typeKey = mealType.replace('-', '_');
     return t(`mealPlans.mealTypes.${typeKey}`);
@@ -214,7 +227,7 @@ export default function ClientMealPlans() {
             {sortedDays.map((day) => (
               <TabsContent key={day.dayNumber} value={day.dayNumber.toString()} className="space-y-4 mt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold">{day.dayName || DAY_NAMES[day.dayNumber - 1]}</h3>
+                  <h3 className="text-xl font-semibold">{getDayName(day.dayName) || DAY_NAMES[day.dayNumber - 1]}</h3>
                   <div className="text-right">
                     <div className="text-sm text-muted-foreground">{t('mealPlans.dayTotal')}</div>
                     <div className="text-lg font-semibold" data-testid={`text-day-total-${day.dayNumber}`}>
