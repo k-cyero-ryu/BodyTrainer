@@ -3641,6 +3641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const setting = await storage.getSystemSetting('social_feature_enabled');
       // Default to true if setting doesn't exist
       const isEnabled = setting?.value !== false;
+      console.log('[SOCIAL FEATURE CHECK] Setting:', setting, 'Enabled:', isEnabled);
       res.json({ enabled: isEnabled });
     } catch (error) {
       console.error("Error fetching social setting:", error);
