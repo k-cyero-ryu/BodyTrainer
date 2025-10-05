@@ -77,9 +77,15 @@ export default function Social() {
   const [editPostContent, setEditPostContent] = useState("");
   const [editCommentContent, setEditCommentContent] = useState("");
 
-  // Fetch social posts
+  // Check if social feature is enabled
+  const { data: socialSetting, isLoading: isLoadingSetting } = useQuery({
+    queryKey: ["/api/admin/system-settings", "social_feature_enabled"],
+  });
+
+  // Fetch social posts only if feature is enabled or user is superadmin
   const { data: posts, isLoading } = useQuery<SocialPost[]>({
     queryKey: ["/api/social/posts"],
+    enabled: socialSetting?.value !== false || user?.role === 'superadmin',
   });
 
   // Create post form
@@ -358,7 +364,32 @@ export default function Social() {
     }
   };
 
-  if (isLoading) {
+  // Check if social feature is disabled and user is not superadmin
+  if (!isLoadingSetting && socialSetting?.value === false && user?.role !== 'superadmin') {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto">
+                  <X className="w-8 h-8 text-gray-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Social Feature Unavailable
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                  The social community feature is currently disabled. Please contact your administrator for more information.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || isLoadingSetting) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
