@@ -88,7 +88,7 @@ const GOAL_OPTIONS = [
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function TrainerMealPlanEdit() {
-  const [, params] = useRoute("/trainer/meal-plans/:id/edit");
+  const [, params] = useRoute("/trainer-meal-plans/:id/edit");
   const planId = params?.id;
   const [, setLocation] = useLocation();
   const { user } = useAuth();
