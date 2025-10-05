@@ -770,7 +770,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlanExercisesByPlan(planId: string): Promise<PlanExercise[]> {
-    return await db.select().from(planExercises).where(eq(planExercises.planId, planId));
+    const results = await db
+      .select({
+        id: planExercises.id,
+        planId: planExercises.planId,
+        exerciseId: planExercises.exerciseId,
+        dayOfWeek: planExercises.dayOfWeek,
+        week: planExercises.week,
+        sets: planExercises.sets,
+        reps: planExercises.reps,
+        weight: planExercises.weight,
+        duration: planExercises.duration,
+        restTime: planExercises.restTime,
+        notes: planExercises.notes,
+        exerciseName: exercises.name,
+      })
+      .from(planExercises)
+      .leftJoin(exercises, eq(planExercises.exerciseId, exercises.id))
+      .where(eq(planExercises.planId, planId));
+    
+    return results as any;
   }
 
   async updatePlanExercise(id: string, planExercise: Partial<InsertPlanExercise>): Promise<PlanExercise> {

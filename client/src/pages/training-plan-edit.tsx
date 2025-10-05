@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   ArrowLeft,
   Plus, 
@@ -68,6 +69,16 @@ export default function TrainingPlanEdit() {
   const [activeWeek, setActiveWeek] = useState<number>(1);
   const [planExercises, setPlanExercises] = useState<PlanExercise[]>([]);
   const [modifiedExercises, setModifiedExercises] = useState<Set<string>>(new Set());
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
+  const [exerciseForm, setExerciseForm] = useState({
+    sets: 3,
+    reps: 10,
+    weight: 0,
+    duration: 0,
+    restTime: 60,
+    notes: ""
+  });
 
   const form = useForm<TrainingPlanFormData>({
     resolver: zodResolver(trainingPlanFormSchema),
@@ -169,14 +180,30 @@ export default function TrainingPlanEdit() {
     },
   });
 
-  const handleAddExercise = (exerciseId: string) => {
-    addExerciseMutation.mutate({
-      exerciseId,
-      dayOfWeek: activeDay,
-      week: activeWeek,
+  const handleSelectExercise = (exerciseId: string) => {
+    setSelectedExerciseId(exerciseId);
+    setExerciseForm({
       sets: 3,
       reps: 10,
+      weight: 0,
+      duration: 0,
+      restTime: 60,
+      notes: ""
     });
+    setShowAddDialog(true);
+  };
+
+  const handleAddExercise = () => {
+    if (!selectedExerciseId) return;
+    
+    addExerciseMutation.mutate({
+      exerciseId: selectedExerciseId,
+      dayOfWeek: activeDay,
+      week: activeWeek,
+      ...exerciseForm,
+    });
+    setShowAddDialog(false);
+    setSelectedExerciseId("");
   };
 
   const handleUpdateExercise = (id: string, updates: any) => {
@@ -513,7 +540,7 @@ export default function TrainingPlanEdit() {
                       <CardTitle className="text-base">Add Exercise</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Select onValueChange={handleAddExercise}>
+                      <Select value={selectedExerciseId} onValueChange={handleSelectExercise}>
                         <SelectTrigger data-testid={`select-add-exercise-day-${day}`}>
                           <SelectValue placeholder="Select an exercise to add" />
                         </SelectTrigger>
@@ -533,6 +560,84 @@ export default function TrainingPlanEdit() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Add Exercise Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Exercise Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Sets</label>
+                <Input
+                  type="number"
+                  value={exerciseForm.sets}
+                  onChange={(e) => setExerciseForm({...exerciseForm, sets: parseInt(e.target.value) || 0})}
+                  data-testid="dialog-input-sets"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Reps</label>
+                <Input
+                  type="number"
+                  value={exerciseForm.reps}
+                  onChange={(e) => setExerciseForm({...exerciseForm, reps: parseInt(e.target.value) || 0})}
+                  data-testid="dialog-input-reps"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Weight (kg)</label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  value={exerciseForm.weight}
+                  onChange={(e) => setExerciseForm({...exerciseForm, weight: parseFloat(e.target.value) || 0})}
+                  data-testid="dialog-input-weight"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Rest (sec)</label>
+                <Input
+                  type="number"
+                  value={exerciseForm.restTime}
+                  onChange={(e) => setExerciseForm({...exerciseForm, restTime: parseInt(e.target.value) || 0})}
+                  data-testid="dialog-input-rest"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Duration (min)</label>
+                <Input
+                  type="number"
+                  value={exerciseForm.duration}
+                  onChange={(e) => setExerciseForm({...exerciseForm, duration: parseInt(e.target.value) || 0})}
+                  data-testid="dialog-input-duration"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Notes (optional)</label>
+              <Textarea
+                value={exerciseForm.notes}
+                onChange={(e) => setExerciseForm({...exerciseForm, notes: e.target.value})}
+                placeholder="Exercise notes..."
+                rows={3}
+                data-testid="dialog-textarea-notes"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowAddDialog(false)} data-testid="dialog-button-cancel">
+              Cancel
+            </Button>
+            <Button onClick={handleAddExercise} data-testid="dialog-button-add">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Exercise
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
