@@ -93,10 +93,7 @@ export function TDEECalculatorDialog({
               <SelectContent>
                 {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span>{client.firstName} {client.lastName}</span>
-                    </div>
+                    {client.firstName} {client.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>
