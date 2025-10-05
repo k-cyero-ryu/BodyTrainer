@@ -46,6 +46,7 @@ export default function TrainerSupplementPlanEdit() {
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [planItems, setPlanItems] = useState<SupplementPlanItemWithDetails[]>([]);
+  const [modifiedItems, setModifiedItems] = useState<Set<string>>(new Set());
 
   const { data: supplementPlan, isLoading, error } = useQuery<CompleteSupplementPlan>({
     queryKey: ["/api/nutrition/supplement-plans", id],
@@ -76,6 +77,7 @@ export default function TrainerSupplementPlanEdit() {
         notes: supplementPlan.notes || "",
       });
       setPlanItems(supplementPlan.items || []);
+      setModifiedItems(new Set()); // Clear modifications when loading fresh data
     }
   }, [supplementPlan, form]);
 
@@ -168,16 +170,56 @@ export default function TrainerSupplementPlanEdit() {
   const handleSavePlan = async () => {
     const isValid = await form.trigger();
     if (isValid) {
-      const data = form.getValues();
-      updatePlanMutation.mutate(data);
+      const planData = form.getValues();
+      
+      try {
+        // Save plan metadata
+        await apiRequest("PATCH", `/api/nutrition/supplement-plans/${id}`, planData);
+        
+        // Save all modified items
+        const savePromises = Array.from(modifiedItems).map(itemId => {
+          const item = planItems.find(i => i.id === itemId);
+          if (item) {
+            return apiRequest("PATCH", `/api/nutrition/supplement-plan-items/${itemId}`, {
+              dosage: item.dosage,
+              frequency: item.frequency,
+              timing: item.timing,
+              isOptional: item.isOptional,
+            });
+          }
+          return Promise.resolve();
+        });
+        
+        await Promise.all(savePromises);
+        
+        // Invalidate queries and show success
+        queryClient.invalidateQueries({ queryKey: ["/api/nutrition/supplement-plans", id] });
+        queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${(user as any)?.trainer?.id}/supplement-plans`] });
+        setModifiedItems(new Set());
+        
+        toast({
+          title: "Success",
+          description: `Plan and ${modifiedItems.size} item(s) updated successfully`,
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update plan",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleUpdateItem = (itemId: string, field: keyof SupplementPlanItem, value: any) => {
-    updateItemMutation.mutate({
-      itemId,
-      updates: { [field]: value },
-    });
+    // Update local state only
+    setPlanItems(prev => 
+      prev.map(item => 
+        item.id === itemId ? { ...item, [field]: value } : item
+      )
+    );
+    // Track as modified
+    setModifiedItems(prev => new Set(prev).add(itemId));
   };
 
   if (isLoading) {
