@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,26 @@ interface CompleteMealPlan extends MealPlan {
 export default function TrainerMealPlanDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [activeDay, setActiveDay] = useState(1);
+
+  const getDayName = (dayName: string) => {
+    const days: Record<string, string> = {
+      'Monday': t('days.monday'),
+      'Tuesday': t('days.tuesday'),
+      'Wednesday': t('days.wednesday'),
+      'Thursday': t('days.thursday'),
+      'Friday': t('days.friday'),
+      'Saturday': t('days.saturday'),
+      'Sunday': t('days.sunday')
+    };
+    return days[dayName] || dayName;
+  };
+
+  const getMealTypeLabel = (mealType: string) => {
+    const type = mealType.replace('-', '_');
+    return t(`mealPlans.mealTypes.${type}`);
+  };
 
   const { data: mealPlan, isLoading, error } = useQuery<CompleteMealPlan>({
     queryKey: ["/api/nutrition/meal-plans", id],
@@ -117,12 +137,12 @@ export default function TrainerMealPlanDetail() {
         <Link href="/trainer-meal-plans">
           <Button variant="ghost" data-testid="button-back">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Meal Plans
+            {t('mealPlans.backToPlans')}
           </Button>
         </Link>
         <Card className="mt-6">
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Meal plan not found or error loading data.</p>
+            <p className="text-muted-foreground">{t('mealPlans.planNotFound')}</p>
           </CardContent>
         </Card>
       </div>
@@ -139,7 +159,7 @@ export default function TrainerMealPlanDetail() {
           <Link href="/trainer-meal-plans">
             <Button variant="ghost" data-testid="button-back">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              {t('common.back')}
             </Button>
           </Link>
           <div>
@@ -151,12 +171,12 @@ export default function TrainerMealPlanDetail() {
         </div>
         <div className="flex items-center gap-2">
           {mealPlan.isTemplate && (
-            <Badge variant="secondary" data-testid="badge-template">Template</Badge>
+            <Badge variant="secondary" data-testid="badge-template">{t('common.template')}</Badge>
           )}
           <Link href={`/trainer-meal-plans/${id}/edit`}>
             <Button variant="outline" data-testid="button-edit-plan">
               <Edit className="h-4 w-4 mr-2" />
-              Edit Plan
+              {t('mealPlans.editPlan')}
             </Button>
           </Link>
         </div>
@@ -166,18 +186,18 @@ export default function TrainerMealPlanDetail() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card data-testid="card-daily-calories">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Daily Target</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('mealPlans.dailyTarget')}</CardTitle>
             <Flame className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mealPlan.dailyCalories} cal</div>
+            <div className="text-2xl font-bold">{mealPlan.dailyCalories} {t('mealPlans.cal')}</div>
           </CardContent>
         </Card>
 
         {mealPlan.targetProtein && (
           <Card data-testid="card-protein">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Protein</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('mealPlans.protein')}</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -189,7 +209,7 @@ export default function TrainerMealPlanDetail() {
         {mealPlan.targetCarbs && (
           <Card data-testid="card-carbs">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Carbs</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('mealPlans.carbs')}</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -201,7 +221,7 @@ export default function TrainerMealPlanDetail() {
         {mealPlan.targetFat && (
           <Card data-testid="card-fat">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Fat</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('mealPlans.fat')}</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -213,8 +233,8 @@ export default function TrainerMealPlanDetail() {
 
       {mealPlan.goal && (
         <div>
-          <span className="text-sm font-medium">Goal: </span>
-          <Badge variant="outline" data-testid="badge-goal">{mealPlan.goal}</Badge>
+          <span className="text-sm font-medium">{t('mealPlans.goal')}: </span>
+          <Badge variant="outline" data-testid="badge-goal">{t(`mealPlans.goals.${mealPlan.goal}`)}</Badge>
         </div>
       )}
 
@@ -223,7 +243,7 @@ export default function TrainerMealPlanDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            7-Day Meal Schedule
+            {t('mealPlans.weeklySchedule')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -235,7 +255,7 @@ export default function TrainerMealPlanDetail() {
                   value={day.dayNumber.toString()}
                   data-testid={`tab-day-${day.dayNumber}`}
                 >
-                  Day {day.dayNumber}
+                  {t('mealPlans.day')} {day.dayNumber}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -250,14 +270,14 @@ export default function TrainerMealPlanDetail() {
                 {/* Day Header */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold" data-testid={`text-day-name-${day.dayNumber}`}>
-                    {day.dayName}
+                    {getDayName(day.dayName)}
                   </h3>
                   {dayTotals[day.dayNumber] && (
                     <div className="text-sm text-muted-foreground" data-testid={`text-day-totals-${day.dayNumber}`}>
-                      Total: {dayTotals[day.dayNumber].calories} cal | 
-                      P: {dayTotals[day.dayNumber].protein}g | 
-                      C: {dayTotals[day.dayNumber].carbs}g | 
-                      F: {dayTotals[day.dayNumber].fat}g
+                      {t('mealPlans.total')}: {dayTotals[day.dayNumber].calories} {t('mealPlans.cal')} | 
+                      {t('mealPlans.proteinShort')}: {dayTotals[day.dayNumber].protein}g | 
+                      {t('mealPlans.carbsShort')}: {dayTotals[day.dayNumber].carbs}g | 
+                      {t('mealPlans.fatShort')}: {dayTotals[day.dayNumber].fat}g
                     </div>
                   )}
                 </div>
@@ -270,7 +290,7 @@ export default function TrainerMealPlanDetail() {
                 {day.meals.length === 0 ? (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
-                      No meals scheduled for this day
+                      {t('mealPlans.noMealsScheduled')}
                     </CardContent>
                   </Card>
                 ) : (
@@ -287,22 +307,22 @@ export default function TrainerMealPlanDetail() {
                           <CardHeader>
                             <div className="flex items-center justify-between">
                               <div>
-                                <CardTitle className="text-base capitalize">
-                                  {meal.mealType.replace("-", " ")}
+                                <CardTitle className="text-base">
+                                  {getMealTypeLabel(meal.mealType)}
                                   {meal.name && ` - ${meal.name}`}
                                 </CardTitle>
                                 {meal.targetTime && (
                                   <p className="text-sm text-muted-foreground mt-1">
-                                    Target time: {meal.targetTime}
+                                    {t('mealPlans.targetTime')}: {meal.targetTime}
                                   </p>
                                 )}
                               </div>
-                              <Badge variant="secondary">{Math.round(mealTotal)} cal</Badge>
+                              <Badge variant="secondary">{Math.round(mealTotal)} {t('mealPlans.cal')}</Badge>
                             </div>
                           </CardHeader>
                           <CardContent>
                             {meal.items.length === 0 ? (
-                              <p className="text-sm text-muted-foreground">No food items added</p>
+                              <p className="text-sm text-muted-foreground">{t('mealPlans.noFoodItems')}</p>
                             ) : (
                               <div className="space-y-2">
                                 {meal.items.map((item) => {
@@ -324,7 +344,7 @@ export default function TrainerMealPlanDetail() {
                                           {item.foodName} ({quantity}g)
                                         </div>
                                         <div className="text-sm text-muted-foreground">
-                                          {calories} cal | P: {protein}g | C: {carbs}g | F: {fat}g
+                                          {calories} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {protein}g | {t('mealPlans.carbsShort')}: {carbs}g | {t('mealPlans.fatShort')}: {fat}g
                                         </div>
                                         {item.notes && (
                                           <div className="text-xs text-muted-foreground italic mt-1">
@@ -339,7 +359,7 @@ export default function TrainerMealPlanDetail() {
                             )}
                             {meal.notes && (
                               <p className="text-sm text-muted-foreground italic mt-4">
-                                Note: {meal.notes}
+                                {t('mealPlans.note')}: {meal.notes}
                               </p>
                             )}
                           </CardContent>
@@ -357,7 +377,7 @@ export default function TrainerMealPlanDetail() {
       {mealPlan.notes && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Plan Notes</CardTitle>
+            <CardTitle className="text-base">{t('mealPlans.planNotes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{mealPlan.notes}</p>
