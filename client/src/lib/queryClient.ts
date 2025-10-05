@@ -32,8 +32,12 @@ export const getQueryFn: <T>(options: {
     // Build URL with query parameters
     let url = queryKey[0] as string;
     
+    // If second element is a string, append it to URL (for IDs)
+    if (queryKey.length > 1 && typeof queryKey[1] === 'string') {
+      url += `/${queryKey[1]}`;
+    }
     // If second element is an object, convert to query parameters
-    if (queryKey.length > 1 && typeof queryKey[1] === 'object' && queryKey[1] !== null) {
+    else if (queryKey.length > 1 && typeof queryKey[1] === 'object' && queryKey[1] !== null) {
       const params = new URLSearchParams();
       const queryParams = queryKey[1] as Record<string, string>;
       

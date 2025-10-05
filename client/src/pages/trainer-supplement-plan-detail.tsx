@@ -19,7 +19,7 @@ export default function TrainerSupplementPlanDetail() {
   const { id } = useParams<{ id: string }>();
 
   const { data: supplementPlan, isLoading, error } = useQuery<CompleteSupplementPlan>({
-    queryKey: [`/api/nutrition/supplement-plans/${id}`],
+    queryKey: ["/api/nutrition/supplement-plans", id],
     enabled: !!id,
   });
 
