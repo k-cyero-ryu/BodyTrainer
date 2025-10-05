@@ -232,6 +232,87 @@ nutritionRouter.delete('/meal-plans/:id', async (req, res) => {
   }
 });
 
+// Copy meal plan (duplicate with incremented name)
+nutritionRouter.post('/meal-plans/:id/copy', async (req, res) => {
+  try {
+    const originalPlan = await storage.getMealPlan(req.params.id);
+    if (!originalPlan) {
+      return res.status(404).json({ error: 'Meal plan not found' });
+    }
+
+    // Generate incremented name
+    const allPlans = await storage.getMealPlansByTrainer(originalPlan.trainerId);
+    const baseName = originalPlan.name.replace(/\s+\d+$/, ''); // Remove trailing number if exists
+    
+    let newName = `${baseName} 2`;
+    let counter = 2;
+    
+    while (allPlans.some(p => p.name === newName)) {
+      counter++;
+      newName = `${baseName} ${counter}`;
+    }
+
+    // Create new meal plan
+    const newPlan = await storage.createMealPlan({
+      name: newName,
+      description: originalPlan.description,
+      goal: originalPlan.goal,
+      dailyCalories: originalPlan.dailyCalories,
+      targetProtein: originalPlan.targetProtein,
+      targetCarbs: originalPlan.targetCarbs,
+      targetFat: originalPlan.targetFat,
+      notes: originalPlan.notes,
+      trainerId: originalPlan.trainerId,
+      isTemplate: originalPlan.isTemplate,
+    });
+
+    // Copy all days with meals and items
+    const days = await storage.getMealDaysByPlan(req.params.id);
+    
+    for (const day of days) {
+      const newDay = await storage.createMealDay({
+        mealPlanId: newPlan.id,
+        dayNumber: day.dayNumber,
+        dayName: day.dayName,
+        notes: day.notes,
+      });
+
+      const meals = await storage.getMealsByDay(day.id);
+      
+      for (const meal of meals) {
+        const newMeal = await storage.createMeal({
+          mealDayId: newDay.id,
+          mealType: meal.mealType,
+          name: meal.name,
+          targetTime: meal.targetTime,
+          notes: meal.notes,
+        });
+
+        const items = await storage.getMealItemsByMeal(meal.id);
+        
+        for (const item of items) {
+          await storage.createMealItem({
+            mealId: newMeal.id,
+            foodName: item.foodName,
+            fdcId: item.fdcId,
+            quantity: item.quantity,
+            calories: item.calories,
+            protein: item.protein,
+            carbs: item.carbs,
+            fat: item.fat,
+            notes: item.notes,
+          });
+        }
+      }
+    }
+
+    res.json(newPlan);
+  } catch (error: any) {
+    console.error('Error copying meal plan:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ============== Meal Day Routes ==============
 
 // Create meal day
