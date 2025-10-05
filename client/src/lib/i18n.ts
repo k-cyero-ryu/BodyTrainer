@@ -408,6 +408,7 @@ const resources = {
       'days.thursday': 'Thursday',
       'days.friday': 'Friday',
       'days.saturday': 'Saturday',
+      'days.sunday': 'Sunday',
       
       // Exercises
       'exercises.library': 'Exercise Library',
@@ -531,6 +532,7 @@ const resources = {
       'supplements.frequency.daily': 'Daily',
       'supplements.frequency.2x_daily': '2x Daily',
       'supplements.frequency.3x_daily': '3x Daily',
+      'supplements.frequency.3_wk': '3x Per Week',
       'supplements.frequency.post_workout': 'Post-Workout',
       'supplements.frequency.pre_workout': 'Pre-Workout',
       'supplements.frequency.as_needed': 'As Needed',
@@ -1674,6 +1676,7 @@ const resources = {
       'days.thursday': 'Jueves',
       'days.friday': 'Viernes',
       'days.saturday': 'Sábado',
+      'days.sunday': 'Domingo',
       
       // Exercises
       'exercises.library': 'Biblioteca de Ejercicios',
@@ -1793,6 +1796,7 @@ const resources = {
       'supplements.frequency.daily': 'Diario',
       'supplements.frequency.2x_daily': '2 veces al día',
       'supplements.frequency.3x_daily': '3 veces al día',
+      'supplements.frequency.3_wk': '3 veces por semana',
       'supplements.frequency.post_workout': 'Post-Entrenamiento',
       'supplements.frequency.pre_workout': 'Pre-Entrenamiento',
       'supplements.frequency.as_needed': 'Según sea necesario',
@@ -2700,6 +2704,15 @@ const resources = {
       'common.filter': 'Filtrer',
       'common.export': 'Exporter',
       
+      // Days of the week
+      'days.monday': 'Lundi',
+      'days.tuesday': 'Mardi',
+      'days.wednesday': 'Mercredi',
+      'days.thursday': 'Jeudi',
+      'days.friday': 'Vendredi',
+      'days.saturday': 'Samedi',
+      'days.sunday': 'Dimanche',
+      
       // Auth
       'auth.signIn': 'Se Connecter',
       'auth.signOut': 'Se Déconnecter',
@@ -2808,6 +2821,7 @@ const resources = {
       'supplements.frequency.daily': 'Quotidien',
       'supplements.frequency.2x_daily': '2x par jour',
       'supplements.frequency.3x_daily': '3x par jour',
+      'supplements.frequency.3_wk': '3x par semaine',
       'supplements.frequency.post_workout': 'Post-Entraînement',
       'supplements.frequency.pre_workout': 'Pré-Entraînement',
       'supplements.frequency.as_needed': 'Au besoin',
@@ -3061,6 +3075,15 @@ const resources = {
       'common.filter': 'Filtrar',
       'common.export': 'Exportar',
       
+      // Days of the week
+      'days.monday': 'Segunda-feira',
+      'days.tuesday': 'Terça-feira',
+      'days.wednesday': 'Quarta-feira',
+      'days.thursday': 'Quinta-feira',
+      'days.friday': 'Sexta-feira',
+      'days.saturday': 'Sábado',
+      'days.sunday': 'Domingo',
+      
       // Auth
       'auth.signIn': 'Entrar',
       'auth.signOut': 'Sair',
@@ -3169,6 +3192,7 @@ const resources = {
       'supplements.frequency.daily': 'Diário',
       'supplements.frequency.2x_daily': '2x por dia',
       'supplements.frequency.3x_daily': '3x por dia',
+      'supplements.frequency.3_wk': '3x por semana',
       'supplements.frequency.post_workout': 'Pós-Treino',
       'supplements.frequency.pre_workout': 'Pré-Treino',
       'supplements.frequency.as_needed': 'Conforme necessário',
