@@ -88,12 +88,22 @@ export function TDEECalculatorDialog({
             <Label className="text-sm font-medium mb-2">{t('tdee.selectClient')}</Label>
             <Select value={selectedClientId} onValueChange={setSelectedClientId}>
               <SelectTrigger className="w-full" data-testid="select-client-tdee">
-                <SelectValue placeholder={t('tdee.selectClientPlaceholder')} />
+                <div className="flex items-center space-x-2">
+                  {selectedClient && <User className="h-4 w-4" />}
+                  <SelectValue placeholder={t('tdee.selectClientPlaceholder')} />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.firstName} {client.lastName}
+                  <SelectItem 
+                    key={client.id} 
+                    value={client.id}
+                    textValue={`${client.firstName} ${client.lastName}`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>{client.firstName} {client.lastName}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
