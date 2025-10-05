@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Pill, Clock, Target } from "lucide-react";
+import { ArrowLeft, Pill, Clock, Target, Edit } from "lucide-react";
 import type { SupplementPlan, SupplementPlanItem, SupplementItem } from "@shared/schema";
 
 interface SupplementPlanItemWithDetails extends SupplementPlanItem {
@@ -72,9 +72,17 @@ export default function TrainerSupplementPlanDetail() {
             )}
           </div>
         </div>
-        {supplementPlan.isTemplate && (
-          <Badge variant="secondary" data-testid="badge-template">Template</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {supplementPlan.isTemplate && (
+            <Badge variant="secondary" data-testid="badge-template">Template</Badge>
+          )}
+          <Link href={`/trainer-supplements/${id}/edit`}>
+            <Button variant="outline" data-testid="button-edit-full-plan">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Full Plan
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Summary Card */}

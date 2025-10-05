@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Pill, FileText, ExternalLink, MoreVertical, Edit, Eye, Copy } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,6 +87,7 @@ export default function TrainerSupplements() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
@@ -276,9 +277,8 @@ export default function TrainerSupplements() {
     return supplementItems.find(item => item.id === id);
   };
 
-  const handleEditClick = (plan: SupplementPlan) => {
-    setEditingPlan(plan);
-    setShowEditDialog(true);
+  const handleEditClick = (planId: string) => {
+    setLocation(`/trainer-supplements/${planId}/edit`);
   };
 
   const handleCopyClick = (planId: string) => {
@@ -615,9 +615,9 @@ export default function TrainerSupplements() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditClick(plan)} data-testid={`menu-edit-${plan.id}`}>
+                      <DropdownMenuItem onClick={() => handleEditClick(plan.id)} data-testid={`menu-edit-${plan.id}`}>
                         <Edit className="w-4 h-4 mr-2" />
-                        Edit
+                        Edit Plan
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => handleCopyClick(plan.id)} 
