@@ -3640,8 +3640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const setting = await storage.getSystemSetting('social_feature_enabled');
       // Default to true if setting doesn't exist
-      // Database stores 't' for true and 'f' for false
-      const isEnabled = !setting || setting.value === true || setting.value === 't';
+      const isEnabled = !setting || setting.value === true;
       res.json({ enabled: isEnabled });
     } catch (error) {
       console.error("Error fetching social setting:", error);

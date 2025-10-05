@@ -2439,7 +2439,29 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(systemSettings)
       .where(eq(systemSettings.key, key));
-    return setting;
+    
+    if (!setting) return undefined;
+    
+    // Normalize boolean values from database
+    // PostgreSQL boolean columns may return various types depending on driver
+    const normalizedValue = this.normalizeBoolean(setting.value);
+    
+    return {
+      ...setting,
+      value: normalizedValue
+    };
+  }
+
+  private normalizeBoolean(value: any): boolean {
+    // Handle various boolean representations
+    if (value === true || value === 't' || value === 'true' || value === 1 || value === '1') {
+      return true;
+    }
+    if (value === false || value === 'f' || value === 'false' || value === 0 || value === '0' || value === null || value === undefined) {
+      return false;
+    }
+    // Default to false for unknown values
+    return false;
   }
 
   async getAllSystemSettings(): Promise<SystemSetting[]> {
