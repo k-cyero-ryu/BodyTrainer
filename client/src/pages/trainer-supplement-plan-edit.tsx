@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -38,40 +39,41 @@ const supplementPlanFormSchema = z.object({
 
 type SupplementPlanFormData = z.infer<typeof supplementPlanFormSchema>;
 
-const FREQUENCY_OPTIONS = [
-  { value: "daily", label: "Daily" },
-  { value: "2x daily", label: "2x Daily" },
-  { value: "3x daily", label: "3x Daily" },
-  { value: "post-workout", label: "Post-Workout" },
-  { value: "pre-workout", label: "Pre-Workout" },
-  { value: "as needed", label: "As Needed" },
-];
-
-const TIMING_OPTIONS = [
-  { value: "morning", label: "Morning" },
-  { value: "afternoon", label: "Afternoon" },
-  { value: "evening", label: "Evening" },
-  { value: "before bed", label: "Before Bed" },
-  { value: "with meals", label: "With Meals" },
-  { value: "between meals", label: "Between Meals" },
-  { value: "post-workout", label: "Post-Workout" },
-  { value: "pre-workout", label: "Pre-Workout" },
-];
-
-const GOAL_OPTIONS = [
-  { value: "recovery", label: "Recovery" },
-  { value: "energy", label: "Energy" },
-  { value: "muscle_gain", label: "Muscle Gain" },
-  { value: "health", label: "General Health" },
-  { value: "performance", label: "Performance" },
-  { value: "weight_loss", label: "Weight Loss" },
-];
-
 export default function TrainerSupplementPlanEdit() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const FREQUENCY_OPTIONS = [
+    { value: "daily", label: t('supplements.frequency.daily') },
+    { value: "2x_daily", label: t('supplements.frequency.2x_daily') },
+    { value: "3x_daily", label: t('supplements.frequency.3x_daily') },
+    { value: "post_workout", label: t('supplements.frequency.post_workout') },
+    { value: "pre_workout", label: t('supplements.frequency.pre_workout') },
+    { value: "as_needed", label: t('supplements.frequency.as_needed') },
+  ];
+
+  const TIMING_OPTIONS = [
+    { value: "morning", label: t('supplements.timing.morning') },
+    { value: "afternoon", label: t('supplements.timing.afternoon') },
+    { value: "evening", label: t('supplements.timing.evening') },
+    { value: "before_bed", label: t('supplements.timing.before_bed') },
+    { value: "with_meals", label: t('supplements.timing.with_meals') },
+    { value: "between_meals", label: t('supplements.timing.between_meals') },
+    { value: "post_workout", label: t('supplements.timing.post_workout') },
+    { value: "pre_workout", label: t('supplements.timing.pre_workout') },
+  ];
+
+  const GOAL_OPTIONS = [
+    { value: "recovery", label: t('supplements.goals.recovery') },
+    { value: "energy", label: t('supplements.goals.energy') },
+    { value: "muscle_gain", label: t('supplements.goals.muscle_gain') },
+    { value: "health", label: t('supplements.goals.health') },
+    { value: "performance", label: t('supplements.goals.performance') },
+    { value: "weight_loss", label: t('supplements.goals.weight_loss') },
+  ];
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [planItems, setPlanItems] = useState<SupplementPlanItemWithDetails[]>([]);
@@ -118,14 +120,14 @@ export default function TrainerSupplementPlanEdit() {
       queryClient.invalidateQueries({ queryKey: ["/api/nutrition/supplement-plans", id] });
       queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`] });
       toast({
-        title: "Success",
-        description: "Plan updated successfully",
+        title: t('common.success'),
+        description: t('supplements.planUpdated'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update plan",
+        title: t('common.error'),
+        description: error.message || t('supplements.failedToUpdatePlan'),
         variant: "destructive",
       });
     },
@@ -141,15 +143,15 @@ export default function TrainerSupplementPlanEdit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/nutrition/supplement-plans", id] });
       toast({
-        title: "Success",
-        description: "Supplement added to plan",
+        title: t('common.success'),
+        description: t('supplements.supplementAddedToPlan'),
       });
       setShowAddItemDialog(false);
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to add supplement",
+        title: t('common.error'),
+        description: error.message || t('supplements.failedToAddSupplementToPlan'),
         variant: "destructive",
       });
     },
@@ -162,14 +164,14 @@ export default function TrainerSupplementPlanEdit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/nutrition/supplement-plans", id] });
       toast({
-        title: "Success",
-        description: "Supplement updated",
+        title: t('common.success'),
+        description: t('supplements.supplementUpdated'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update supplement",
+        title: t('common.error'),
+        description: error.message || t('supplements.failedToUpdateSupplement'),
         variant: "destructive",
       });
     },
@@ -182,15 +184,15 @@ export default function TrainerSupplementPlanEdit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/nutrition/supplement-plans", id] });
       toast({
-        title: "Success",
-        description: "Supplement removed from plan",
+        title: t('common.success'),
+        description: t('supplements.supplementRemovedFromPlan'),
       });
       setRemovingItemId(null);
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to remove supplement",
+        title: t('common.error'),
+        description: error.message || t('supplements.failedToRemoveSupplement'),
         variant: "destructive",
       });
     },
@@ -227,13 +229,13 @@ export default function TrainerSupplementPlanEdit() {
         setModifiedItems(new Set());
         
         toast({
-          title: "Success",
-          description: `Plan and ${modifiedItems.size} item(s) updated successfully`,
+          title: t('common.success'),
+          description: t('supplements.planUpdatedSuccess', { count: modifiedItems.size }),
         });
       } catch (error: any) {
         toast({
-          title: "Error",
-          description: error.message || "Failed to update plan",
+          title: t('common.error'),
+          description: error.message || t('supplements.failedToUpdatePlan'),
           variant: "destructive",
         });
       }
@@ -266,12 +268,12 @@ export default function TrainerSupplementPlanEdit() {
         <Link href="/trainer-supplements">
           <Button variant="ghost" data-testid="button-back">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Supplement Plans
+            {t('supplements.backToSupplementPlans')}
           </Button>
         </Link>
         <Card className="mt-6">
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-muted-foreground">Supplement plan not found or error loading data.</p>
+            <p className="text-muted-foreground">{t('supplements.planNotFound')}</p>
           </CardContent>
         </Card>
       </div>
@@ -286,12 +288,12 @@ export default function TrainerSupplementPlanEdit() {
           <Link href={`/trainer-supplements/${id}`}>
             <Button variant="ghost" data-testid="button-back">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              {t('supplements.back')}
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Edit Supplement Plan</h1>
-            <p className="text-muted-foreground">Make changes to the plan and its supplements</p>
+            <h1 className="text-3xl font-bold">{t('supplements.editSupplementPlan')}</h1>
+            <p className="text-muted-foreground">{t('supplements.makeChangesToPlan')}</p>
           </div>
         </div>
         <Button 
@@ -300,14 +302,14 @@ export default function TrainerSupplementPlanEdit() {
           data-testid="button-save-plan"
         >
           <Save className="h-4 w-4 mr-2" />
-          Save Plan
+          {t('supplements.savePlan')}
         </Button>
       </div>
 
       {/* Plan Metadata Form */}
       <Card>
         <CardHeader>
-          <CardTitle>Plan Details</CardTitle>
+          <CardTitle>{t('supplements.planDetails')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -317,9 +319,9 @@ export default function TrainerSupplementPlanEdit() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Plan Name *</FormLabel>
+                    <FormLabel>{t('supplements.planName')} *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., Recovery Stack" data-testid="input-name" />
+                      <Input {...field} placeholder={t('supplements.planNamePlaceholder')} data-testid="input-name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -331,9 +333,9 @@ export default function TrainerSupplementPlanEdit() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t('supplements.description')}</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Describe this supplement plan..." data-testid="input-description" />
+                      <Textarea {...field} placeholder={t('supplements.descriptionPlaceholder')} data-testid="input-description" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -345,18 +347,18 @@ export default function TrainerSupplementPlanEdit() {
                 name="goal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Goal</FormLabel>
+                    <FormLabel>{t('supplements.goal')}</FormLabel>
                     <FormControl>
                       <Select value={field.value || ""} onValueChange={field.onChange}>
                         <SelectTrigger data-testid="select-goal">
-                          <SelectValue placeholder="Select goal" />
+                          <SelectValue placeholder={t('supplements.selectGoal')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="recovery">Recovery</SelectItem>
-                          <SelectItem value="energy">Energy</SelectItem>
-                          <SelectItem value="muscle_gain">Muscle Gain</SelectItem>
-                          <SelectItem value="health">General Health</SelectItem>
-                          <SelectItem value="performance">Performance</SelectItem>
+                          {GOAL_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -370,9 +372,9 @@ export default function TrainerSupplementPlanEdit() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel>{t('supplements.notes')}</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Additional notes or instructions..." data-testid="input-notes" />
+                      <Textarea {...field} placeholder={t('supplements.notesPlaceholder')} data-testid="input-notes" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -390,7 +392,7 @@ export default function TrainerSupplementPlanEdit() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Pill className="h-5 w-5" />
-                Supplements in Plan ({planItems.length})
+                {t('supplements.supplementsInPlan')} ({planItems.length})
               </CardTitle>
             </div>
             <Button 
@@ -399,14 +401,14 @@ export default function TrainerSupplementPlanEdit() {
               data-testid="button-add-supplement"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Supplement
+              {t('supplements.addSupplement')}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {planItems.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              No supplements added yet. Click "Add Supplement" to get started.
+              {t('supplements.noSupplementsAddedYet')}
             </div>
           ) : (
             <div className="space-y-4">
@@ -440,22 +442,22 @@ export default function TrainerSupplementPlanEdit() {
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="text-sm font-medium">Dosage</label>
+                          <label className="text-sm font-medium">{t('supplements.dosage')}</label>
                           <Input
                             value={item.dosage || item.supplementItem.defaultDosage || ""}
                             onChange={(e) => handleUpdateItem(item.id, "dosage", e.target.value)}
-                            placeholder={item.supplementItem.defaultDosage || "e.g., 5g"}
+                            placeholder={item.supplementItem.defaultDosage || t('supplements.dosagePlaceholder')}
                             data-testid={`input-dosage-${item.id}`}
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Frequency</label>
+                          <label className="text-sm font-medium">{t('supplements.frequency')}</label>
                           <Select
                             value={item.frequency || item.supplementItem.defaultFrequency || ""}
                             onValueChange={(value) => handleUpdateItem(item.id, "frequency", value)}
                           >
                             <SelectTrigger data-testid={`select-frequency-${item.id}`}>
-                              <SelectValue placeholder="Select frequency" />
+                              <SelectValue placeholder={t('supplements.selectFrequency')} />
                             </SelectTrigger>
                             <SelectContent>
                               {FREQUENCY_OPTIONS.map((opt) => (
@@ -467,13 +469,13 @@ export default function TrainerSupplementPlanEdit() {
                           </Select>
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Timing</label>
+                          <label className="text-sm font-medium">{t('supplements.timing')}</label>
                           <Select
                             value={item.timing || item.supplementItem.defaultTiming || ""}
                             onValueChange={(value) => handleUpdateItem(item.id, "timing", value)}
                           >
                             <SelectTrigger data-testid={`select-timing-${item.id}`}>
-                              <SelectValue placeholder="Select timing" />
+                              <SelectValue placeholder={t('supplements.selectTiming')} />
                             </SelectTrigger>
                             <SelectContent>
                               {TIMING_OPTIONS.map((opt) => (
@@ -491,11 +493,11 @@ export default function TrainerSupplementPlanEdit() {
                           onCheckedChange={(checked) => handleUpdateItem(item.id, "isOptional", checked)}
                           data-testid={`checkbox-optional-${item.id}`}
                         />
-                        <label className="text-sm">Optional supplement</label>
+                        <label className="text-sm">{t('supplements.optionalSupplement')}</label>
                       </div>
                       {item.supplementItem.instructions && (
                         <div className="p-3 bg-muted rounded-lg">
-                          <p className="text-sm font-medium mb-1">Instructions</p>
+                          <p className="text-sm font-medium mb-1">{t('supplements.instructions')}</p>
                           <p className="text-sm text-muted-foreground">{item.supplementItem.instructions}</p>
                         </div>
                       )}
@@ -511,14 +513,14 @@ export default function TrainerSupplementPlanEdit() {
       <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Supplement to Plan</DialogTitle>
+            <DialogTitle>{t('supplements.addSupplementToPlan')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {availableSupplements.filter(
               sup => !planItems.some(item => item.supplementItemId === sup.id)
             ).length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                All available supplements are already in this plan.
+                {t('supplements.allSupplementsInPlan')}
               </p>
             ) : (
               <div className="space-y-2">
