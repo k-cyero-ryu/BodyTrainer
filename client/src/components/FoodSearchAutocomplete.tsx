@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
@@ -17,10 +17,12 @@ import {
   Info,
   AlertCircle,
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
+  Zap
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { USDASearchResponse, USDASearchResult, NutritionData } from "@shared/schema";
+import { searchCommonFoods, getTranslatedFoodName, type CommonFood } from "@/data/commonFoods";
 
 interface FoodSearchAutocompleteProps {
   onFoodSelect: (food: SelectedFoodData) => void;
@@ -58,20 +60,28 @@ export function FoodSearchAutocomplete({
   isOpen: externalIsOpen,
   onOpenChange: externalOnOpenChange
 }: FoodSearchAutocompleteProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(defaultSearchTerm);
   const [selectedFood, setSelectedFood] = useState<USDASearchResult | null>(null);
+  const [selectedCommonFood, setSelectedCommonFood] = useState<CommonFood | null>(null);
   const [showNutritionDetails, setShowNutritionDetails] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const currentLang = (i18n.language?.split('-')[0] || 'en') as 'en' | 'es' | 'fr' | 'pt';
   
   // Handle external vs internal open state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
   const setIsOpen = externalOnOpenChange !== undefined ? externalOnOpenChange : setInternalIsOpen;
+  
+  // Search common foods locally
+  const commonFoodResults = useMemo(() => {
+    if (debouncedSearchTerm.trim().length < 2) return [];
+    return searchCommonFoods(debouncedSearchTerm, currentLang);
+  }, [debouncedSearchTerm, currentLang]);
 
   // Debounce search term
   useEffect(() => {
@@ -95,6 +105,7 @@ export function FoodSearchAutocomplete({
   useEffect(() => {
     if (!isOpen) {
       setSelectedFood(null);
+      setSelectedCommonFood(null);
       setShowNutritionDetails(false);
       if (!defaultSearchTerm) {
         setSearchTerm("");
@@ -110,41 +121,70 @@ export function FoodSearchAutocomplete({
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Get nutrition details for selected food
+  // Get nutrition details for selected food (only for USDA foods)
   const { data: nutritionData, isLoading: isLoadingNutrition, error: nutritionError } = useQuery<{ data: NutritionData }>({
     queryKey: [`/api/usda/nutrients/${selectedFood?.fdcId}`],
-    enabled: !!selectedFood?.fdcId,
+    enabled: !!selectedFood?.fdcId && !selectedCommonFood,
     retry: 2,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const handleFoodSelection = (food: USDASearchResult) => {
     setSelectedFood(food);
+    setSelectedCommonFood(null);
+    setShowNutritionDetails(true);
+  };
+
+  const handleCommonFoodSelection = (food: CommonFood) => {
+    const usdaFormat: USDASearchResult = {
+      fdcId: food.fdcId,
+      description: getTranslatedFoodName(food, currentLang),
+      dataType: 'Common',
+      foodCategory: food.category,
+    };
+    setSelectedFood(usdaFormat);
+    setSelectedCommonFood(food);
     setShowNutritionDetails(true);
   };
 
   const handleConfirmSelection = () => {
-    if (!selectedFood || !nutritionData?.data) return;
+    if (!selectedFood) return;
 
-    const selectedFoodData: SelectedFoodData = {
-      fdcId: selectedFood.fdcId,
-      name: selectedFood.description,
-      brand: selectedFood.brandOwner,
-      category: selectedFood.foodCategory,
-      calories: nutritionData.data.calories,
-      protein: nutritionData.data.protein,
-      carbs: nutritionData.data.carbs,
-      totalFat: nutritionData.data.totalFat,
-      fiber: nutritionData.data.fiber,
-      sugar: nutritionData.data.sugar,
-      sodium: nutritionData.data.sodium,
-      servingSize: nutritionData.data.servingSize,
-      servingUnit: nutritionData.data.servingUnit,
-      isUSDAFood: true,
-    };
-
-    onFoodSelect(selectedFoodData);
-    setIsOpen(false);
+    if (selectedCommonFood) {
+      const selectedFoodData: SelectedFoodData = {
+        fdcId: selectedCommonFood.fdcId,
+        name: getTranslatedFoodName(selectedCommonFood, currentLang),
+        category: selectedCommonFood.category,
+        calories: selectedCommonFood.nutrition.calories,
+        protein: selectedCommonFood.nutrition.protein,
+        carbs: selectedCommonFood.nutrition.carbs,
+        totalFat: selectedCommonFood.nutrition.fat,
+        servingSize: 100,
+        servingUnit: 'g',
+        isUSDAFood: false,
+      };
+      onFoodSelect(selectedFoodData);
+      setIsOpen(false);
+    } else if (nutritionData?.data) {
+      const selectedFoodData: SelectedFoodData = {
+        fdcId: selectedFood.fdcId,
+        name: selectedFood.description,
+        brand: selectedFood.brandOwner,
+        category: selectedFood.foodCategory,
+        calories: nutritionData.data.calories,
+        protein: nutritionData.data.protein,
+        carbs: nutritionData.data.carbs,
+        totalFat: nutritionData.data.totalFat,
+        fiber: nutritionData.data.fiber,
+        sugar: nutritionData.data.sugar,
+        sodium: nutritionData.data.sodium,
+        servingSize: nutritionData.data.servingSize,
+        servingUnit: nutritionData.data.servingUnit,
+        isUSDAFood: true,
+      };
+      onFoodSelect(selectedFoodData);
+      setIsOpen(false);
+    }
   };
 
   const handleManualEntry = () => {
@@ -215,7 +255,7 @@ export function FoodSearchAutocomplete({
                   </div>
                 )}
 
-                {debouncedSearchTerm.length >= 2 && !isSearching && !searchError && searchResults && searchResults.foods && searchResults.foods.length === 0 && (
+                {debouncedSearchTerm.length >= 2 && !isSearching && !searchError && commonFoodResults.length === 0 && searchResults && searchResults.foods && searchResults.foods.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground" data-testid="text-no-results">
                     <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>{t('usda.noResults')}</p>
@@ -231,14 +271,43 @@ export function FoodSearchAutocomplete({
                 )}
 
                 {/* Search Results */}
-                {searchResults && searchResults.foods && Array.isArray(searchResults.foods) && searchResults.foods.length > 0 && (
+                {(commonFoodResults.length > 0 || (searchResults && searchResults.foods && Array.isArray(searchResults.foods) && searchResults.foods.length > 0)) && (
                   <div className="space-y-2 max-h-96 overflow-y-auto" data-testid="list-search-results">
                     <p className="text-sm text-muted-foreground">
-                      {t('usda.selectFood')} ({searchResults.foods.length} {searchResults.totalHits > searchResults.foods.length ? `of ${searchResults.totalHits}` : ''} results)
+                      {t('usda.selectFood')} ({commonFoodResults.length + (searchResults?.foods?.length || 0)} results)
                     </p>
-                    {searchResults.foods.map((food) => food && (
+                    
+                    {/* Common Foods First */}
+                    {commonFoodResults.map((food) => (
                       <Card
-                        key={food.fdcId}
+                        key={`common-${food.fdcId}`}
+                        className="cursor-pointer hover:bg-accent transition-colors border-primary/20"
+                        onClick={() => handleCommonFoodSelection(food)}
+                        data-testid={`card-food-common-${food.fdcId}`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-medium line-clamp-2" data-testid={`text-food-name-common-${food.fdcId}`}>
+                                {getTranslatedFoodName(food, currentLang)}
+                              </h4>
+                              <p className="text-xs text-muted-foreground" data-testid={`text-category-common-${food.fdcId}`}>
+                                {t('usda.category')} {food.category}
+                              </p>
+                            </div>
+                            <Badge variant="default" className="ml-2 flex items-center gap-1" data-testid={`badge-common-${food.fdcId}`}>
+                              <Zap className="h-3 w-3" />
+                              Quick
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    
+                    {/* USDA Foods */}
+                    {searchResults && searchResults.foods && searchResults.foods.map((food) => food && (
+                      <Card
+                        key={`usda-${food.fdcId}`}
                         className="cursor-pointer hover:bg-accent transition-colors"
                         onClick={() => handleFoodSelection(food)}
                         data-testid={`card-food-${food.fdcId}`}
@@ -320,7 +389,7 @@ export function FoodSearchAutocomplete({
 
                       <Separator />
 
-                      {isLoadingNutrition && (
+                      {isLoadingNutrition && !selectedCommonFood && (
                         <div className="space-y-2" data-testid="loading-nutrition">
                           <p className="text-sm text-muted-foreground">{t('usda.loadingNutrition')}</p>
                           <div className="space-y-2">
@@ -331,14 +400,49 @@ export function FoodSearchAutocomplete({
                         </div>
                       )}
 
-                      {nutritionError && (
+                      {nutritionError && !selectedCommonFood && (
                         <div className="flex items-center gap-2 text-destructive" data-testid="error-nutrition">
                           <AlertCircle className="h-4 w-4" />
                           <span className="text-sm">{t('usda.nutritionError')}</span>
                         </div>
                       )}
 
-                      {nutritionData?.data && (
+                      {selectedCommonFood && (
+                        <div className="grid grid-cols-2 gap-4" data-testid="grid-nutrition-data">
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Calories</p>
+                            <p className="text-2xl font-bold text-primary" data-testid="text-calories">
+                              {selectedCommonFood.nutrition.calories}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {t('usda.perServing', { amount: 100 })}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">{t('usda.proteinLabel')}</p>
+                            <p className="text-lg font-semibold" data-testid="text-protein">
+                              {selectedCommonFood.nutrition.protein}{t('usda.grams')}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">{t('usda.carbsLabel')}</p>
+                            <p className="text-lg font-semibold" data-testid="text-carbs">
+                              {selectedCommonFood.nutrition.carbs}{t('usda.grams')}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">{t('usda.fatLabel')}</p>
+                            <p className="text-lg font-semibold" data-testid="text-fat">
+                              {selectedCommonFood.nutrition.fat}{t('usda.grams')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {nutritionData?.data && !selectedCommonFood && (
                         <div className="grid grid-cols-2 gap-4" data-testid="grid-nutrition-data">
                           {nutritionData.data.calories !== undefined && (
                             <div className="space-y-1">
@@ -408,7 +512,7 @@ export function FoodSearchAutocomplete({
                         </div>
                       )}
 
-                      {nutritionData?.data && (
+                      {(nutritionData?.data || selectedCommonFood) && (
                         <>
                           <Separator />
                           <div className="flex gap-2">
@@ -506,7 +610,7 @@ export function FoodSearchAutocomplete({
                 </div>
               )}
 
-              {debouncedSearchTerm.length >= 2 && !isSearching && !searchError && searchResults && searchResults.foods && searchResults.foods.length === 0 && (
+              {debouncedSearchTerm.length >= 2 && !isSearching && !searchError && commonFoodResults.length === 0 && searchResults && searchResults.foods && searchResults.foods.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground" data-testid="text-no-results">
                   <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>{t('usda.noResults')}</p>
@@ -522,14 +626,43 @@ export function FoodSearchAutocomplete({
               )}
 
               {/* Search Results */}
-              {searchResults && searchResults.foods && Array.isArray(searchResults.foods) && searchResults.foods.length > 0 && (
+              {(commonFoodResults.length > 0 || (searchResults && searchResults.foods && Array.isArray(searchResults.foods) && searchResults.foods.length > 0)) && (
                 <div className="space-y-2 max-h-96 overflow-y-auto" data-testid="list-search-results">
                   <p className="text-sm text-muted-foreground">
-                    {t('usda.selectFood')} ({searchResults.foods.length} {searchResults.totalHits > searchResults.foods.length ? `of ${searchResults.totalHits}` : ''} results)
+                    {t('usda.selectFood')} ({commonFoodResults.length + (searchResults?.foods?.length || 0)} results)
                   </p>
-                  {searchResults.foods.map((food) => food && (
+                  
+                  {/* Common Foods First */}
+                  {commonFoodResults.map((food) => (
                     <Card
-                      key={food.fdcId}
+                      key={`common-${food.fdcId}`}
+                      className="cursor-pointer hover:bg-accent transition-colors border-primary/20"
+                      onClick={() => handleCommonFoodSelection(food)}
+                      data-testid={`card-food-common-${food.fdcId}`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-medium line-clamp-2" data-testid={`text-food-name-common-${food.fdcId}`}>
+                              {getTranslatedFoodName(food, currentLang)}
+                            </h4>
+                            <p className="text-xs text-muted-foreground" data-testid={`text-category-common-${food.fdcId}`}>
+                              {t('usda.category')} {food.category}
+                            </p>
+                          </div>
+                          <Badge variant="default" className="ml-2 flex items-center gap-1" data-testid={`badge-common-${food.fdcId}`}>
+                            <Zap className="h-3 w-3" />
+                            Quick
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {/* USDA Foods */}
+                  {searchResults && searchResults.foods && searchResults.foods.map((food) => food && (
+                    <Card
+                      key={`usda-${food.fdcId}`}
                       className="cursor-pointer hover:bg-accent transition-colors"
                       onClick={() => handleFoodSelection(food)}
                       data-testid={`card-food-${food.fdcId}`}
@@ -611,7 +744,7 @@ export function FoodSearchAutocomplete({
 
                     <Separator />
 
-                    {isLoadingNutrition && (
+                    {isLoadingNutrition && !selectedCommonFood && (
                       <div className="space-y-2" data-testid="loading-nutrition">
                         <p className="text-sm text-muted-foreground">{t('usda.loadingNutrition')}</p>
                         <div className="space-y-2">
@@ -622,14 +755,49 @@ export function FoodSearchAutocomplete({
                       </div>
                     )}
 
-                    {nutritionError && (
+                    {nutritionError && !selectedCommonFood && (
                       <div className="flex items-center gap-2 text-destructive" data-testid="error-nutrition">
                         <AlertCircle className="h-4 w-4" />
                         <span className="text-sm">{t('usda.nutritionError')}</span>
                       </div>
                     )}
 
-                    {nutritionData?.data && (
+                    {selectedCommonFood && (
+                      <div className="grid grid-cols-2 gap-4" data-testid="grid-nutrition-data">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">Calories</p>
+                          <p className="text-2xl font-bold text-primary" data-testid="text-calories">
+                            {selectedCommonFood.nutrition.calories}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t('usda.perServing', { amount: 100 })}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">{t('usda.proteinLabel')}</p>
+                          <p className="text-lg font-semibold" data-testid="text-protein">
+                            {selectedCommonFood.nutrition.protein}{t('usda.grams')}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">{t('usda.carbsLabel')}</p>
+                          <p className="text-lg font-semibold" data-testid="text-carbs">
+                            {selectedCommonFood.nutrition.carbs}{t('usda.grams')}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">{t('usda.fatLabel')}</p>
+                          <p className="text-lg font-semibold" data-testid="text-fat">
+                            {selectedCommonFood.nutrition.fat}{t('usda.grams')}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {nutritionData?.data && !selectedCommonFood && (
                       <div className="grid grid-cols-2 gap-4" data-testid="grid-nutrition-data">
                         {nutritionData.data.calories !== undefined && (
                           <div className="space-y-1">
@@ -699,7 +867,7 @@ export function FoodSearchAutocomplete({
                       </div>
                     )}
 
-                    {nutritionData?.data && (
+                    {(nutritionData?.data || selectedCommonFood) && (
                       <>
                         <Separator />
                         <div className="flex gap-2">
