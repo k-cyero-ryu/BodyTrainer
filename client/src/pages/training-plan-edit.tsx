@@ -107,7 +107,7 @@ export default function TrainingPlanEdit() {
         name: plan.name || "",
         description: plan.description || "",
         goal: plan.goal || "",
-        duration: plan.duration || "",
+        duration: plan.duration ? String(plan.duration) : "",
         weeksCycle: plan.weeksCycle || 1,
       });
       

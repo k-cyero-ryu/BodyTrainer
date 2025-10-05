@@ -154,6 +154,7 @@ export interface IStorage {
   // Plan exercise operations
   createPlanExercise(planExercise: InsertPlanExercise): Promise<PlanExercise>;
   createPlanExercises(planId: string, exercises: Array<Omit<InsertPlanExercise, 'planId'>>): Promise<void>;
+  getPlanExercise(id: string): Promise<PlanExercise | undefined>;
   getPlanExercisesByPlan(planId: string): Promise<PlanExercise[]>;
   updatePlanExercise(id: string, planExercise: Partial<InsertPlanExercise>): Promise<PlanExercise>;
   deletePlanExercise(id: string): Promise<void>;
@@ -767,6 +768,14 @@ export class DatabaseStorage implements IStorage {
     }));
     
     await db.insert(planExercises).values(planExercisesToInsert);
+  }
+
+  async getPlanExercise(id: string): Promise<PlanExercise | undefined> {
+    const [result] = await db
+      .select()
+      .from(planExercises)
+      .where(eq(planExercises.id, id));
+    return result;
   }
 
   async getPlanExercisesByPlan(planId: string): Promise<PlanExercise[]> {

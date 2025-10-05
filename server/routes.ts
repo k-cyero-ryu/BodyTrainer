@@ -858,6 +858,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add exercise to existing training plan
+  app.post('/api/training-plans/:planId/exercises', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { planId } = req.params;
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can add exercises" });
+      }
+      
+      // Verify the plan belongs to this trainer
+      const plan = await storage.getTrainingPlan(planId);
+      if (!plan || plan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const exerciseData = {
+        planId,
+        exerciseId: req.body.exerciseId,
+        dayOfWeek: req.body.dayOfWeek,
+        week: req.body.week || 1,
+        sets: req.body.sets,
+        reps: req.body.reps,
+        weight: req.body.weight,
+        duration: req.body.duration,
+        restTime: req.body.restTime,
+        notes: req.body.notes || "",
+      };
+      
+      const newExercise = await storage.createPlanExercise(exerciseData);
+      res.status(201).json(newExercise);
+    } catch (error) {
+      console.error("Error adding exercise to plan:", error);
+      res.status(500).json({ message: "Failed to add exercise to plan" });
+    }
+  });
+
+  // Update plan exercise
+  app.put('/api/plan-exercises/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can update exercises" });
+      }
+      
+      // Get the exercise to verify ownership
+      const exercise = await storage.getPlanExercise(id);
+      if (!exercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      
+      // Verify the plan belongs to this trainer
+      const plan = await storage.getTrainingPlan(exercise.planId);
+      if (!plan || plan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updates = {
+        sets: req.body.sets,
+        reps: req.body.reps,
+        weight: req.body.weight,
+        duration: req.body.duration,
+        restTime: req.body.restTime,
+        notes: req.body.notes,
+      };
+      
+      await storage.updatePlanExercise(id, updates);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating plan exercise:", error);
+      res.status(500).json({ message: "Failed to update exercise" });
+    }
+  });
+
+  // Delete plan exercise
+  app.delete('/api/plan-exercises/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { id } = req.params;
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can delete exercises" });
+      }
+      
+      // Get the exercise to verify ownership
+      const exercise = await storage.getPlanExercise(id);
+      if (!exercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      
+      // Verify the plan belongs to this trainer
+      const plan = await storage.getTrainingPlan(exercise.planId);
+      if (!plan || plan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.deletePlanExercise(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting plan exercise:", error);
+      res.status(500).json({ message: "Failed to delete exercise" });
+    }
+  });
+
   // Client-specific endpoints
   app.get('/api/client/assigned-plans', isAuthenticated, async (req: any, res) => {
     try {
