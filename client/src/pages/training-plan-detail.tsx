@@ -16,7 +16,8 @@ import {
   Target, 
   Play,
   Calendar,
-  User
+  User,
+  Edit
 } from "lucide-react";
 
 export default function TrainingPlanDetail() {
@@ -158,6 +159,12 @@ export default function TrainingPlanDetail() {
           <Badge variant={plan.isActive ? "default" : "secondary"}>
             {plan.isActive ? t('plans.active') : t('plans.draft')}
           </Badge>
+          <Link href={`/training-plans/${planId}/edit`}>
+            <Button variant="outline" data-testid="button-edit-plan">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Plan
+            </Button>
+          </Link>
         </div>
       </div>
 

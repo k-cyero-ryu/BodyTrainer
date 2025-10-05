@@ -32,6 +32,7 @@ import PaymentPlans from "@/pages/payment-plans";
 import ClientPaymentPlansPage from "@/pages/client-payment-plans";
 import TrainingPlans from "@/pages/training-plans";
 import TrainingPlanDetail from "@/pages/training-plan-detail";
+import TrainingPlanEdit from "@/pages/training-plan-edit";
 import ClientTrainingPlanDetail from "@/pages/client-training-plan-detail";
 import ClientTrainingPlans from "@/pages/client-training-plans";
 import MonthlyEvaluation from "@/pages/monthly-evaluation";
@@ -222,6 +223,7 @@ function Router() {
                   <Route path="/clients/:clientId/daily-resume" component={DailyResume} />
                   <Route path="/training-plans" component={TrainingPlans} />
                   <Route path="/training-plans/:planId" component={TrainingPlanDetail} />
+                  <Route path="/training-plans/:planId/edit" component={TrainingPlanEdit} />
                   <Route path="/exercises" component={Exercises} />
                   <Route path="/trainer-meal-plans" component={TrainerMealPlans} />
                   <Route path="/trainer-meal-plans/:id" component={TrainerMealPlanDetail} />
