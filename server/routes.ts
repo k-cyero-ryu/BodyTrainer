@@ -3635,6 +3635,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint to check social feature status
+  app.get('/api/system-settings/social-enabled', async (req, res) => {
+    try {
+      const setting = await storage.getSystemSetting('social_feature_enabled');
+      // Default to true if setting doesn't exist
+      const isEnabled = setting?.value !== false;
+      res.json({ enabled: isEnabled });
+    } catch (error) {
+      console.error("Error fetching social setting:", error);
+      res.status(500).json({ message: "Failed to fetch setting" });
+    }
+  });
+
   // System Settings routes (SuperAdmin only)
   app.get('/api/admin/system-settings', isAuthenticated, async (req: any, res) => {
     try {

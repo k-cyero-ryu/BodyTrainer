@@ -77,15 +77,15 @@ export default function Social() {
   const [editPostContent, setEditPostContent] = useState("");
   const [editCommentContent, setEditCommentContent] = useState("");
 
-  // Check if social feature is enabled
-  const { data: socialSetting, isLoading: isLoadingSetting } = useQuery({
-    queryKey: ["/api/admin/system-settings", "social_feature_enabled"],
+  // Check if social feature is enabled (public endpoint)
+  const { data: socialFeatureStatus, isLoading: isLoadingSetting } = useQuery({
+    queryKey: ["/api/system-settings/social-enabled"],
   });
 
   // Fetch social posts only if feature is enabled or user is superadmin
   const { data: posts, isLoading } = useQuery<SocialPost[]>({
     queryKey: ["/api/social/posts"],
-    enabled: socialSetting?.value !== false || user?.role === 'superadmin',
+    enabled: socialFeatureStatus?.enabled !== false || user?.role === 'superadmin',
   });
 
   // Create post form
@@ -365,7 +365,7 @@ export default function Social() {
   };
 
   // Check if social feature is disabled and user is not superadmin
-  if (!isLoadingSetting && socialSetting?.value === false && user?.role !== 'superadmin') {
+  if (!isLoadingSetting && socialFeatureStatus?.enabled === false && user?.role !== 'superadmin') {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
