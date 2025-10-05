@@ -208,7 +208,7 @@ export default function TrainingPlanDetail() {
                 <Play className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">{t('plans.exercises')}</p>
-                  <p className="text-sm text-muted-foreground">{plan.planExercises?.length || 0} {t('plans.exercises').toLowerCase()}</p>
+                  <p className="text-sm text-muted-foreground">{plan.exercises?.length || 0} {t('plans.exercises').toLowerCase()}</p>
                 </div>
               </div>
               {plan.createdAt && (
@@ -273,9 +273,9 @@ export default function TrainingPlanDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {plan.planExercises && plan.planExercises.length > 0 ? (
+              {plan.exercises && plan.exercises.length > 0 ? (
                 <div className="space-y-4">
-                  {plan.planExercises.map((planExercise: any, index: number) => {
+                  {plan.exercises.map((planExercise: any, index: number) => {
                     const exercise = getExerciseDetails(planExercise.exerciseId);
                     return (
                       <div key={planExercise.id} className="p-4 border rounded-lg">
