@@ -13,9 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Eye, Dumbbell, X } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Dumbbell, X, MoreVertical, Copy } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function TrainingPlans() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -125,6 +131,38 @@ export default function TrainingPlans() {
       toast({
         title: t('plans.error'),
         description: t('plans.failedToUpdate'),
+        variant: "destructive",
+      });
+    },
+  });
+
+  const copyPlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const response = await apiRequest("POST", `/api/training-plans/${planId}/copy`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t('plans.success'),
+        description: "Training plan copied successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/training-plans"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: t('plans.error'),
+        description: "Failed to copy training plan",
         variant: "destructive",
       });
     },
@@ -278,6 +316,10 @@ export default function TrainingPlans() {
     setShowCreateForm(false);
     setWeeksCycle(1);
     setWorkoutDays({});
+  };
+
+  const handleCopyClick = (planId: string) => {
+    copyPlanMutation.mutate(planId);
   };
 
   if (isLoading) {
@@ -759,30 +801,53 @@ export default function TrainingPlans() {
                   )}
                 </div>
 
-                <div className="pt-2 border-t flex flex-wrap justify-center gap-2">
+                <div className="pt-2 border-t flex justify-between items-center">
                   <Link href={`/training-plans/${plan.id}`}>
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
+                      data-testid={`button-view-${plan.id}`}
                     >
                       <Eye className="h-4 w-4 mr-1" />
                       {t('plans.viewDetails')}
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm" data-testid="button-edit-plan" onClick={() => {
-                    setEditingPlan(plan);
-                    setEditGoal(plan.goal || "");
-                    setEditDuration(plan.duration?.toString() || "");
-                    setEditWeekCycle(plan.weekCycle?.toString() || "");
-                  }}>
-                    <Edit className="h-4 w-4 mr-1" />
-                    {t('plans.edit')}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600">
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    {t('plans.delete')}
-                  </Button>
-
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">Template</Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" data-testid={`button-menu-${plan.id}`}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setEditingPlan(plan);
+                            setEditGoal(plan.goal || "");
+                            setEditDuration(plan.duration?.toString() || "");
+                            setEditWeekCycle(plan.weekCycle?.toString() || "");
+                          }}
+                          data-testid={`menu-edit-${plan.id}`}
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          {t('plans.edit')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleCopyClick(plan.id)} 
+                          disabled={copyPlanMutation.isPending}
+                          data-testid={`menu-copy-${plan.id}`}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy
+                        </DropdownMenuItem>
+                        <DropdownMenuItem data-testid={`menu-delete-${plan.id}`}>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          {t('plans.delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </CardContent>
             </Card>
