@@ -157,8 +157,28 @@ export default function TrainingPlanEdit() {
       const response = await apiRequest("POST", `/api/training-plans/${planId}/exercises`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newExercise) => {
+      // Add to local state immediately
+      if (newExercise) {
+        const exerciseName = exercises.find((ex: any) => ex.id === newExercise.exerciseId)?.name || "Unknown";
+        setPlanExercises(prev => [...prev, {
+          ...newExercise,
+          exerciseName,
+        }]);
+      }
+      // Also invalidate to ensure data is in sync
       queryClient.invalidateQueries({ queryKey: [`/api/training-plans/${planId}`] });
+      toast({
+        title: "Success",
+        description: "Exercise added to plan",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add exercise",
+        variant: "destructive",
+      });
     },
   });
 
@@ -174,9 +194,30 @@ export default function TrainingPlanEdit() {
   const deleteExerciseMutation = useMutation({
     mutationFn: async (exerciseId: string) => {
       await apiRequest("DELETE", `/api/plan-exercises/${exerciseId}`, {});
+      return exerciseId;
     },
-    onSuccess: () => {
+    onSuccess: (deletedId) => {
+      // Remove from local state immediately
+      setPlanExercises(prev => prev.filter(ex => ex.id !== deletedId));
+      // Remove from modified set if it was there
+      setModifiedExercises(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(deletedId);
+        return newSet;
+      });
+      // Also invalidate to ensure data is in sync
       queryClient.invalidateQueries({ queryKey: [`/api/training-plans/${planId}`] });
+      toast({
+        title: "Success",
+        description: "Exercise removed from plan",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove exercise",
+        variant: "destructive",
+      });
     },
   });
 
