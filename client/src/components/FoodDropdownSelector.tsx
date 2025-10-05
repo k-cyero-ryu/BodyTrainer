@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ import {
   Loader2
 } from "lucide-react";
 import type { NutritionData } from "@shared/schema";
+import { commonFoods, getTranslatedFoodName, type CommonFood } from "@/data/commonFoods";
 
 interface FoodDropdownSelectorProps {
   onFoodSelect: (data: {
@@ -58,26 +59,51 @@ export function FoodDropdownSelector({
   onCategoryChange,
   hideTitle = false
 }: FoodDropdownSelectorProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
+  const currentLang = (i18n.language?.split('-')[0] || 'en') as 'en' | 'es' | 'fr' | 'pt';
   
   const [selectedFoodId, setSelectedFoodId] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("100");
   const [isCalculating, setIsCalculating] = useState(false);
   
-  // Fetch curated foods list
-  const { data: foodsResponse, isLoading, error } = useQuery<CuratedFoodsResponse>({
-    queryKey: ["/api/usda/curated-foods"],
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    retry: 2,
-  });
+  // Convert common foods to NutritionData format
+  const foods = useMemo(() => {
+    return commonFoods.map(food => ({
+      fdcId: food.fdcId,
+      name: food.name,
+      translatedName: getTranslatedFoodName(food, currentLang),
+      category: food.category.toLowerCase(),
+      calories: food.nutrition.calories,
+      protein: food.nutrition.protein,
+      carbs: food.nutrition.carbs,
+      totalFat: food.nutrition.fat,
+      servingSize: 100,
+      servingUnit: 'g'
+    } as NutritionData & { translatedName: string }));
+  }, [currentLang]);
 
-  const foods = foodsResponse?.data || [];
+  const isLoading = false;
+  const error = null;
   
   // Filter foods by category
   const filteredFoods = selectedCategory === "all" 
     ? foods 
-    : foods.filter(food => food.category === selectedCategory);
+    : foods.filter(food => {
+        const foodCategory = food.category?.toLowerCase() || '';
+        const targetCategory = selectedCategory.toLowerCase();
+        
+        if (targetCategory === 'proteins' || targetCategory === 'protein') {
+          return foodCategory === 'protein';
+        }
+        if (targetCategory === 'carbohydrates' || targetCategory === 'grains') {
+          return foodCategory === 'grains';
+        }
+        if (targetCategory === 'fats' || targetCategory === 'oils') {
+          return foodCategory === 'oils';
+        }
+        return foodCategory === targetCategory;
+      });
 
   // Get selected food data
   const selectedFood = foods.find(food => food.fdcId.toString() === selectedFoodId);
@@ -139,7 +165,7 @@ export function FoodDropdownSelector({
 
       toast({
         title: "Success",
-        description: `Calculated ${calculatedNutrition.calories || 0} calories for ${quantityNum}g of ${selectedFood.name}`,
+        description: `Calculated ${calculatedNutrition.calories || 0} calories for ${quantityNum}g of ${selectedFood.translatedName || selectedFood.name}`,
         variant: "default"
       });
     } catch (error) {
@@ -234,7 +260,7 @@ export function FoodDropdownSelector({
                       data-testid={`option-food-${food.fdcId}`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="truncate">{food.name}</span>
+                        <span className="truncate">{food.translatedName || food.name}</span>
                         <Badge variant="secondary" className="ml-2">
                           {food.calories || 0} cal/100g
                         </Badge>
