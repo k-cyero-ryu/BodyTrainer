@@ -8,22 +8,35 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FoodDropdownSelector } from "@/components/FoodDropdownSelector";
-import { 
-  ArrowLeft,
-  Plus, 
-  Trash2, 
-  Save,
-  X
-} from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, X } from "lucide-react";
 import type { NutritionData } from "@shared/schema";
 
 const mealPlanFormSchema = z.object({
@@ -75,37 +88,38 @@ export default function TrainerMealPlanEdit() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { toast } = useToast();
-  
+
   const MEAL_TYPES = [
-    { value: "breakfast", label: t('mealPlans.mealTypes.breakfast') },
-    { value: "lunch", label: t('mealPlans.mealTypes.lunch') },
-    { value: "dinner", label: t('mealPlans.mealTypes.dinner') },
-    { value: "snack", label: t('mealPlans.mealTypes.snack') },
-    { value: "pre-workout", label: t('mealPlans.mealTypes.pre_workout') },
-    { value: "post-workout", label: t('mealPlans.mealTypes.post_workout') },
-    { value: "intra-workout", label: t('mealPlans.mealTypes.intra_workout') },
+    { value: "breakfast", label: t("mealPlans.mealTypes.breakfast") },
+    { value: "lunch", label: t("mealPlans.mealTypes.lunch") },
+    { value: "dinner", label: t("mealPlans.mealTypes.dinner") },
+    { value: "snack", label: t("mealPlans.mealTypes.snack") },
+    { value: "pre-workout", label: t("mealPlans.mealTypes.pre_workout") },
+    { value: "post-workout", label: t("mealPlans.mealTypes.post_workout") },
+    { value: "intra-workout", label: t("mealPlans.mealTypes.intra_workout") },
   ];
 
   const GOAL_OPTIONS = [
-    { value: "weight_loss", label: t('mealPlans.goals.weight_loss') },
-    { value: "muscle_gain", label: t('mealPlans.goals.muscle_gain') },
-    { value: "maintenance", label: t('mealPlans.goals.maintenance') },
-    { value: "endurance", label: t('mealPlans.goals.endurance') },
-    { value: "strength", label: t('mealPlans.goals.strength') },
+    { value: "weight_loss", label: t("mealPlans.goals.weight_loss") },
+    { value: "muscle_gain", label: t("mealPlans.goals.muscle_gain") },
+    { value: "maintenance", label: t("mealPlans.goals.maintenance") },
+    { value: "endurance", label: t("mealPlans.goals.endurance") },
+    { value: "strength", label: t("mealPlans.goals.strength") },
   ];
 
   const DAY_NAMES = [
-    t('days.monday'),
-    t('days.tuesday'),
-    t('days.wednesday'),
-    t('days.thursday'),
-    t('days.friday'),
-    t('days.saturday'),
-    t('days.sunday')
+    t("days.monday"),
+    t("days.tuesday"),
+    t("days.wednesday"),
+    t("days.thursday"),
+    t("days.friday"),
+    t("days.saturday"),
+    t("days.sunday"),
   ];
   const [daysData, setDaysData] = useState<DayData[]>([]);
   const [activeDay, setActiveDay] = useState<number>(1);
-  const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
+  const [selectedFoodCategory, setSelectedFoodCategory] =
+    useState<string>("all");
   const [modifiedMeals, setModifiedMeals] = useState<Set<string>>(new Set());
   const [modifiedItems, setModifiedItems] = useState<Set<string>>(new Set());
 
@@ -150,7 +164,7 @@ export default function TrainerMealPlanEdit() {
 
   useEffect(() => {
     if (mealDays && mealDays.length > 0) {
-      const daysWithMeals = mealDays.map(day => ({
+      const daysWithMeals = mealDays.map((day) => ({
         id: day.id,
         dayNumber: day.dayNumber,
         dayName: day.dayName,
@@ -171,8 +185,8 @@ export default function TrainerMealPlanEdit() {
             carbs: parseFloat(item.carbs || "0"),
             fat: parseFloat(item.fat || "0"),
             notes: item.notes || "",
-          }))
-        }))
+          })),
+        })),
       }));
       setDaysData(daysWithMeals);
       setModifiedMeals(new Set()); // Clear modifications when loading fresh data
@@ -189,8 +203,14 @@ export default function TrainerMealPlanEdit() {
         title: "Success",
         description: "Meal plan updated successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", planId] });
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${(user as any)?.trainer?.id}/meal-plans`] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/nutrition/meal-plans", planId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [
+          `/api/nutrition/trainers/${(user as any)?.trainer?.id}/meal-plans`,
+        ],
+      });
     },
     onError: (error: any) => {
       toast({
@@ -214,7 +234,9 @@ export default function TrainerMealPlanEdit() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/nutrition/meal-plans/${planId}/days`],
+      });
     },
   });
 
@@ -223,35 +245,55 @@ export default function TrainerMealPlanEdit() {
       await apiRequest("DELETE", `/api/nutrition/meals/${mealId}`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/nutrition/meal-plans/${planId}/days`],
+      });
     },
   });
 
   const updateMealMutation = useMutation({
     mutationFn: async (data: { id: string; updates: any }) => {
-      await apiRequest("PATCH", `/api/nutrition/meals/${data.id}`, data.updates);
+      await apiRequest(
+        "PATCH",
+        `/api/nutrition/meals/${data.id}`,
+        data.updates,
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/nutrition/meal-plans/${planId}/days`],
+      });
     },
   });
 
   const addMealItemMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", `/api/nutrition/meal-items`, data);
+      const response = await apiRequest(
+        "POST",
+        `/api/nutrition/meal-items`,
+        data,
+      );
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/nutrition/meal-plans/${planId}/days`],
+      });
     },
   });
 
   const updateMealItemMutation = useMutation({
     mutationFn: async (data: { id: string; updates: any }) => {
-      await apiRequest("PATCH", `/api/nutrition/meal-items/${data.id}`, data.updates);
+      await apiRequest(
+        "PATCH",
+        `/api/nutrition/meal-items/${data.id}`,
+        data.updates,
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/nutrition/meal-plans/${planId}/days`],
+      });
     },
   });
 
@@ -260,7 +302,9 @@ export default function TrainerMealPlanEdit() {
       await apiRequest("DELETE", `/api/nutrition/meal-items/${itemId}`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/nutrition/meal-plans/${planId}/days`],
+      });
     },
   });
 
@@ -274,24 +318,27 @@ export default function TrainerMealPlanEdit() {
 
   const handleUpdateMeal = (mealId: string, updates: any) => {
     // Update local state only
-    setDaysData(prev => 
-      prev.map(day => ({
+    setDaysData((prev) =>
+      prev.map((day) => ({
         ...day,
-        meals: day.meals.map(meal => 
-          meal.id === mealId ? { ...meal, ...updates } : meal
-        )
-      }))
+        meals: day.meals.map((meal) =>
+          meal.id === mealId ? { ...meal, ...updates } : meal,
+        ),
+      })),
     );
     // Track as modified
-    setModifiedMeals(prev => new Set(prev).add(mealId));
+    setModifiedMeals((prev) => new Set(prev).add(mealId));
   };
 
-  const handleAddFoodToMeal = (mealId: string, data: {
-    food: NutritionData;
-    quantity: number;
-    calculatedCalories: number;
-    calculatedNutrition: NutritionData;
-  }) => {
+  const handleAddFoodToMeal = (
+    mealId: string,
+    data: {
+      food: NutritionData;
+      quantity: number;
+      calculatedCalories: number;
+      calculatedNutrition: NutritionData;
+    },
+  ) => {
     addMealItemMutation.mutate({
       mealId,
       foodName: data.food.name || "Unknown Food",
@@ -307,19 +354,19 @@ export default function TrainerMealPlanEdit() {
 
   const handleUpdateMealItem = (itemId: string, updates: any) => {
     // Update local state only
-    setDaysData(prev => 
-      prev.map(day => ({
+    setDaysData((prev) =>
+      prev.map((day) => ({
         ...day,
-        meals: day.meals.map(meal => ({
+        meals: day.meals.map((meal) => ({
           ...meal,
-          items: meal.items.map(item => 
-            item.id === itemId ? { ...item, ...updates } : item
-          )
-        }))
-      }))
+          items: meal.items.map((item) =>
+            item.id === itemId ? { ...item, ...updates } : item,
+          ),
+        })),
+      })),
     );
     // Track as modified
-    setModifiedItems(prev => new Set(prev).add(itemId));
+    setModifiedItems((prev) => new Set(prev).add(itemId));
   };
 
   const handleDeleteMealItem = (itemId: string) => {
@@ -354,10 +401,12 @@ export default function TrainerMealPlanEdit() {
     try {
       // Save plan metadata
       await apiRequest("PATCH", `/api/nutrition/meal-plans/${planId}`, data);
-      
+
       // Save all modified meals
-      const mealSavePromises = Array.from(modifiedMeals).map(mealId => {
-        const meal = daysData.flatMap(d => d.meals).find(m => m.id === mealId);
+      const mealSavePromises = Array.from(modifiedMeals).map((mealId) => {
+        const meal = daysData
+          .flatMap((d) => d.meals)
+          .find((m) => m.id === mealId);
         if (meal) {
           return apiRequest("PATCH", `/api/nutrition/meals/${mealId}`, {
             mealType: meal.mealType,
@@ -368,10 +417,13 @@ export default function TrainerMealPlanEdit() {
         }
         return Promise.resolve();
       });
-      
+
       // Save all modified items
-      const itemSavePromises = Array.from(modifiedItems).map(itemId => {
-        const item = daysData.flatMap(d => d.meals).flatMap(m => m.items).find(i => i.id === itemId);
+      const itemSavePromises = Array.from(modifiedItems).map((itemId) => {
+        const item = daysData
+          .flatMap((d) => d.meals)
+          .flatMap((m) => m.items)
+          .find((i) => i.id === itemId);
         if (item) {
           return apiRequest("PATCH", `/api/nutrition/meal-items/${itemId}`, {
             quantity: item.quantity.toString(),
@@ -384,16 +436,24 @@ export default function TrainerMealPlanEdit() {
         }
         return Promise.resolve();
       });
-      
+
       await Promise.all([...mealSavePromises, ...itemSavePromises]);
-      
+
       // Clear modifications and invalidate queries
       setModifiedMeals(new Set());
       setModifiedItems(new Set());
-      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", planId] });
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${(user as any)?.trainer?.id}/meal-plans`] });
-      
+      queryClient.invalidateQueries({
+        queryKey: ["/api/nutrition/meal-plans", planId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/nutrition/meal-plans/${planId}/days`],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [
+          `/api/nutrition/trainers/${(user as any)?.trainer?.id}/meal-plans`,
+        ],
+      });
+
       toast({
         title: "Success",
         description: `Plan, ${modifiedMeals.size} meal(s), and ${modifiedItems.size} item(s) updated successfully`,
@@ -429,20 +489,22 @@ export default function TrainerMealPlanEdit() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setLocation("/trainer/meal-plans")}
+          onClick={() => setLocation("/trainer-meal-plans")}
           data-testid="button-back"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">{t('mealPlans.editPlan')}</h1>
-          <p className="text-muted-foreground">{t('mealPlans.updatePlanDetails')}</p>
+          <h1 className="text-3xl font-bold">{t("mealPlans.editPlan")}</h1>
+          <p className="text-muted-foreground">
+            {t("mealPlans.updatePlanDetails")}
+          </p>
         </div>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>{t('mealPlans.planDetails')}</CardTitle>
+          <CardTitle>{t("mealPlans.planDetails")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -453,7 +515,7 @@ export default function TrainerMealPlanEdit() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('mealPlans.planName')}</FormLabel>
+                      <FormLabel>{t("mealPlans.planName")}</FormLabel>
                       <FormControl>
                         <Input {...field} data-testid="input-plan-name" />
                       </FormControl>
@@ -468,7 +530,10 @@ export default function TrainerMealPlanEdit() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Goal</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger data-testid="select-goal">
                             <SelectValue placeholder="Select goal" />
@@ -492,12 +557,14 @@ export default function TrainerMealPlanEdit() {
                   name="dailyCalories"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('mealPlans.dailyCalories')}</FormLabel>
+                      <FormLabel>{t("mealPlans.dailyCalories")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
                           data-testid="input-daily-calories"
                         />
                       </FormControl>
@@ -511,12 +578,14 @@ export default function TrainerMealPlanEdit() {
                   name="targetProtein"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('mealPlans.targetProtein')}</FormLabel>
+                      <FormLabel>{t("mealPlans.targetProtein")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
                           data-testid="input-target-protein"
                         />
                       </FormControl>
@@ -530,12 +599,14 @@ export default function TrainerMealPlanEdit() {
                   name="targetCarbs"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('mealPlans.targetCarbs')}</FormLabel>
+                      <FormLabel>{t("mealPlans.targetCarbs")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
                           data-testid="input-target-carbs"
                         />
                       </FormControl>
@@ -549,12 +620,14 @@ export default function TrainerMealPlanEdit() {
                   name="targetFat"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('mealPlans.targetFat')}</FormLabel>
+                      <FormLabel>{t("mealPlans.targetFat")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
                           data-testid="input-target-fat"
                         />
                       </FormControl>
@@ -569,9 +642,13 @@ export default function TrainerMealPlanEdit() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('mealPlans.description')}</FormLabel>
+                    <FormLabel>{t("mealPlans.description")}</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={2} data-testid="textarea-description" />
+                      <Textarea
+                        {...field}
+                        rows={2}
+                        data-testid="textarea-description"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -583,18 +660,28 @@ export default function TrainerMealPlanEdit() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('mealPlans.notes')}</FormLabel>
+                    <FormLabel>{t("mealPlans.notes")}</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={2} data-testid="textarea-notes" />
+                      <Textarea
+                        {...field}
+                        rows={2}
+                        data-testid="textarea-notes"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" data-testid="button-save-plan" disabled={updateMealPlanMutation.isPending}>
+              <Button
+                type="submit"
+                data-testid="button-save-plan"
+                disabled={updateMealPlanMutation.isPending}
+              >
                 <Save className="h-4 w-4 mr-2" />
-                {updateMealPlanMutation.isPending ? t('mealPlans.saving') : t('mealPlans.savePlanDetails')}
+                {updateMealPlanMutation.isPending
+                  ? t("mealPlans.saving")
+                  : t("mealPlans.savePlanDetails")}
               </Button>
             </form>
           </Form>
@@ -603,14 +690,23 @@ export default function TrainerMealPlanEdit() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('mealPlans.weeklyMeals')}</CardTitle>
-          <CardDescription>{t('mealPlans.manageMealsDescription')}</CardDescription>
+          <CardTitle>{t("mealPlans.weeklyMeals")}</CardTitle>
+          <CardDescription>
+            {t("mealPlans.manageMealsDescription")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeDay.toString()} onValueChange={(v) => setActiveDay(parseInt(v))}>
+          <Tabs
+            value={activeDay.toString()}
+            onValueChange={(v) => setActiveDay(parseInt(v))}
+          >
             <TabsList className="grid grid-cols-7 w-full mb-4">
               {DAY_NAMES.map((day, index) => (
-                <TabsTrigger key={index + 1} value={(index + 1).toString()} data-testid={`tab-day-${index + 1}`}>
+                <TabsTrigger
+                  key={index + 1}
+                  value={(index + 1).toString()}
+                  data-testid={`tab-day-${index + 1}`}
+                >
                   {day.slice(0, 3)}
                 </TabsTrigger>
               ))}
@@ -618,31 +714,48 @@ export default function TrainerMealPlanEdit() {
             {daysData.map((day) => {
               const totals = calculateDayTotals(day);
               return (
-                <TabsContent key={day.dayNumber} value={day.dayNumber.toString()} className="space-y-4">
+                <TabsContent
+                  key={day.dayNumber}
+                  value={day.dayNumber.toString()}
+                  className="space-y-4"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">{day.dayName}</h3>
                       <div className="text-sm text-muted-foreground">
-                        {t('mealPlans.total')}: {totals.calories} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {totals.protein}g | {t('mealPlans.carbsShort')}: {totals.carbs}g | {t('mealPlans.fatShort')}: {totals.fat}g
+                        {t("mealPlans.total")}: {totals.calories}{" "}
+                        {t("mealPlans.cal")} | {t("mealPlans.proteinShort")}:{" "}
+                        {totals.protein}g | {t("mealPlans.carbsShort")}:{" "}
+                        {totals.carbs}g | {t("mealPlans.fatShort")}:{" "}
+                        {totals.fat}g
                       </div>
                     </div>
-                    <Button onClick={() => handleAddMeal(day.id)} size="sm" data-testid={`button-add-meal-day-${day.dayNumber}`}>
+                    <Button
+                      onClick={() => handleAddMeal(day.id)}
+                      size="sm"
+                      data-testid={`button-add-meal-day-${day.dayNumber}`}
+                    >
                       <Plus className="h-4 w-4 mr-2" />
-                      {t('mealPlans.addMeal')}
+                      {t("mealPlans.addMeal")}
                     </Button>
                   </div>
 
                   <div className="space-y-4">
                     {day.meals.map((meal, mealIndex) => {
-                      const mealTotals = meal.items.reduce((acc, item) => {
-                        const multiplier = item.quantity / 100;
-                        return {
-                          calories: acc.calories + (item.calories || 0) * multiplier,
-                          protein: acc.protein + (item.protein || 0) * multiplier,
-                          carbs: acc.carbs + (item.carbs || 0) * multiplier,
-                          fat: acc.fat + (item.fat || 0) * multiplier,
-                        };
-                      }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+                      const mealTotals = meal.items.reduce(
+                        (acc, item) => {
+                          const multiplier = item.quantity / 100;
+                          return {
+                            calories:
+                              acc.calories + (item.calories || 0) * multiplier,
+                            protein:
+                              acc.protein + (item.protein || 0) * multiplier,
+                            carbs: acc.carbs + (item.carbs || 0) * multiplier,
+                            fat: acc.fat + (item.fat || 0) * multiplier,
+                          };
+                        },
+                        { calories: 0, protein: 0, carbs: 0, fat: 0 },
+                      );
 
                       return (
                         <Card key={meal.id}>
@@ -652,14 +765,24 @@ export default function TrainerMealPlanEdit() {
                                 <div className="flex items-center gap-2">
                                   <Select
                                     value={meal.mealType}
-                                    onValueChange={(value) => handleUpdateMeal(meal.id, { mealType: value })}
+                                    onValueChange={(value) =>
+                                      handleUpdateMeal(meal.id, {
+                                        mealType: value,
+                                      })
+                                    }
                                   >
-                                    <SelectTrigger className="w-48" data-testid={`select-meal-type-${mealIndex}`}>
+                                    <SelectTrigger
+                                      className="w-48"
+                                      data-testid={`select-meal-type-${mealIndex}`}
+                                    >
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                       {MEAL_TYPES.map((type) => (
-                                        <SelectItem key={type.value} value={type.value}>
+                                        <SelectItem
+                                          key={type.value}
+                                          value={type.value}
+                                        >
                                           {type.label}
                                         </SelectItem>
                                       ))}
@@ -668,21 +791,36 @@ export default function TrainerMealPlanEdit() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                   <Input
-                                    placeholder={t('mealPlans.mealName')}
+                                    placeholder={t("mealPlans.mealName")}
                                     value={meal.name || ""}
-                                    onChange={(e) => handleUpdateMeal(meal.id, { name: e.target.value })}
+                                    onChange={(e) =>
+                                      handleUpdateMeal(meal.id, {
+                                        name: e.target.value,
+                                      })
+                                    }
                                     data-testid={`input-meal-name-${mealIndex}`}
                                   />
                                   <Input
                                     type="time"
-                                    placeholder={t('mealPlans.targetTime')}
+                                    placeholder={t("mealPlans.targetTime")}
                                     value={meal.targetTime || ""}
-                                    onChange={(e) => handleUpdateMeal(meal.id, { targetTime: e.target.value })}
+                                    onChange={(e) =>
+                                      handleUpdateMeal(meal.id, {
+                                        targetTime: e.target.value,
+                                      })
+                                    }
                                     data-testid={`input-meal-time-${mealIndex}`}
                                   />
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  {Math.round(mealTotals.calories)} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {Math.round(mealTotals.protein)}g | {t('mealPlans.carbsShort')}: {Math.round(mealTotals.carbs)}g | {t('mealPlans.fatShort')}: {Math.round(mealTotals.fat)}g
+                                  {Math.round(mealTotals.calories)}{" "}
+                                  {t("mealPlans.cal")} |{" "}
+                                  {t("mealPlans.proteinShort")}:{" "}
+                                  {Math.round(mealTotals.protein)}g |{" "}
+                                  {t("mealPlans.carbsShort")}:{" "}
+                                  {Math.round(mealTotals.carbs)}g |{" "}
+                                  {t("mealPlans.fatShort")}:{" "}
+                                  {Math.round(mealTotals.fat)}g
                                 </div>
                               </div>
                               <Button
@@ -697,30 +835,53 @@ export default function TrainerMealPlanEdit() {
                           </CardHeader>
                           <CardContent className="space-y-3">
                             {meal.items.map((item, itemIndex) => {
-                              const itemTotalCalories = (item.calories || 0) * (item.quantity / 100);
-                              const itemTotalProtein = (item.protein || 0) * (item.quantity / 100);
-                              const itemTotalCarbs = (item.carbs || 0) * (item.quantity / 100);
-                              const itemTotalFat = (item.fat || 0) * (item.quantity / 100);
+                              const itemTotalCalories =
+                                (item.calories || 0) * (item.quantity / 100);
+                              const itemTotalProtein =
+                                (item.protein || 0) * (item.quantity / 100);
+                              const itemTotalCarbs =
+                                (item.carbs || 0) * (item.quantity / 100);
+                              const itemTotalFat =
+                                (item.fat || 0) * (item.quantity / 100);
 
                               return (
-                                <div key={item.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+                                <div
+                                  key={item.id}
+                                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-md"
+                                >
                                   <div className="flex-1">
-                                    <div className="font-medium">{item.foodName}</div>
+                                    <div className="font-medium">
+                                      {item.foodName}
+                                    </div>
                                     <div className="text-sm text-muted-foreground">
-                                      {item.quantity}g | {Math.round(itemTotalCalories)} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}: {Math.round(itemTotalProtein)}g | {t('mealPlans.carbsShort')}: {Math.round(itemTotalCarbs)}g | {t('mealPlans.fatShort')}: {Math.round(itemTotalFat)}g
+                                      {item.quantity}g |{" "}
+                                      {Math.round(itemTotalCalories)}{" "}
+                                      {t("mealPlans.cal")} |{" "}
+                                      {t("mealPlans.proteinShort")}:{" "}
+                                      {Math.round(itemTotalProtein)}g |{" "}
+                                      {t("mealPlans.carbsShort")}:{" "}
+                                      {Math.round(itemTotalCarbs)}g |{" "}
+                                      {t("mealPlans.fatShort")}:{" "}
+                                      {Math.round(itemTotalFat)}g
                                     </div>
                                   </div>
                                   <Input
                                     type="number"
                                     className="w-24"
                                     value={item.quantity}
-                                    onChange={(e) => handleUpdateMealItem(item.id, { quantity: e.target.value })}
+                                    onChange={(e) =>
+                                      handleUpdateMealItem(item.id, {
+                                        quantity: e.target.value,
+                                      })
+                                    }
                                     data-testid={`input-item-quantity-${mealIndex}-${itemIndex}`}
                                   />
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleDeleteMealItem(item.id)}
+                                    onClick={() =>
+                                      handleDeleteMealItem(item.id)
+                                    }
                                     data-testid={`button-delete-item-${mealIndex}-${itemIndex}`}
                                   >
                                     <X className="h-4 w-4" />
@@ -730,7 +891,7 @@ export default function TrainerMealPlanEdit() {
                             })}
 
                             <FoodDropdownSelector
-                              onFoodSelect={(data) => 
+                              onFoodSelect={(data) =>
                                 handleAddFoodToMeal(meal.id, data)
                               }
                               selectedCategory={selectedFoodCategory}
@@ -738,9 +899,13 @@ export default function TrainerMealPlanEdit() {
                             />
 
                             <Textarea
-                              placeholder={t('mealPlans.mealNotesPlaceholder')}
+                              placeholder={t("mealPlans.mealNotesPlaceholder")}
                               value={meal.notes || ""}
-                              onChange={(e) => handleUpdateMeal(meal.id, { notes: e.target.value })}
+                              onChange={(e) =>
+                                handleUpdateMeal(meal.id, {
+                                  notes: e.target.value,
+                                })
+                              }
                               rows={2}
                               data-testid={`textarea-meal-notes-${mealIndex}`}
                             />
@@ -751,7 +916,7 @@ export default function TrainerMealPlanEdit() {
 
                     {day.meals.length === 0 && (
                       <div className="text-center py-8 text-muted-foreground">
-                        {t('mealPlans.noMealsAddedYet')}
+                        {t("mealPlans.noMealsAddedYet")}
                       </div>
                     )}
                   </div>

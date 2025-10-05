@@ -213,8 +213,8 @@ export default function TrainerMealPlans() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Meal plan created successfully",
+        title: t('common.success'),
+        description: t('mealPlans.mealPlanCreatedSuccess'),
       });
       queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/meal-plans`] });
       setShowCreateDialog(false);
@@ -492,8 +492,8 @@ export default function TrainerMealPlans() {
   const onSubmit = (data: MealPlanFormData) => {
     if (daysData.every((day) => day.meals.length === 0)) {
       toast({
-        title: "Error",
-        description: "Please add at least one meal to the plan",
+        title: t('common.error'),
+        description: t('mealPlans.addAtLeastOneMeal'),
         variant: "destructive",
       });
       return;
@@ -529,9 +529,9 @@ export default function TrainerMealPlans() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Plan Name</FormLabel>
+                        <FormLabel>{t('mealPlans.planName')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="e.g., Weight Loss Plan Week 1" data-testid="input-plan-name" />
+                          <Input {...field} placeholder={t('mealPlans.planNamePlaceholder')} data-testid="input-plan-name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -543,11 +543,11 @@ export default function TrainerMealPlans() {
                     name="goal"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Goal</FormLabel>
+                        <FormLabel>{t('mealPlans.goal')}</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger data-testid="select-goal">
-                              <SelectValue placeholder="Select goal" />
+                              <SelectValue placeholder={t('mealPlans.selectGoal')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -568,7 +568,7 @@ export default function TrainerMealPlans() {
                     name="dailyCalories"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Daily Calories</FormLabel>
+                        <FormLabel>{t('mealPlans.dailyCalories')}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -587,7 +587,7 @@ export default function TrainerMealPlans() {
                     name="targetProtein"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Target Protein (g)</FormLabel>
+                        <FormLabel>{t('mealPlans.targetProtein')}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -606,7 +606,7 @@ export default function TrainerMealPlans() {
                     name="targetCarbs"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Target Carbs (g)</FormLabel>
+                        <FormLabel>{t('mealPlans.targetCarbs')}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -625,7 +625,7 @@ export default function TrainerMealPlans() {
                     name="targetFat"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Target Fat (g)</FormLabel>
+                        <FormLabel>{t('mealPlans.targetFat')}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -645,7 +645,7 @@ export default function TrainerMealPlans() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>{t('mealPlans.description')}</FormLabel>
                       <FormControl>
                         <Textarea {...field} rows={2} data-testid="textarea-description" />
                       </FormControl>
@@ -657,7 +657,7 @@ export default function TrainerMealPlans() {
                 <Separator />
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Weekly Meal Planning</h3>
+                  <h3 className="text-lg font-semibold mb-4">{t('mealPlans.weeklyMealPlanning')}</h3>
                   <Tabs value={activeDay.toString()} onValueChange={(v) => setActiveDay(parseInt(v))}>
                     <TabsList className="grid grid-cols-7 w-full">
                       {DAY_NAMES.map((day, index) => (
@@ -673,7 +673,7 @@ export default function TrainerMealPlans() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <CardTitle>{day.dayName}</CardTitle>
-                                <CardDescription>Day {day.dayNumber}</CardDescription>
+                                <CardDescription>{t('mealPlans.day')} {day.dayNumber}</CardDescription>
                               </div>
                               <div className="text-right">
                                 {(() => {
@@ -681,10 +681,10 @@ export default function TrainerMealPlans() {
                                   return (
                                     <div className="space-y-1">
                                       <div className="text-sm font-semibold" data-testid={`text-day-calories-${day.dayNumber}`}>
-                                        {totals.calories} cal
+                                        {totals.calories} {t('mealPlans.cal')}
                                       </div>
                                       <div className="text-xs text-muted-foreground">
-                                        P: {totals.protein}g | C: {totals.carbs}g | F: {totals.fat}g
+                                        {t('mealPlans.proteinShort')}: {totals.protein}g | {t('mealPlans.carbsShort')}: {totals.carbs}g | {t('mealPlans.fatShort')}: {totals.fat}g
                                       </div>
                                     </div>
                                   );
@@ -716,7 +716,7 @@ export default function TrainerMealPlans() {
                                         </SelectContent>
                                       </Select>
                                       <Input
-                                        placeholder="Meal name (optional)"
+                                        placeholder={t('mealPlans.mealName')}
                                         value={meal.name || ""}
                                         onChange={(e) =>
                                           updateMeal(day.dayNumber, meal.id, { name: e.target.value })
@@ -725,7 +725,7 @@ export default function TrainerMealPlans() {
                                         data-testid={`input-meal-name-${meal.id}`}
                                       />
                                       <Input
-                                        placeholder="Time (e.g., 8:00 AM)"
+                                        placeholder={t('mealPlans.timePlaceholder')}
                                         value={meal.targetTime || ""}
                                         onChange={(e) =>
                                           updateMeal(day.dayNumber, meal.id, { targetTime: e.target.value })
@@ -754,12 +754,12 @@ export default function TrainerMealPlans() {
                                     >
                                       <div className="flex-1">
                                         <div className="font-medium text-sm">
-                                          {item.foodName || "Unknown Food"} ({item.quantity}g)
+                                          {item.foodName || t('mealPlans.unknownFood')} ({item.quantity}g)
                                         </div>
                                         <div className="text-xs text-muted-foreground">
-                                          {Math.round((item.calories || 0) * (item.quantity / 100))} cal | P:{" "}
-                                          {Math.round((item.protein || 0) * (item.quantity / 100))}g | C:{" "}
-                                          {Math.round((item.carbs || 0) * (item.quantity / 100))}g | F:{" "}
+                                          {Math.round((item.calories || 0) * (item.quantity / 100))} {t('mealPlans.cal')} | {t('mealPlans.proteinShort')}:{" "}
+                                          {Math.round((item.protein || 0) * (item.quantity / 100))}g | {t('mealPlans.carbsShort')}:{" "}
+                                          {Math.round((item.carbs || 0) * (item.quantity / 100))}g | {t('mealPlans.fatShort')}:{" "}
                                           {Math.round((item.fat || 0) * (item.quantity / 100))}g
                                         </div>
                                       </div>
@@ -807,7 +807,7 @@ export default function TrainerMealPlans() {
                               data-testid={`button-add-meal-day-${day.dayNumber}`}
                             >
                               <Plus className="h-4 w-4 mr-2" />
-                              Add Meal
+                              {t('mealPlans.addMeal')}
                             </Button>
                           </CardContent>
                         </Card>
@@ -823,7 +823,7 @@ export default function TrainerMealPlans() {
                     onClick={() => setShowCreateDialog(false)}
                     data-testid="button-cancel"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -831,7 +831,7 @@ export default function TrainerMealPlans() {
                     data-testid="button-save-meal-plan"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {createMealPlanMutation.isPending ? "Saving..." : "Save Meal Plan"}
+                    {createMealPlanMutation.isPending ? t('mealPlans.saving') : t('mealPlans.saveMealPlan')}
                   </Button>
                 </div>
               </form>
