@@ -96,6 +96,8 @@ export default function TrainerMealPlanEdit() {
   const [daysData, setDaysData] = useState<DayData[]>([]);
   const [activeDay, setActiveDay] = useState<number>(1);
   const [selectedFoodCategory, setSelectedFoodCategory] = useState<string>('all');
+  const [modifiedMeals, setModifiedMeals] = useState<Set<string>>(new Set());
+  const [modifiedItems, setModifiedItems] = useState<Set<string>>(new Set());
 
   const form = useForm<MealPlanFormData>({
     resolver: zodResolver(mealPlanFormSchema),
@@ -163,6 +165,8 @@ export default function TrainerMealPlanEdit() {
         }))
       }));
       setDaysData(daysWithMeals);
+      setModifiedMeals(new Set()); // Clear modifications when loading fresh data
+      setModifiedItems(new Set());
     }
   }, [mealDays]);
 
@@ -259,7 +263,17 @@ export default function TrainerMealPlanEdit() {
   };
 
   const handleUpdateMeal = (mealId: string, updates: any) => {
-    updateMealMutation.mutate({ id: mealId, updates });
+    // Update local state only
+    setDaysData(prev => 
+      prev.map(day => ({
+        ...day,
+        meals: day.meals.map(meal => 
+          meal.id === mealId ? { ...meal, ...updates } : meal
+        )
+      }))
+    );
+    // Track as modified
+    setModifiedMeals(prev => new Set(prev).add(mealId));
   };
 
   const handleAddFoodToMeal = (mealId: string, data: {
@@ -282,7 +296,20 @@ export default function TrainerMealPlanEdit() {
   };
 
   const handleUpdateMealItem = (itemId: string, updates: any) => {
-    updateMealItemMutation.mutate({ id: itemId, updates });
+    // Update local state only
+    setDaysData(prev => 
+      prev.map(day => ({
+        ...day,
+        meals: day.meals.map(meal => ({
+          ...meal,
+          items: meal.items.map(item => 
+            item.id === itemId ? { ...item, ...updates } : item
+          )
+        }))
+      }))
+    );
+    // Track as modified
+    setModifiedItems(prev => new Set(prev).add(itemId));
   };
 
   const handleDeleteMealItem = (itemId: string) => {
@@ -313,8 +340,61 @@ export default function TrainerMealPlanEdit() {
     };
   };
 
-  const onSubmit = (data: MealPlanFormData) => {
-    updateMealPlanMutation.mutate(data);
+  const onSubmit = async (data: MealPlanFormData) => {
+    try {
+      // Save plan metadata
+      await apiRequest("PATCH", `/api/nutrition/meal-plans/${planId}`, data);
+      
+      // Save all modified meals
+      const mealSavePromises = Array.from(modifiedMeals).map(mealId => {
+        const meal = daysData.flatMap(d => d.meals).find(m => m.id === mealId);
+        if (meal) {
+          return apiRequest("PATCH", `/api/nutrition/meals/${mealId}`, {
+            mealType: meal.mealType,
+            name: meal.name,
+            targetTime: meal.targetTime,
+            notes: meal.notes,
+          });
+        }
+        return Promise.resolve();
+      });
+      
+      // Save all modified items
+      const itemSavePromises = Array.from(modifiedItems).map(itemId => {
+        const item = daysData.flatMap(d => d.meals).flatMap(m => m.items).find(i => i.id === itemId);
+        if (item) {
+          return apiRequest("PATCH", `/api/nutrition/meal-items/${itemId}`, {
+            quantity: item.quantity.toString(),
+            calories: item.calories?.toString(),
+            protein: item.protein?.toString(),
+            carbs: item.carbs?.toString(),
+            fat: item.fat?.toString(),
+            notes: item.notes,
+          });
+        }
+        return Promise.resolve();
+      });
+      
+      await Promise.all([...mealSavePromises, ...itemSavePromises]);
+      
+      // Clear modifications and invalidate queries
+      setModifiedMeals(new Set());
+      setModifiedItems(new Set());
+      queryClient.invalidateQueries({ queryKey: ["/api/nutrition/meal-plans", planId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/meal-plans/${planId}/days`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${(user as any)?.trainer?.id}/meal-plans`] });
+      
+      toast({
+        title: "Success",
+        description: `Plan, ${modifiedMeals.size} meal(s), and ${modifiedItems.size} item(s) updated successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update meal plan",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
