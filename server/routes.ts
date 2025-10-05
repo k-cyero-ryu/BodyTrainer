@@ -787,6 +787,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete training plan
+  app.delete('/api/training-plans/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const planId = req.params.id;
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can delete training plans" });
+      }
+      
+      // Verify the plan belongs to this trainer
+      const existingPlan = await storage.getTrainingPlan(planId);
+      if (!existingPlan || existingPlan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await storage.deleteTrainingPlan(planId);
+      res.json({ success: true, message: "Training plan deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting training plan:", error);
+      res.status(500).json({ message: "Failed to delete training plan" });
+    }
+  });
+
   // Get single training plan by ID (accessible by both trainers and clients)
   app.get('/api/training-plans/:planId', isAuthenticated, async (req: any, res) => {
     try {

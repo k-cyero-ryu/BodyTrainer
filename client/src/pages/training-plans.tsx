@@ -168,6 +168,37 @@ export default function TrainingPlans() {
     },
   });
 
+  const deletePlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      await apiRequest("DELETE", `/api/training-plans/${planId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: t('plans.success'),
+        description: "Training plan deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/training-plans"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: t('plans.error'),
+        description: "Failed to delete training plan",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreatePlan = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -320,6 +351,12 @@ export default function TrainingPlans() {
 
   const handleCopyClick = (planId: string) => {
     copyPlanMutation.mutate(planId);
+  };
+
+  const handleDeleteClick = (planId: string) => {
+    if (confirm("Are you sure you want to delete this training plan? This action cannot be undone.")) {
+      deletePlanMutation.mutate(planId);
+    }
   };
 
   if (isLoading) {
@@ -841,7 +878,10 @@ export default function TrainingPlans() {
                           <Copy className="w-4 h-4 mr-2" />
                           Copy
                         </DropdownMenuItem>
-                        <DropdownMenuItem data-testid={`menu-delete-${plan.id}`}>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteClick(plan.id)}
+                          data-testid={`menu-delete-${plan.id}`}
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
                           {t('plans.delete')}
                         </DropdownMenuItem>
