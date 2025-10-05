@@ -29,7 +29,7 @@ export default function ClientSupplements() {
   const activeSupplementPlan = activeAssignment?.supplementPlan;
 
   const { data: supplementItems = [] } = useQuery<SupplementItem[]>({
-    queryKey: ["/api/nutrition/supplement-plans", activeSupplementPlan?.id, "items"],
+    queryKey: [`/api/nutrition/supplement-plans/${activeSupplementPlan?.id}/items`],
     enabled: !!activeSupplementPlan?.id,
   });
 
