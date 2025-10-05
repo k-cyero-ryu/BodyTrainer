@@ -67,6 +67,7 @@ export default function TrainingPlanEdit() {
   const [activeDay, setActiveDay] = useState<number>(1);
   const [activeWeek, setActiveWeek] = useState<number>(1);
   const [planExercises, setPlanExercises] = useState<PlanExercise[]>([]);
+  const [modifiedExercises, setModifiedExercises] = useState<Set<string>>(new Set());
 
   const form = useForm<TrainingPlanFormData>({
     resolver: zodResolver(trainingPlanFormSchema),
@@ -115,6 +116,7 @@ export default function TrainingPlanEdit() {
         }));
         setPlanExercises(formattedExercises);
       }
+      setModifiedExercises(new Set()); // Clear modifications when loading fresh data
     }
   }, [plan, form]);
 
@@ -178,15 +180,59 @@ export default function TrainingPlanEdit() {
   };
 
   const handleUpdateExercise = (id: string, updates: any) => {
-    updateExerciseMutation.mutate({ id, updates });
+    // Update local state only
+    setPlanExercises(prev => 
+      prev.map(ex => 
+        ex.id === id ? { ...ex, ...updates } : ex
+      )
+    );
+    // Track as modified
+    setModifiedExercises(prev => new Set(prev).add(id));
   };
 
   const handleDeleteExercise = (id: string) => {
     deleteExerciseMutation.mutate(id);
   };
 
-  const onSubmit = (data: TrainingPlanFormData) => {
-    updatePlanMutation.mutate(data);
+  const onSubmit = async (data: TrainingPlanFormData) => {
+    try {
+      // Save plan metadata
+      await apiRequest("PUT", `/api/training-plans/${planId}`, data);
+      
+      // Save all modified exercises
+      const exerciseSavePromises = Array.from(modifiedExercises).map(exerciseId => {
+        const exercise = planExercises.find(ex => ex.id === exerciseId);
+        if (exercise) {
+          return apiRequest("PUT", `/api/plan-exercises/${exerciseId}`, {
+            sets: exercise.sets,
+            reps: exercise.reps,
+            weight: exercise.weight,
+            duration: exercise.duration,
+            restTime: exercise.restTime,
+            notes: exercise.notes,
+          });
+        }
+        return Promise.resolve();
+      });
+      
+      await Promise.all(exerciseSavePromises);
+      
+      // Clear modifications and invalidate queries
+      setModifiedExercises(new Set());
+      queryClient.invalidateQueries({ queryKey: [`/api/training-plans/${planId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/training-plans"] });
+      
+      toast({
+        title: "Success",
+        description: `Plan and ${modifiedExercises.size} exercise(s) updated successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update training plan",
+        variant: "destructive",
+      });
+    }
   };
 
   const getExercisesForDayAndWeek = (day: number, week: number) => {
