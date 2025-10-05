@@ -135,6 +135,16 @@ const getMealTypeLabel = (mealType: string | undefined, t: any) => {
   }
 };
 
+const getCategoryLabel = (category: string | undefined, t: any) => {
+  switch (category) {
+    case 'proteins': return t('dailyResume.proteins');
+    case 'carbohydrates': 
+    case 'carbs': return t('dailyResume.carbohydrates');
+    case 'sugar': return t('dailyResume.fruits');
+    default: return category || '';
+  }
+};
+
 export default function CalorieTracker() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
@@ -721,7 +731,7 @@ export default function CalorieTracker() {
                             {getMealTypeLabel(entry.mealType, t)}
                           </Badge>
                           <Badge variant="outline" data-testid={`badge-category-${entry.id}`}>
-                            {entry.category}
+                            {getCategoryLabel(entry.category, t)}
                           </Badge>
                         </div>
                         <p className="font-medium text-gray-900 dark:text-white" data-testid={`text-food-description-${entry.id}`}>
