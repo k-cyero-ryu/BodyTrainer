@@ -98,12 +98,8 @@ export function TDEECalculatorDialog({
                   <SelectItem 
                     key={client.id} 
                     value={client.id}
-                    textValue={`${client.firstName} ${client.lastName}`}
                   >
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span>{client.firstName} {client.lastName}</span>
-                    </div>
+                    {client.firstName} {client.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>
