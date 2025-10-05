@@ -42,6 +42,7 @@ import FoodDropdownSelector from "@/components/FoodDropdownSelector";
 import FoodSearchAutocomplete from "@/components/FoodSearchAutocomplete";
 import AutoCalorieCalculator from "@/components/AutoCalorieCalculator";
 import type { NutritionData } from "@shared/schema";
+import { translateFoodName } from "@/lib/foodTranslations";
 
 // TypeScript interfaces for API responses
 interface CalorieSummary {
@@ -735,7 +736,7 @@ export default function CalorieTracker() {
                           </Badge>
                         </div>
                         <p className="font-medium text-gray-900 dark:text-white" data-testid={`text-food-description-${entry.id}`}>
-                          {entry.description}
+                          {translateFoodName(entry.description, i18n.language)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {t('calorieTracker.quantity')} {entry.quantity}g
@@ -824,7 +825,7 @@ export default function CalorieTracker() {
                           )}
                         </div>
                         <p className="font-medium text-gray-900 dark:text-white" data-testid={`text-custom-description-${entry.id}`}>
-                          {entry.description}
+                          {translateFoodName(entry.description, i18n.language)}
                         </p>
                         {entry.notes && (
                           <p className="text-sm text-gray-600 dark:text-gray-400">
