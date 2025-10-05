@@ -719,6 +719,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Copy training plan (duplicate with incremented name)
+  app.post('/api/training-plans/:id/copy', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const planId = req.params.id;
+      
+      const trainer = await storage.getTrainerByUserId(userId);
+      if (!trainer) {
+        return res.status(403).json({ message: "Only trainers can copy training plans" });
+      }
+      
+      // Verify the plan belongs to this trainer
+      const originalPlan = await storage.getTrainingPlan(planId);
+      if (!originalPlan || originalPlan.trainerId !== trainer.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Generate incremented name
+      const allPlans = await storage.getTrainingPlansByTrainer(trainer.id);
+      const baseName = originalPlan.name.replace(/\s+\d+$/, ''); // Remove trailing number if exists
+      
+      let newName = `${baseName} 2`;
+      let counter = 2;
+      
+      while (allPlans.some(p => p.name === newName)) {
+        counter++;
+        newName = `${baseName} ${counter}`;
+      }
+
+      // Create new training plan
+      const newPlan = await storage.createTrainingPlan({
+        name: newName,
+        description: originalPlan.description,
+        goal: originalPlan.goal,
+        duration: originalPlan.duration,
+        difficulty: originalPlan.difficulty,
+        category: originalPlan.category,
+        weekCycle: originalPlan.weekCycle,
+        dailyCalories: originalPlan.dailyCalories,
+        protein: originalPlan.protein,
+        carbs: originalPlan.carbs,
+        trainerId: trainer.id,
+      });
+
+      // Copy all plan exercises
+      const planExercises = await storage.getPlanExercisesByPlan(planId);
+      
+      for (const exercise of planExercises) {
+        await storage.createPlanExercise({
+          planId: newPlan.id,
+          exerciseId: exercise.exerciseId,
+          dayOfWeek: exercise.dayOfWeek,
+          sets: exercise.sets,
+          reps: exercise.reps,
+          weight: exercise.weight,
+          duration: exercise.duration,
+          restTime: exercise.restTime,
+          notes: exercise.notes,
+        });
+      }
+
+      res.json(newPlan);
+    } catch (error) {
+      console.error("Error copying training plan:", error);
+      res.status(500).json({ message: "Failed to copy training plan" });
+    }
+  });
+
   // Get single training plan by ID (accessible by both trainers and clients)
   app.get('/api/training-plans/:planId', isAuthenticated, async (req: any, res) => {
     try {

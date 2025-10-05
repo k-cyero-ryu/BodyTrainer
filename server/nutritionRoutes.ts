@@ -573,6 +573,56 @@ nutritionRouter.delete('/supplement-plans/:id', async (req, res) => {
   }
 });
 
+// Copy supplement plan (duplicate with incremented name)
+nutritionRouter.post('/supplement-plans/:id/copy', async (req, res) => {
+  try {
+    const originalPlan = await storage.getSupplementPlan(req.params.id);
+    if (!originalPlan) {
+      return res.status(404).json({ error: 'Supplement plan not found' });
+    }
+
+    // Generate incremented name
+    const allPlans = await storage.getSupplementPlansByTrainer(originalPlan.trainerId);
+    const baseName = originalPlan.name.replace(/\s+\d+$/, ''); // Remove trailing number if exists
+    
+    let newName = `${baseName} 2`;
+    let counter = 2;
+    
+    while (allPlans.some(p => p.name === newName)) {
+      counter++;
+      newName = `${baseName} ${counter}`;
+    }
+
+    // Create new supplement plan
+    const newPlan = await storage.createSupplementPlan({
+      name: newName,
+      description: originalPlan.description,
+      goal: originalPlan.goal,
+      notes: originalPlan.notes,
+      trainerId: originalPlan.trainerId,
+    });
+
+    // Copy all supplement plan items
+    const planItems = await storage.getSupplementPlanItemsByPlan(req.params.id);
+    
+    for (const item of planItems) {
+      await storage.createSupplementPlanItem({
+        supplementPlanId: newPlan.id,
+        supplementItemId: item.supplementItemId,
+        frequency: item.frequency,
+        timing: item.timing,
+        isOptional: item.isOptional,
+        notes: item.notes,
+      });
+    }
+
+    res.json(newPlan);
+  } catch (error: any) {
+    console.error('Error copying supplement plan:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ============== Supplement Plan Item Routes (Junction) ==============
 
 // Add supplement item to plan
