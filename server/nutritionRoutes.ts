@@ -619,10 +619,11 @@ nutritionRouter.post('/supplement-plans/:id/copy', async (req, res) => {
       await storage.createSupplementPlanItem({
         supplementPlanId: newPlan.id,
         supplementItemId: item.supplementItemId,
+        dosage: item.dosage,
         frequency: item.frequency,
         timing: item.timing,
         isOptional: item.isOptional,
-        notes: item.notes,
+        sortOrder: item.sortOrder,
       });
     }
 
