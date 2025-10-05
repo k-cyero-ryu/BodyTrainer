@@ -51,6 +51,20 @@ const FOOD_CATEGORIES = [
   'legumes'
 ];
 
+const getCategoryTranslationKey = (category: string) => {
+  const mapping: Record<string, string> = {
+    'all': 'dailyResume.allCategories',
+    'proteins': 'dailyResume.proteins',
+    'carbohydrates': 'dailyResume.carbohydrates',
+    'fruits': 'dailyResume.fruits',
+    'vegetables': 'dailyResume.vegetables',
+    'dairy': 'dailyResume.dairy',
+    'fats': 'dailyResume.fats',
+    'legumes': 'dailyResume.legumes'
+  };
+  return mapping[category] || category;
+};
+
 export function FoodDropdownSelector({
   onFoodSelect,
   className = "",
@@ -211,17 +225,17 @@ export function FoodDropdownSelector({
       <CardContent className="space-y-4">
         {/* Category Selection */}
         <div className="space-y-2">
-          <Label htmlFor="category-select">Food Category</Label>
+          <Label htmlFor="category-select">{t('dailyResume.foodCategory')}</Label>
           <Select key={`category-${selectedCategory}`} value={selectedCategory} onValueChange={handleCategoryChange}>
             <SelectTrigger data-testid="select-food-category">
               <SelectValue>
-                {selectedCategory === 'all' ? 'All Categories' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+                {t(getCategoryTranslationKey(selectedCategory))}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {FOOD_CATEGORIES.map((category) => (
                 <SelectItem key={category} value={category} data-testid={`option-category-${category}`}>
-                  {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                  {t(getCategoryTranslationKey(category))}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -233,7 +247,7 @@ export function FoodDropdownSelector({
           <Label htmlFor="food-select">
             <div className="flex items-center gap-2">
               <Utensils className="h-4 w-4" />
-              Food Item
+              {t('dailyResume.foodItem')}
             </div>
           </Label>
           
@@ -245,7 +259,7 @@ export function FoodDropdownSelector({
           ) : (
             <Select value={selectedFoodId} onValueChange={setSelectedFoodId}>
               <SelectTrigger data-testid="select-food-item">
-                <SelectValue placeholder={placeholder || "Select a food item"} />
+                <SelectValue placeholder={placeholder || t('dailyResume.selectFood')} />
               </SelectTrigger>
               <SelectContent>
                 {filteredFoods.length === 0 ? (
@@ -278,7 +292,7 @@ export function FoodDropdownSelector({
           <Label htmlFor="quantity-input">
             <div className="flex items-center gap-2">
               <Scale className="h-4 w-4" />
-              Quantity (grams)
+              {t('dailyResume.quantityGrams')}
             </div>
           </Label>
           <Input
@@ -298,18 +312,18 @@ export function FoodDropdownSelector({
           <div className="p-3 bg-muted rounded-md space-y-2" data-testid="nutrition-preview">
             <div className="flex items-center gap-2 text-sm font-medium">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              Nutrition Preview
+              {t('dailyResume.nutritionPreview')}
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="font-medium">Calories:</span>{" "}
+                <span className="font-medium">{t('dailyResume.calories')}:</span>{" "}
                 <span className="text-primary font-bold">
                   {calculateNutrition(selectedFood, parseFloat(quantity)).calories || 0}
                 </span>
               </div>
               {selectedFood.protein && (
                 <div>
-                  <span className="font-medium">Protein:</span>{" "}
+                  <span className="font-medium">{t('dailyResume.protein')}:</span>{" "}
                   {calculateNutrition(selectedFood, parseFloat(quantity)).protein}g
                 </div>
               )}
@@ -327,12 +341,12 @@ export function FoodDropdownSelector({
           {isCalculating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Calculating...
+              {t('dailyResume.calculating')}
             </>
           ) : (
             <>
               <Calculator className="h-4 w-4 mr-2" />
-              Add Food Entry
+              {t('dailyResume.addFoodEntry')}
             </>
           )}
         </Button>
