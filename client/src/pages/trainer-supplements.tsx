@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Pill, FileText, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Pill, FileText, ExternalLink, MoreVertical, Edit, Eye, Copy } from "lucide-react";
 import { Link } from "wouter";
 import {
   AlertDialog,
@@ -29,6 +29,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { SupplementPlan, SupplementItem, SupplementPlanItem } from "@shared/schema";
 
 const supplementPlanFormSchema = z.object({
@@ -82,7 +88,9 @@ export default function TrainerSupplements() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
+  const [editingPlan, setEditingPlan] = useState<SupplementPlan | null>(null);
   const [selectedItems, setSelectedItems] = useState<SelectedSupplementItem[]>([]);
   const [selectedLibraryItemId, setSelectedLibraryItemId] = useState<string>("");
 
@@ -169,6 +177,50 @@ export default function TrainerSupplements() {
     },
   });
 
+  const copyPlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const response = await apiRequest("POST", `/api/nutrition/supplement-plans/${planId}/copy`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t("Success"),
+        description: "Supplement plan copied successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t("Error"),
+        description: error.message || "Failed to copy supplement plan",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updatePlanMutation = useMutation({
+    mutationFn: async (data: { id: string; updates: Partial<SupplementPlanFormData> }) => {
+      const response = await apiRequest("PATCH", `/api/nutrition/supplement-plans/${data.id}`, data.updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t("Success"),
+        description: "Supplement plan updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/nutrition/trainers/${user?.trainer?.id}/supplement-plans`] });
+      setShowEditDialog(false);
+      setEditingPlan(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: t("Error"),
+        description: error.message || "Failed to update supplement plan",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreate = (data: SupplementPlanFormData) => {
     if (selectedItems.length === 0) {
       toast({
@@ -222,6 +274,21 @@ export default function TrainerSupplements() {
 
   const getSupplementItemById = (id: string) => {
     return supplementItems.find(item => item.id === id);
+  };
+
+  const handleEditClick = (plan: SupplementPlan) => {
+    setEditingPlan(plan);
+    setShowEditDialog(true);
+  };
+
+  const handleCopyClick = (planId: string) => {
+    copyPlanMutation.mutate(planId);
+  };
+
+  const handleEditSubmit = (data: SupplementPlanFormData) => {
+    if (editingPlan) {
+      updatePlanMutation.mutate({ id: editingPlan.id, updates: data });
+    }
   };
 
   return (
@@ -531,21 +598,41 @@ export default function TrainerSupplements() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <CardTitle data-testid={`text-plan-name-${plan.id}`}>{plan.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle data-testid={`text-plan-name-${plan.id}`}>{plan.name}</CardTitle>
+                      <Badge variant="outline" className="text-xs">Template</Badge>
+                    </div>
                     {plan.goal && (
                       <Badge className="mt-2" variant="secondary" data-testid={`badge-goal-${plan.id}`}>
                         {plan.goal}
                       </Badge>
                     )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeletingPlanId(plan.id)}
-                    data-testid={`button-delete-${plan.id}`}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" data-testid={`button-menu-${plan.id}`}>
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditClick(plan)} data-testid={`menu-edit-${plan.id}`}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleCopyClick(plan.id)} 
+                        disabled={copyPlanMutation.isPending}
+                        data-testid={`menu-copy-${plan.id}`}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeletingPlanId(plan.id)} data-testid={`menu-delete-${plan.id}`}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 {plan.description && (
                   <CardDescription className="mt-2" data-testid={`text-description-${plan.id}`}>
@@ -559,9 +646,6 @@ export default function TrainerSupplements() {
                     {plan.notes}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">
-                  Template - Assign to clients from their detail page
-                </p>
               </CardContent>
             </Card>
           ))}
@@ -587,6 +671,112 @@ export default function TrainerSupplements() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Supplement Plan</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plan Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Plan name"
+                        defaultValue={editingPlan?.name}
+                        data-testid="input-edit-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Brief description"
+                        defaultValue={editingPlan?.description || ""}
+                        data-testid="input-edit-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="goal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Goal</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={editingPlan?.goal || ""}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-goal">
+                          <SelectValue placeholder="Select goal" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {GOAL_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Additional notes"
+                        defaultValue={editingPlan?.notes || ""}
+                        data-testid="input-edit-notes"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingPlan(null);
+                  }}
+                  data-testid="button-edit-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updatePlanMutation.isPending} data-testid="button-edit-submit">
+                  {updatePlanMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
