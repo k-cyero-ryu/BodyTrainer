@@ -369,7 +369,7 @@ export const commonFoods: CommonFood[] = [
     category: "Fruits"
   },
   {
-    fdcId: 171688,
+    fdcId: 171705,
     name: "Avocado",
     translations: {
       es: "Aguacate",

@@ -138,7 +138,7 @@ export function FoodSearchAutocomplete({
   const handleCommonFoodSelection = (food: CommonFood) => {
     const usdaFormat: USDASearchResult = {
       fdcId: food.fdcId,
-      description: getTranslatedFoodName(food, currentLang),
+      description: food.name,
       dataType: 'Common',
       foodCategory: food.category,
     };
@@ -153,7 +153,7 @@ export function FoodSearchAutocomplete({
     if (selectedCommonFood) {
       const selectedFoodData: SelectedFoodData = {
         fdcId: selectedCommonFood.fdcId,
-        name: getTranslatedFoodName(selectedCommonFood, currentLang),
+        name: selectedCommonFood.name,
         category: selectedCommonFood.category,
         calories: selectedCommonFood.nutrition.calories,
         protein: selectedCommonFood.nutrition.protein,

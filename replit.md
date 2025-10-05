@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **File Uploads**: Uppy for media file handling.
 
 ### Recent Changes
+- **October 2025 - Food Translation System**: Implemented local food database with ~50 common foods (fruits, vegetables, proteins, grains, dairy, legumes, nuts) with full translations in Spanish, French, and Portuguese. Food search and selection components now prioritize local translated foods for instant display, with USDA API fallback for comprehensive coverage. Nutrition data stored locally for common foods eliminates API calls and improves performance.
 - **October 2025 - Nutrition & Supplement Planning Module**: Implemented comprehensive nutrition module with BMR/TDEE calculations using Mifflin-St Jeor formula, 7-day meal planning with USDA food database integration, supplement management with timing tracking, and client gender field for accurate calorie calculations.
 - **August 2025 - Media System**: Exercise videos/photos and T-pose evaluation photos both use `/objects/` route for public file serving without authentication. System stabilized after resolving path inconsistencies between `/objects/` and `/public-objects/` routes.
 
