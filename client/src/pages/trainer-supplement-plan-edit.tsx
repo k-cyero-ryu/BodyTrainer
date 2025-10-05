@@ -38,6 +38,35 @@ const supplementPlanFormSchema = z.object({
 
 type SupplementPlanFormData = z.infer<typeof supplementPlanFormSchema>;
 
+const FREQUENCY_OPTIONS = [
+  { value: "daily", label: "Daily" },
+  { value: "2x daily", label: "2x Daily" },
+  { value: "3x daily", label: "3x Daily" },
+  { value: "post-workout", label: "Post-Workout" },
+  { value: "pre-workout", label: "Pre-Workout" },
+  { value: "as needed", label: "As Needed" },
+];
+
+const TIMING_OPTIONS = [
+  { value: "morning", label: "Morning" },
+  { value: "afternoon", label: "Afternoon" },
+  { value: "evening", label: "Evening" },
+  { value: "before bed", label: "Before Bed" },
+  { value: "with meals", label: "With Meals" },
+  { value: "between meals", label: "Between Meals" },
+  { value: "post-workout", label: "Post-Workout" },
+  { value: "pre-workout", label: "Pre-Workout" },
+];
+
+const GOAL_OPTIONS = [
+  { value: "recovery", label: "Recovery" },
+  { value: "energy", label: "Energy" },
+  { value: "muscle_gain", label: "Muscle Gain" },
+  { value: "health", label: "General Health" },
+  { value: "performance", label: "Performance" },
+  { value: "weight_loss", label: "Weight Loss" },
+];
+
 export default function TrainerSupplementPlanEdit() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -421,21 +450,39 @@ export default function TrainerSupplementPlanEdit() {
                         </div>
                         <div>
                           <label className="text-sm font-medium">Frequency</label>
-                          <Input
+                          <Select
                             value={item.frequency || item.supplementItem.defaultFrequency || ""}
-                            onChange={(e) => handleUpdateItem(item.id, "frequency", e.target.value)}
-                            placeholder={item.supplementItem.defaultFrequency || "e.g., daily"}
-                            data-testid={`input-frequency-${item.id}`}
-                          />
+                            onValueChange={(value) => handleUpdateItem(item.id, "frequency", value)}
+                          >
+                            <SelectTrigger data-testid={`select-frequency-${item.id}`}>
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {FREQUENCY_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <label className="text-sm font-medium">Timing</label>
-                          <Input
+                          <Select
                             value={item.timing || item.supplementItem.defaultTiming || ""}
-                            onChange={(e) => handleUpdateItem(item.id, "timing", e.target.value)}
-                            placeholder={item.supplementItem.defaultTiming || "e.g., morning"}
-                            data-testid={`input-timing-${item.id}`}
-                          />
+                            onValueChange={(value) => handleUpdateItem(item.id, "timing", value)}
+                          >
+                            <SelectTrigger data-testid={`select-timing-${item.id}`}>
+                              <SelectValue placeholder="Select timing" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TIMING_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
