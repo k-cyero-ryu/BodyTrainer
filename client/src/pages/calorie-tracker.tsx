@@ -696,7 +696,7 @@ export default function CalorieTracker() {
 
       {/* Conditional Content Based on View Mode */}
       {viewMode === 'daily-resume' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
         {/* Food Entries Management */}
         <Card>
           <CardHeader>
