@@ -25,7 +25,8 @@ import {
   Heart,
   MessageCircle,
   Target,
-  Award
+  Award,
+  Utensils
 } from "lucide-react";
 
 import heroImage1 from "@assets/stock_images/fitness_training_gym_0c77a198.jpg";
@@ -58,7 +59,7 @@ export default function Login() {
       description: t('landing.features.trainer3.desc'),
     },
     {
-      icon: MessageCircle,
+      icon: Utensils,
       title: t('landing.features.trainer4.title'),
       description: t('landing.features.trainer4.desc'),
     },
