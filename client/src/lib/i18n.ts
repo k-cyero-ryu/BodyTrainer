@@ -25,8 +25,8 @@ const resources = {
       'landing.features.trainer2.desc': 'Create personalized workout plans tailored to each client\'s goals and needs',
       'landing.features.trainer3.title': 'Progress Tracking',
       'landing.features.trainer3.desc': 'Monitor client progress with detailed analytics and monthly evaluations',
-      'landing.features.trainer4.title': 'Community Building',
-      'landing.features.trainer4.desc': 'Foster a community among your clients with group chat and social features',
+      'landing.features.trainer4.title': 'Nutrition & Supplement Planning',
+      'landing.features.trainer4.desc': 'Create meal plans with TDEE calculator and manage supplement schedules for optimal results',
       
       'landing.features.member1.title': 'Personalized Workouts',
       'landing.features.member1.desc': 'Get custom training plans designed specifically for your fitness goals',
