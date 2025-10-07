@@ -12,13 +12,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Dumbbell, Shield, Search, ChevronDown, ChevronUp, ExternalLink, Globe } from "lucide-react";
-import { SiInstagram, SiTwitter, SiFacebook, SiLinkedin, SiYoutube, SiTiktok } from "react-icons/si";
+import { SiInstagram, SiX, SiFacebook, SiLinkedin, SiYoutube, SiTiktok } from "react-icons/si";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 const getSocialIcon = (platform: string) => {
   const iconMap: Record<string, any> = {
     instagram: SiInstagram,
-    twitter: SiTwitter,
+    twitter: SiX,
+    x: SiX,
     facebook: SiFacebook,
     linkedin: SiLinkedin,
     youtube: SiYoutube,
