@@ -126,6 +126,7 @@ export interface IStorage {
   getAllTrainers(): Promise<Trainer[]>;
   getPendingTrainers(): Promise<Trainer[]>;
   getApprovedTrainers(): Promise<Trainer[]>;
+  getAllApprovedTrainers(): Promise<any[]>; // For trainer browsing with full details
   approveTrainer(trainerId: string): Promise<void>;
   rejectTrainer(trainerId: string): Promise<void>;
   suspendTrainer(trainerId: string): Promise<void>;
@@ -550,6 +551,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.status, 'active'))
       .orderBy(desc(trainers.createdAt));
     return result as any[];
+  }
+
+  async getAllApprovedTrainers(): Promise<any[]> {
+    const result = await db
+      .select({
+        id: trainers.id,
+        userId: trainers.userId,
+        referralCode: trainers.referralCode,
+        expertise: trainers.expertise,
+        experience: trainers.experience,
+        bio: trainers.bio,
+        certifications: trainers.certifications,
+        specializations: trainers.specializations,
+        profileImageUrl: users.profileImageUrl,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(trainers)
+      .innerJoin(users, eq(trainers.userId, users.id))
+      .where(eq(users.status, 'active'))
+      .orderBy(desc(trainers.createdAt));
+    return result;
   }
 
   async approveTrainer(trainerId: string): Promise<void> {

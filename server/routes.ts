@@ -416,6 +416,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all approved trainers for browsing (MUST come before /:id routes)
+  app.get('/api/trainers/browse', async (req, res) => {
+    try {
+      const trainers = await storage.getAllApprovedTrainers();
+      res.json(trainers);
+    } catch (error) {
+      console.error("Error fetching trainers for browse:", error);
+      res.status(500).json({ message: "Failed to fetch trainers" });
+    }
+  });
+
   app.get('/api/trainers/:id', isAuthenticated, async (req, res) => {
     try {
       const trainer = await storage.getTrainer(req.params.id);

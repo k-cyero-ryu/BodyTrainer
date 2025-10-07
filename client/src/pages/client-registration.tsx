@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -9,13 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 // import { Textarea } from "@/components/ui/textarea";
-import { Users, Dumbbell } from "lucide-react";
+import { Users, Dumbbell, Search, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function ClientRegistration() {
   const [location, navigate] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [showTrainerBrowser, setShowTrainerBrowser] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedTrainerId, setExpandedTrainerId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     referralCode: "",
@@ -25,6 +32,12 @@ export default function ClientRegistration() {
     height: "",
     activityLevel: "moderate",
     medicalConditions: "",
+  });
+
+  // Fetch all trainers for browsing
+  const { data: trainers = [], isLoading: trainersLoading } = useQuery({
+    queryKey: ['/api/trainers/browse'],
+    enabled: showTrainerBrowser,
   });
 
   useEffect(() => {
@@ -69,6 +82,23 @@ export default function ClientRegistration() {
       });
     },
   });
+
+  // Filter trainers based on search query
+  const filteredTrainers = trainers.filter((trainer: any) => {
+    const fullName = `${trainer.firstName || ''} ${trainer.lastName || ''}`.toLowerCase();
+    const code = trainer.referralCode?.toLowerCase() || '';
+    const query = searchQuery.toLowerCase();
+    return fullName.includes(query) || code.includes(query);
+  });
+
+  const handleSelectTrainer = (trainer: any) => {
+    setFormData(prev => ({ ...prev, referralCode: trainer.referralCode }));
+    setShowTrainerBrowser(false);
+    toast({
+      title: "Trainer Selected",
+      description: `${trainer.firstName} ${trainer.lastName} has been selected as your trainer`,
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,15 +153,133 @@ export default function ClientRegistration() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="referralCode">Trainer Referral Code *</Label>
-                <Input
-                  id="referralCode"
-                  placeholder="Enter your trainer's referral code"
-                  value={formData.referralCode}
-                  onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value }))}
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="referralCode"
+                    placeholder="Enter your trainer's referral code"
+                    value={formData.referralCode}
+                    onChange={(e) => setFormData(prev => ({ ...prev, referralCode: e.target.value }))}
+                    required
+                    data-testid="input-referral-code"
+                  />
+                  <Dialog open={showTrainerBrowser} onOpenChange={setShowTrainerBrowser}>
+                    <DialogTrigger asChild>
+                      <Button type="button" variant="outline" data-testid="button-browse-trainers">
+                        <Search className="h-4 w-4 mr-2" />
+                        Browse Trainers
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl max-h-[80vh]">
+                      <DialogHeader>
+                        <DialogTitle>Select Your Trainer</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Search by name or referral code..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                            data-testid="input-trainer-search"
+                          />
+                        </div>
+                        <ScrollArea className="h-[400px] pr-4">
+                          {trainersLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                            </div>
+                          ) : filteredTrainers.length === 0 ? (
+                            <p className="text-center text-gray-500 py-8">No trainers found</p>
+                          ) : (
+                            <div className="space-y-3">
+                              {filteredTrainers.map((trainer: any) => (
+                                <Collapsible
+                                  key={trainer.id}
+                                  open={expandedTrainerId === trainer.id}
+                                  onOpenChange={(open) => setExpandedTrainerId(open ? trainer.id : null)}
+                                >
+                                  <Card className="border-2 hover:border-primary/50 transition-colors">
+                                    <CardContent className="p-4">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                          <h3 className="font-semibold text-lg" data-testid={`trainer-name-${trainer.id}`}>
+                                            {trainer.firstName} {trainer.lastName}
+                                          </h3>
+                                          <p className="text-sm text-gray-600" data-testid={`trainer-code-${trainer.id}`}>
+                                            Referral Code: <span className="font-mono font-semibold">{trainer.referralCode}</span>
+                                          </p>
+                                          {trainer.expertise && (
+                                            <p className="text-sm text-gray-500 mt-1">{trainer.expertise}</p>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            type="button"
+                                            onClick={() => handleSelectTrainer(trainer)}
+                                            size="sm"
+                                            data-testid={`button-select-${trainer.id}`}
+                                          >
+                                            Select
+                                          </Button>
+                                          <CollapsibleTrigger asChild>
+                                            <Button type="button" variant="ghost" size="sm" data-testid={`button-expand-${trainer.id}`}>
+                                              {expandedTrainerId === trainer.id ? (
+                                                <ChevronUp className="h-4 w-4" />
+                                              ) : (
+                                                <ChevronDown className="h-4 w-4" />
+                                              )}
+                                            </Button>
+                                          </CollapsibleTrigger>
+                                        </div>
+                                      </div>
+                                      <CollapsibleContent className="mt-4 pt-4 border-t space-y-3">
+                                        {trainer.bio && (
+                                          <div>
+                                            <p className="text-sm font-medium text-gray-700">About</p>
+                                            <p className="text-sm text-gray-600 mt-1">{trainer.bio}</p>
+                                          </div>
+                                        )}
+                                        {trainer.certifications && trainer.certifications.length > 0 && (
+                                          <div>
+                                            <p className="text-sm font-medium text-gray-700 mb-2">Certifications</p>
+                                            <div className="space-y-2">
+                                              {trainer.certifications.map((cert: any, index: number) => (
+                                                <div key={index} className="bg-gray-50 p-2 rounded" data-testid={`cert-${trainer.id}-${index}`}>
+                                                  <p className="font-medium text-sm">{cert.name}</p>
+                                                  {cert.issuer && <p className="text-xs text-gray-600">{cert.issuer}</p>}
+                                                  {cert.year && <p className="text-xs text-gray-500">{cert.year}</p>}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                        {trainer.specializations && trainer.specializations.length > 0 && (
+                                          <div>
+                                            <p className="text-sm font-medium text-gray-700 mb-2">Specializations</p>
+                                            <div className="flex flex-wrap gap-2">
+                                              {trainer.specializations.map((spec: string, index: number) => (
+                                                <Badge key={index} variant="secondary" data-testid={`spec-${trainer.id}-${index}`}>
+                                                  {spec}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </CollapsibleContent>
+                                    </CardContent>
+                                  </Card>
+                                </Collapsible>
+                              ))}
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <p className="text-xs text-gray-500">
-                  Your trainer should have provided you with this code
+                  Enter the code provided by your trainer or browse available trainers
                 </p>
               </div>
 
