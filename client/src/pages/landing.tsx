@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Carousel,
   CarouselContent,
@@ -25,8 +27,11 @@ import {
   Heart,
   MessageCircle,
   Target,
-  Award
+  Award,
+  Check,
+  DollarSign
 } from "lucide-react";
+import type { PaymentPlan } from "@shared/schema";
 
 import heroImage1 from "@assets/stock_images/fitness_training_gym_0c77a198.jpg";
 import heroImage2 from "@assets/stock_images/fitness_training_gym_f5a4900d.jpg";
@@ -40,6 +45,11 @@ export default function Login() {
     setLanguage(lng);
     i18n.changeLanguage(lng);
   };
+
+  // Fetch active payment plans
+  const { data: paymentPlans = [] } = useQuery<PaymentPlan[]>({
+    queryKey: ['/api/payment-plans/active'],
+  });
 
   const trainerFeatures = [
     {
@@ -268,6 +278,71 @@ export default function Login() {
           </div>
         </div>
       </section>
+
+      {/* Pricing Section */}
+      {paymentPlans.length > 0 && (
+        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+          <div className="container mx-auto max-w-7xl">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">
+              {t('landing.pricing.title')}
+            </h2>
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+              {t('landing.pricing.subtitle')}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {paymentPlans.map((plan) => (
+                <Card 
+                  key={plan.id} 
+                  className="relative border-2 hover:border-blue-500 transition-all hover:shadow-lg"
+                  data-testid={`card-pricing-plan-${plan.id}`}
+                >
+                  <CardContent className="p-6">
+                    <div className="mb-4">
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        {plan.name}
+                      </h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                          ${plan.amount}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {plan.currency}
+                        </span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                          / {plan.type}
+                        </span>
+                      </div>
+                    </div>
+
+                    {plan.features && plan.features.length > 0 && (
+                      <div className="space-y-3 mb-6">
+                        {plan.features.map((feature, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            <Check className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <Link href="/register">
+                      <Button 
+                        className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                        data-testid={`button-choose-plan-${plan.id}`}
+                      >
+                        {t('landing.pricing.choosePlan')}
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900">

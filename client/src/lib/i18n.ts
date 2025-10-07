@@ -37,6 +37,10 @@ const resources = {
       'landing.features.member4.title': 'Community Support',
       'landing.features.member4.desc': 'Connect with fellow members and your trainer for motivation and support',
       
+      'landing.pricing.title': 'Pricing Plans',
+      'landing.pricing.subtitle': 'Choose the perfect plan for your fitness journey',
+      'landing.pricing.choosePlan': 'Choose Plan',
+      
       'landing.cta.title': 'Ready to Transform Your Fitness Business?',
       'landing.cta.subtitle': 'Join hundreds of trainers already using TuGymBro to grow their business',
       'landing.cta.button': 'Start Free Trial',
@@ -588,9 +592,6 @@ const resources = {
       'supplements.failedToUpdate': 'Failed to update supplement plan',
       'supplements.failedToDelete': 'Failed to delete supplement plan',
       'supplements.failedToCopy': 'Failed to copy supplement plan',
-      'supplements.failedToAddSupplement': 'Failed to add supplement',
-      'supplements.failedToUpdateSupplement': 'Failed to update supplement',
-      'supplements.failedToRemoveSupplement': 'Failed to remove supplement',
       'supplements.pleaseAddOneItem': 'Please add at least one supplement item to the plan',
       'supplements.pleaseSelectItem': 'Please select a supplement item',
       'supplements.alreadyAdded': 'This supplement is already added to the plan',
@@ -1407,6 +1408,10 @@ const resources = {
       'landing.features.member4.title': 'Apoyo Comunitario',
       'landing.features.member4.desc': 'Conéctate con otros miembros y tu entrenador para motivación y apoyo',
       
+      'landing.pricing.title': 'Planes de Precios',
+      'landing.pricing.subtitle': 'Elige el plan perfecto para tu viaje fitness',
+      'landing.pricing.choosePlan': 'Elegir Plan',
+      
       'landing.cta.title': '¿Listo Para Transformar Tu Negocio Fitness?',
       'landing.cta.subtitle': 'Únete a cientos de entrenadores que ya usan TuGymBro para hacer crecer su negocio',
       'landing.cta.button': 'Comenzar Prueba Gratis',
@@ -1892,9 +1897,6 @@ const resources = {
       'supplements.failedToUpdate': 'Error al actualizar el plan de suplementos',
       'supplements.failedToDelete': 'Error al eliminar el plan de suplementos',
       'supplements.failedToCopy': 'Error al copiar el plan de suplementos',
-      'supplements.failedToAddSupplement': 'Error al agregar el suplemento',
-      'supplements.failedToUpdateSupplement': 'Error al actualizar el suplemento',
-      'supplements.failedToRemoveSupplement': 'Error al eliminar el suplemento',
       'supplements.pleaseAddOneItem': 'Por favor agrega al menos un artículo de suplemento al plan',
       'supplements.pleaseSelectItem': 'Por favor selecciona un artículo de suplemento',
       'supplements.alreadyAdded': 'Este suplemento ya está agregado al plan',
@@ -2731,6 +2733,10 @@ const resources = {
       'landing.features.member4.title': 'Soutien Communautaire',
       'landing.features.member4.desc': 'Connectez-vous avec d\'autres membres et votre entraîneur pour motivation et soutien',
       
+      'landing.pricing.title': 'Plans Tarifaires',
+      'landing.pricing.subtitle': 'Choisissez le plan parfait pour votre parcours fitness',
+      'landing.pricing.choosePlan': 'Choisir le Plan',
+      
       'landing.cta.title': 'Prêt À Transformer Votre Entreprise Fitness?',
       'landing.cta.subtitle': 'Rejoignez des centaines d\'entraîneurs utilisant déjà TuGymBro pour développer leur entreprise',
       'landing.cta.button': 'Commencer L\'essai Gratuit',
@@ -2961,9 +2967,6 @@ const resources = {
       'supplements.failedToUpdate': 'Échec de la mise à jour du plan de suppléments',
       'supplements.failedToDelete': 'Échec de la suppression du plan de suppléments',
       'supplements.failedToCopy': 'Échec de la copie du plan de suppléments',
-      'supplements.failedToAddSupplement': 'Échec de l\'ajout du supplément',
-      'supplements.failedToUpdateSupplement': 'Échec de la mise à jour du supplément',
-      'supplements.failedToRemoveSupplement': 'Échec du retrait du supplément',
       'supplements.pleaseAddOneItem': 'Veuillez ajouter au moins un article de supplément au plan',
       'supplements.pleaseSelectItem': 'Veuillez sélectionner un article de supplément',
       'supplements.alreadyAdded': 'Ce supplément est déjà ajouté au plan',
@@ -3151,6 +3154,10 @@ const resources = {
       'landing.features.member3.desc': 'Acompanhe seu progresso com avaliações mensais e comparações visuais',
       'landing.features.member4.title': 'Apoio Comunitário',
       'landing.features.member4.desc': 'Conecte-se com outros membros e seu treinador para motivação e apoio',
+      
+      'landing.pricing.title': 'Planos de Preços',
+      'landing.pricing.subtitle': 'Escolha o plano perfeito para sua jornada fitness',
+      'landing.pricing.choosePlan': 'Escolher Plano',
       
       'landing.cta.title': 'Pronto Para Transformar Seu Negócio Fitness?',
       'landing.cta.subtitle': 'Junte-se a centenas de treinadores que já usam TuGymBro para expandir seus negócios',
@@ -3382,9 +3389,6 @@ const resources = {
       'supplements.failedToUpdate': 'Falha ao atualizar o plano de suplementos',
       'supplements.failedToDelete': 'Falha ao excluir o plano de suplementos',
       'supplements.failedToCopy': 'Falha ao copiar o plano de suplementos',
-      'supplements.failedToAddSupplement': 'Falha ao adicionar o suplemento',
-      'supplements.failedToUpdateSupplement': 'Falha ao atualizar o suplemento',
-      'supplements.failedToRemoveSupplement': 'Falha ao remover o suplemento',
       'supplements.pleaseAddOneItem': 'Por favor, adicione pelo menos um item de suplemento ao plano',
       'supplements.pleaseSelectItem': 'Por favor, selecione um item de suplemento',
       'supplements.alreadyAdded': 'Este suplemento já está adicionado ao plano',

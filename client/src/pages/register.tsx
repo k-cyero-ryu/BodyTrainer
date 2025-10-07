@@ -234,7 +234,7 @@ export default function Register() {
                   name="referralCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Trainer Referral Code (Optional)</FormLabel>
+                      <FormLabel>Trainer Referral Code</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter trainer's referral code"
