@@ -564,6 +564,8 @@ export class DatabaseStorage implements IStorage {
         bio: trainers.bio,
         certifications: trainers.certifications,
         specializations: trainers.specializations,
+        socialMedia: trainers.socialMedia,
+        website: trainers.website,
         profileImageUrl: users.profileImageUrl,
         firstName: users.firstName,
         lastName: users.lastName,

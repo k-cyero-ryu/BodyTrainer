@@ -11,8 +11,21 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Dumbbell, Shield, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Dumbbell, Shield, Search, ChevronDown, ChevronUp, ExternalLink, Globe } from "lucide-react";
+import { SiInstagram, SiTwitter, SiFacebook, SiLinkedin, SiYoutube, SiTiktok } from "react-icons/si";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
+const getSocialIcon = (platform: string) => {
+  const iconMap: Record<string, any> = {
+    instagram: SiInstagram,
+    twitter: SiTwitter,
+    facebook: SiFacebook,
+    linkedin: SiLinkedin,
+    youtube: SiYoutube,
+    tiktok: SiTiktok,
+  };
+  return iconMap[platform.toLowerCase()] || ExternalLink;
+};
 
 export default function RoleSelection() {
   const { user } = useAuth();
@@ -337,6 +350,42 @@ export default function RoleSelection() {
                                                   {spec}
                                                 </Badge>
                                               ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                        {(trainer.socialMedia || trainer.website) && (
+                                          <div>
+                                            <p className="text-sm font-medium text-gray-700 mb-2">Connect</p>
+                                            <div className="flex flex-wrap gap-2">
+                                              {trainer.website && (
+                                                <a
+                                                  href={trainer.website}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                                                  data-testid={`link-website-${trainer.id}`}
+                                                >
+                                                  <Globe className="h-4 w-4" />
+                                                  Website
+                                                </a>
+                                              )}
+                                              {trainer.socialMedia && Object.entries(trainer.socialMedia).map(([platform, url]: [string, any]) => {
+                                                if (!url) return null;
+                                                const Icon = getSocialIcon(platform);
+                                                return (
+                                                  <a
+                                                    key={platform}
+                                                    href={url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md text-sm transition-colors"
+                                                    data-testid={`link-${platform}-${trainer.id}`}
+                                                  >
+                                                    <Icon className="h-4 w-4" />
+                                                    {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                                                  </a>
+                                                );
+                                              })}
                                             </div>
                                           </div>
                                         )}
