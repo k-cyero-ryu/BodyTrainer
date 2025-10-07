@@ -46,8 +46,8 @@ const resources = {
       'pricing.noPlansAvailable': 'No pricing plans available at the moment',
       
       'landing.cta.title': 'Ready to Transform Your Fitness Business?',
-      'landing.cta.subtitle': 'Join hundreds of trainers already using TuGymBro to grow their business',
-      'landing.cta.button': 'Start Free Trial',
+      'landing.cta.subtitle': 'Join the trainers already using TuGymBro to grow their business',
+      'landing.cta.button': 'Start',
       
       // Landing Footer
       'landing.footer.company': 'Company',
@@ -1421,8 +1421,8 @@ const resources = {
       'pricing.noPlansAvailable': 'No hay planes de precios disponibles en este momento',
       
       'landing.cta.title': '¿Listo Para Transformar Tu Negocio Fitness?',
-      'landing.cta.subtitle': 'Únete a cientos de entrenadores que ya usan TuGymBro para hacer crecer su negocio',
-      'landing.cta.button': 'Comenzar Prueba Gratis',
+      'landing.cta.subtitle': 'Únete a los entrenadores que ya usan TuGymBro para hacer crecer su negocio',
+      'landing.cta.button': 'Comenzar',
       
       // Landing Footer
       'landing.footer.company': 'Empresa',
@@ -2750,8 +2750,8 @@ const resources = {
       'pricing.noPlansAvailable': 'Aucun plan tarifaire disponible pour le moment',
       
       'landing.cta.title': 'Prêt À Transformer Votre Entreprise Fitness?',
-      'landing.cta.subtitle': 'Rejoignez des centaines d\'entraîneurs utilisant déjà TuGymBro pour développer leur entreprise',
-      'landing.cta.button': 'Commencer L\'essai Gratuit',
+      'landing.cta.subtitle': 'Rejoignez les entraîneurs utilisant déjà TuGymBro pour développer leur entreprise',
+      'landing.cta.button': 'Commencer',
       
       // Landing Footer
       'landing.footer.company': 'Entreprise',
@@ -3176,8 +3176,8 @@ const resources = {
       'pricing.noPlansAvailable': 'Nenhum plano de preços disponível no momento',
       
       'landing.cta.title': 'Pronto Para Transformar Seu Negócio Fitness?',
-      'landing.cta.subtitle': 'Junte-se a centenas de treinadores que já usam TuGymBro para expandir seus negócios',
-      'landing.cta.button': 'Iniciar Teste Grátis',
+      'landing.cta.subtitle': 'Junte-se aos treinadores que já usam TuGymBro para expandir seus negócios',
+      'landing.cta.button': 'Começar',
       
       // Landing Footer
       'landing.footer.company': 'Empresa',
