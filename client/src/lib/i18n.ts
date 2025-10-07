@@ -3155,8 +3155,8 @@ const resources = {
       'landing.features.trainer2.desc': 'Crie planos de treino personalizados adaptados às metas e necessidades de cada cliente',
       'landing.features.trainer3.title': 'Acompanhamento De Progresso',
       'landing.features.trainer3.desc': 'Monitore o progresso do cliente com análises detalhadas e avaliações mensais',
-      'landing.features.trainer4.title': 'Construção De Comunidade',
-      'landing.features.trainer4.desc': 'Promova uma comunidade entre seus clientes com chat em grupo e recursos sociais',
+      'landing.features.trainer4.title': 'Planejamento Nutricional e Suplementos',
+      'landing.features.trainer4.desc': 'Crie planos de refeição com calculadora TDEE e gerencie horários de suplementos para resultados ótimos',
       
       'landing.features.member1.title': 'Treinos Personalizados',
       'landing.features.member1.desc': 'Receba planos de treino personalizados projetados especificamente para seus objetivos',
