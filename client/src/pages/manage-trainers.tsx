@@ -22,6 +22,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { 
   UserCheck, 
@@ -353,27 +354,29 @@ export default function ManageTrainers() {
             {selectedPaymentPlan && selectedPaymentPlan !== 'none' && paymentPlans.find((p: PaymentPlan) => p.id === selectedPaymentPlan) && (
               <div className="p-3 bg-gray-50 rounded-lg">
                 <h4 className="font-medium mb-2">Plan Details:</h4>
-                {(() => {
-                  const plan = paymentPlans.find((p: PaymentPlan) => p.id === selectedPaymentPlan);
-                  return plan ? (
-                    <div className="space-y-1 text-sm">
-                      <div><strong>Name:</strong> {plan.name}</div>
-                      <div><strong>Amount:</strong> ${plan.amount} {plan.currency}</div>
-                      <div><strong>Billing:</strong> {plan.type}</div>
-                      <div><strong>Status:</strong> {plan.isActive ? 'Active' : 'Inactive'}</div>
-                      {plan.features && plan.features.length > 0 && (
-                        <div>
-                          <strong>Features:</strong>
-                          <ul className="list-disc list-inside ml-2">
-                            {plan.features.map((feature: string, index: number) => (
-                              <li key={index}>{feature}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ) : null;
-                })()}
+                <ScrollArea className="h-[300px] pr-4">
+                  {(() => {
+                    const plan = paymentPlans.find((p: PaymentPlan) => p.id === selectedPaymentPlan);
+                    return plan ? (
+                      <div className="space-y-1 text-sm">
+                        <div><strong>Name:</strong> {plan.name}</div>
+                        <div><strong>Amount:</strong> ${plan.amount} {plan.currency}</div>
+                        <div><strong>Billing:</strong> {plan.type}</div>
+                        <div><strong>Status:</strong> {plan.isActive ? 'Active' : 'Inactive'}</div>
+                        {plan.features && plan.features.length > 0 && (
+                          <div>
+                            <strong>Features:</strong>
+                            <ul className="list-disc list-inside ml-2">
+                              {plan.features.map((feature: string, index: number) => (
+                                <li key={index}>{feature}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : null;
+                  })()}
+                </ScrollArea>
               </div>
             )}
           </div>
