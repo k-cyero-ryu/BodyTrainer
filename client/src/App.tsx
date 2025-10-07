@@ -11,6 +11,7 @@ import { MessageCircle, X, Clock, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import Pricing from "@/pages/pricing";
 import Login from "@/pages/login";
 import LoginForm from "@/pages/login-form";
 import Register from "@/pages/register";
@@ -78,6 +79,7 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/pricing" component={Pricing} />
         <Route path="/login" component={Landing} />
         <Route path="/login-form" component={LoginForm} />
         <Route path="/register" component={Register} />

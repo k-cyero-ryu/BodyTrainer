@@ -37,9 +37,13 @@ const resources = {
       'landing.features.member4.title': 'Community Support',
       'landing.features.member4.desc': 'Connect with fellow members and your trainer for motivation and support',
       
+      'landing.pricing.nav': 'Pricing',
       'landing.pricing.title': 'Pricing Plans',
       'landing.pricing.subtitle': 'Choose the perfect plan for your fitness journey',
-      'landing.pricing.choosePlan': 'Choose Plan',
+      
+      'pricing.backToHome': 'Back to Home',
+      'pricing.featuresIncluded': 'Features Included',
+      'pricing.noPlansAvailable': 'No pricing plans available at the moment',
       
       'landing.cta.title': 'Ready to Transform Your Fitness Business?',
       'landing.cta.subtitle': 'Join hundreds of trainers already using TuGymBro to grow their business',
@@ -1408,9 +1412,13 @@ const resources = {
       'landing.features.member4.title': 'Apoyo Comunitario',
       'landing.features.member4.desc': 'Conéctate con otros miembros y tu entrenador para motivación y apoyo',
       
+      'landing.pricing.nav': 'Precios',
       'landing.pricing.title': 'Planes de Precios',
       'landing.pricing.subtitle': 'Elige el plan perfecto para tu viaje fitness',
-      'landing.pricing.choosePlan': 'Elegir Plan',
+      
+      'pricing.backToHome': 'Volver al Inicio',
+      'pricing.featuresIncluded': 'Funciones Incluidas',
+      'pricing.noPlansAvailable': 'No hay planes de precios disponibles en este momento',
       
       'landing.cta.title': '¿Listo Para Transformar Tu Negocio Fitness?',
       'landing.cta.subtitle': 'Únete a cientos de entrenadores que ya usan TuGymBro para hacer crecer su negocio',
@@ -2733,9 +2741,13 @@ const resources = {
       'landing.features.member4.title': 'Soutien Communautaire',
       'landing.features.member4.desc': 'Connectez-vous avec d\'autres membres et votre entraîneur pour motivation et soutien',
       
+      'landing.pricing.nav': 'Tarifs',
       'landing.pricing.title': 'Plans Tarifaires',
       'landing.pricing.subtitle': 'Choisissez le plan parfait pour votre parcours fitness',
-      'landing.pricing.choosePlan': 'Choisir le Plan',
+      
+      'pricing.backToHome': 'Retour à l\'Accueil',
+      'pricing.featuresIncluded': 'Fonctionnalités Incluses',
+      'pricing.noPlansAvailable': 'Aucun plan tarifaire disponible pour le moment',
       
       'landing.cta.title': 'Prêt À Transformer Votre Entreprise Fitness?',
       'landing.cta.subtitle': 'Rejoignez des centaines d\'entraîneurs utilisant déjà TuGymBro pour développer leur entreprise',
@@ -3155,9 +3167,13 @@ const resources = {
       'landing.features.member4.title': 'Apoio Comunitário',
       'landing.features.member4.desc': 'Conecte-se com outros membros e seu treinador para motivação e apoio',
       
+      'landing.pricing.nav': 'Preços',
       'landing.pricing.title': 'Planos de Preços',
       'landing.pricing.subtitle': 'Escolha o plano perfeito para sua jornada fitness',
-      'landing.pricing.choosePlan': 'Escolher Plano',
+      
+      'pricing.backToHome': 'Voltar ao Início',
+      'pricing.featuresIncluded': 'Recursos Incluídos',
+      'pricing.noPlansAvailable': 'Nenhum plano de preços disponível no momento',
       
       'landing.cta.title': 'Pronto Para Transformar Seu Negócio Fitness?',
       'landing.cta.subtitle': 'Junte-se a centenas de treinadores que já usam TuGymBro para expandir seus negócios',
