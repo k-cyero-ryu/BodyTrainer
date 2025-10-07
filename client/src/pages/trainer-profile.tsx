@@ -571,7 +571,7 @@ export default function TrainerProfile() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {(trainerForm.watch("certifications") || []).map((cert, index) => (
+                {((isEditing ? trainerForm.watch("certifications") : (trainerProfile as any)?.certifications) || []).map((cert, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded" data-testid={`cert-item-${index}`}>
                     <div>
                       <p className="font-medium">{cert.name}</p>
@@ -590,7 +590,7 @@ export default function TrainerProfile() {
                     )}
                   </div>
                 ))}
-                {(!trainerForm.watch("certifications") || trainerForm.watch("certifications")?.length === 0) && (
+                {(!(isEditing ? trainerForm.watch("certifications") : (trainerProfile as any)?.certifications) || (isEditing ? trainerForm.watch("certifications") : (trainerProfile as any)?.certifications)?.length === 0) && (
                   <p className="text-gray-500 text-sm" data-testid="text-no-certifications">{t('profile.noCertifications')}</p>
                 )}
               </div>
@@ -619,7 +619,7 @@ export default function TrainerProfile() {
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  {(trainerForm.watch("specializations") || []).map((spec, index) => (
+                  {((isEditing ? trainerForm.watch("specializations") : (trainerProfile as any)?.specializations) || []).map((spec, index) => (
                     <Badge key={index} variant="secondary" className="flex items-center gap-1" data-testid={`specialization-${index}`}>
                       {spec}
                       {isEditing && (
@@ -634,7 +634,7 @@ export default function TrainerProfile() {
                     </Badge>
                   ))}
                 </div>
-                {(!trainerForm.watch("specializations") || trainerForm.watch("specializations")?.length === 0) && (
+                {(!(isEditing ? trainerForm.watch("specializations") : (trainerProfile as any)?.specializations) || (isEditing ? trainerForm.watch("specializations") : (trainerProfile as any)?.specializations)?.length === 0) && (
                   <p className="text-gray-500 text-sm" data-testid="text-no-specializations">{t('profile.noSpecializations')}</p>
                 )}
               </div>
