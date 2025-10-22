@@ -65,6 +65,15 @@ export default function TrainingPlanDetail() {
     enabled: !!user && user.role === 'trainer',
   });
 
+  const linkify = (text: string) => {
+    if (!text) return "";
+    const urlPattern = /(\b(https?:\/\/|www\.)[^\s]+)/gi;
+    return text.replace(urlPattern, (url) => {
+      const href = url.startsWith("http") ? url : `https://${url}`;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`;
+    });
+  };
+  
   if (isLoading || planLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -297,7 +306,10 @@ export default function TrainingPlanDetail() {
                         
                         {exercise?.description && (
                           <div className="mb-3">
-                            <p className="text-sm text-muted-foreground">{exercise.description}</p>
+                            <p
+                                  className="text-sm text-muted-foreground"
+                                  dangerouslySetInnerHTML={{ __html: linkify(exercise.description) }}
+                            />                            
                           </div>
                         )}
 

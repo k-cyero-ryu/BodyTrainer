@@ -65,6 +65,15 @@ export default function ClientTrainingPlanDetail() {
     enabled: !!user && user.role === 'client',
   });
 
+  const linkify = (text: string) => {
+    if (!text) return "";
+    const urlPattern = /(\b(https?:\/\/|www\.)[^\s]+)/gi;
+    return text.replace(urlPattern, (url) => {
+      const href = url.startsWith("http") ? url : `https://${url}`;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`;
+    });
+  };
+
   if (isLoading || planLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -281,7 +290,10 @@ export default function ClientTrainingPlanDetail() {
                               </div>
                               
                               {exercise?.description && (
-                                <p className="text-sm text-muted-foreground mb-3">{exercise.description}</p>
+                                <p
+                                  className="text-sm text-muted-foreground mb-3"
+                                  dangerouslySetInnerHTML={{ __html: linkify(exercise.description) }}
+                                />
                               )}
 
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">

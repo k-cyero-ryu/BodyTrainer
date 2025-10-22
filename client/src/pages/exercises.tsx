@@ -176,6 +176,16 @@ export default function Exercises() {
 
   const categories = ["all", "strength", "cardio", "flexibility", "sports"];
 
+  const linkify = (text: string) => {
+    if (!text) return "";
+    const urlPattern = /(\b(https?:\/\/|www\.)[^\s]+)/gi;
+    return text.replace(urlPattern, (url) => {
+      const href = url.startsWith("http") ? url : `https://${url}`;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`;
+    });
+  };
+
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -412,9 +422,12 @@ export default function Exercises() {
                     </ObjectUploader>
                   </div>
                 )}
-
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">{exercise.description}</p>
-
+                
+                <p
+                  className="text-gray-600 text-sm mb-4 line-clamp-3"
+                  dangerouslySetInnerHTML={{ __html: linkify(exercise.description) }}
+                />
+  
                 <div className="flex justify-between items-center">
                   <Button variant="outline" size="sm">
                     {t('exercises.addToPlan')}
