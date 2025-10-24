@@ -1632,6 +1632,28 @@ export const commonFoods: CommonFood[] = [
     },
     nutrition: { calories: 260, protein: 0, carbs: 67, fat: 0.2 },
     category: "Sweetener"
+  },
+  {
+    fdcId: 999001,
+    name: "Protein powder",
+    translations: {
+      es: "Proteína en polvo",
+      fr: "Protéine en poudre",
+      pt: "Proteína em pó"
+    },
+    nutrition: { calories: 120, protein: 24, carbs: 3, fat: 1.5 },
+    category: "Supplements"
+  },
+  {
+    fdcId: 999002,
+    name: "Protein shake",
+    translations: {
+      es: "Batido de proteína",
+      fr: "Shake protéiné",
+      pt: "Shake de proteína"
+    },
+    nutrition: { calories: 160, protein: 30, carbs: 5, fat: 3 },
+    category: "Supplements"
   }
 ];
 
