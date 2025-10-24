@@ -1094,6 +1094,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         phone,
+        gender,
         dateOfBirth,
         goals,
         currentWeight,
@@ -1116,6 +1117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update client information
       await storage.updateClient(client.id, {
         phone,
+        gender,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
         goals,
         currentWeight,
