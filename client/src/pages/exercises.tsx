@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { Plus, Edit, Trash2, Play, Upload, Dumbbell, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { linkify } from "@/lib/utils";
 
 export default function Exercises() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -175,16 +176,6 @@ export default function Exercises() {
   );
 
   const categories = ["all", "strength", "cardio", "flexibility", "sports"];
-
-  const linkify = (text: string) => {
-    if (!text) return "";
-    const urlPattern = /(\b(https?:\/\/|www\.)[^\s]+)/gi;
-    return text.replace(urlPattern, (url) => {
-      const href = url.startsWith("http") ? url : `https://${url}`;
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`;
-    });
-  };
-
 
   if (isLoading) {
     return (
