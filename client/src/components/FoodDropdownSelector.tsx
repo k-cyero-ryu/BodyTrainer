@@ -48,7 +48,8 @@ const FOOD_CATEGORIES = [
   'vegetables', 
   'dairy', 
   'fats', 
-  'legumes'
+  'legumes',
+  'supplements'
 ];
 
 const getCategoryTranslationKey = (category: string) => {
@@ -60,7 +61,8 @@ const getCategoryTranslationKey = (category: string) => {
     'vegetables': 'dailyResume.vegetables',
     'dairy': 'dailyResume.dairy',
     'fats': 'dailyResume.fats',
-    'legumes': 'dailyResume.legumes'
+    'legumes': 'dailyResume.legumes',
+    'supplements': 'dailyResume.supplements'
   };
   return mapping[category] || category;
 };

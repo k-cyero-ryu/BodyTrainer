@@ -13,9 +13,16 @@ The local food database stores common foods with:
 
 ### Files to Modify
 
-**Main File:** `client/src/data/commonFoods.ts`
+**Food Data File:** `client/src/data/commonFoods.ts`
+- Contains all food items in the `commonFoods` array
 
-This file contains all food items in the `commonFoods` array.
+**Food Selector Component:** `client/src/components/FoodDropdownSelector.tsx`
+- Contains the category list for the dropdown selector
+- Must be updated when adding new categories
+
+**Translation File:** `client/src/lib/i18n.ts`
+- Contains translations for all categories in 4 languages
+- Must be updated when adding new categories
 
 ---
 
@@ -98,7 +105,7 @@ Add your food item to the `commonFoods` array before the closing bracket `];`
 - Condiment
 - Supplements
 
-**Note:** You can create new categories by simply using a new category name.
+**Note:** If you create a new category, you must also register it in the dropdown selector (see Step 7 below).
 
 ---
 
@@ -171,6 +178,81 @@ Here's how we added "Protein powder" to the Supplements category:
 ```
 
 **Important:** Make sure to add a comma after the previous item, but NOT after the last item in the array.
+
+---
+
+## Step 7: Register New Category in Dropdown Selector (If Creating New Category)
+
+If you created a **new category** (not using an existing one), you must register it in two places:
+
+### A. Update the Category List
+
+Open `client/src/components/FoodDropdownSelector.tsx` and find the `FOOD_CATEGORIES` array (around line 46):
+
+```typescript
+const FOOD_CATEGORIES = [
+  'all',
+  'proteins', 
+  'carbohydrates', 
+  'fruits', 
+  'vegetables', 
+  'dairy', 
+  'fats', 
+  'legumes',
+  'supplements'  // Your new category here (lowercase)
+];
+```
+
+Add your new category to this array in **lowercase**.
+
+### B. Add Category Translation Mapping
+
+In the same file, find the `getCategoryTranslationKey` function (around line 58):
+
+```typescript
+const getCategoryTranslationKey = (category: string) => {
+  const mapping: Record<string, string> = {
+    'all': 'dailyResume.allCategories',
+    'proteins': 'dailyResume.proteins',
+    'carbohydrates': 'dailyResume.carbohydrates',
+    'fruits': 'dailyResume.fruits',
+    'vegetables': 'dailyResume.vegetables',
+    'dairy': 'dailyResume.dairy',
+    'fats': 'dailyResume.fats',
+    'legumes': 'dailyResume.legumes',
+    'supplements': 'dailyResume.supplements'  // Map to translation key
+  };
+  return mapping[category] || category;
+};
+```
+
+Add your category mapping pointing to a translation key (e.g., `'yourcategory': 'dailyResume.yourcategory'`).
+
+### C. Add Translations in All Languages
+
+Open `client/src/lib/i18n.ts` and add your category translation in **all 4 language sections**:
+
+**English (around line 1171):**
+```typescript
+'dailyResume.yourcategory': 'Your Category Name',
+```
+
+**Spanish (around line 2254):**
+```typescript
+'dailyResume.yourcategory': 'Nombre de tu Categoría',
+```
+
+**French (around line 3006):**
+```typescript
+'dailyResume.yourcategory': 'Nom de Votre Catégorie',
+```
+
+**Portuguese (around line 3432):**
+```typescript
+'dailyResume.yourcategory': 'Nome da Sua Categoria',
+```
+
+**Important:** Place the new translation right after `'dailyResume.legumes'` in each language section.
 
 ---
 

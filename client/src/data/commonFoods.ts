@@ -589,7 +589,7 @@ export const commonFoods: CommonFood[] = [
     category: "Protein"
   },
   {
-    fdcId: 175168,
+    fdcId: 175169,
     name: "Lamb",
     translations: {
       es: "Cordero",
