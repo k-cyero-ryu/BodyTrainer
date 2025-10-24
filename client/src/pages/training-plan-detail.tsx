@@ -274,9 +274,9 @@ export default function TrainingPlanDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {plan.exercises && plan.exercises.length > 0 ? (
+              {plan.planExercises && plan.planExercises.length > 0 ? (
                 <div className="space-y-4">
-                  {plan.exercises.map((planExercise: any, index: number) => {
+                  {plan.planExercises.map((planExercise: any, index: number) => {
                     const exercise = getExerciseDetails(planExercise.exerciseId);
                     return (
                       <div key={planExercise.id} className="p-4 border rounded-lg">
