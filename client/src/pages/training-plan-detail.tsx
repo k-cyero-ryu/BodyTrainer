@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { linkify } from "@/lib/utils";
 import { 
   ArrowLeft, 
   Activity, 
@@ -64,15 +65,6 @@ export default function TrainingPlanDetail() {
     queryKey: ["/api/exercises"],
     enabled: !!user && user.role === 'trainer',
   });
-
-  const linkify = (text: string) => {
-    if (!text) return "";
-    const urlPattern = /(\b(https?:\/\/|www\.)[^\s]+)/gi;
-    return text.replace(urlPattern, (url) => {
-      const href = url.startsWith("http") ? url : `https://${url}`;
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`;
-    });
-  };
   
   if (isLoading || planLoading) {
     return (
