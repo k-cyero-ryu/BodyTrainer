@@ -861,7 +861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         ...plan,
-        exercises: planExercises
+        planExercises: planExercises
       });
     } catch (error) {
       console.error("Error fetching training plan:", error);
