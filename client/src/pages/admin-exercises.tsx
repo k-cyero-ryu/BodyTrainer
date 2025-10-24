@@ -20,6 +20,7 @@ import {
   Target,
   Settings
 } from "lucide-react";
+import { linkify } from "@/lib/utils";
 
 export default function AdminExercises() {
   const [search, setSearch] = useState("");
@@ -90,7 +91,10 @@ export default function AdminExercises() {
       </CardHeader>
       <CardContent className="space-y-4">
         {exercise.description && (
-          <p className="text-sm text-muted-foreground">{exercise.description}</p>
+          <p 
+            className="text-sm text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: linkify(exercise.description) }}
+          />
         )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
